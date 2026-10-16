@@ -90,9 +90,7 @@ async fn start(settings: &Settings) -> Result<Helper, FetchError> {
         .stderr(log)
         .kill_on_drop(true)
         .spawn()
-        .map_err(|e| {
-            FetchError::Browser(format!("could not run {}: {e}", settings.python))
-        })?;
+        .map_err(|e| FetchError::Browser(format!("could not run {}: {e}", settings.python)))?;
 
     let stdin = child.stdin.take().expect("piped");
     let lines = BufReader::new(child.stdout.take().expect("piped")).lines();
@@ -110,7 +108,9 @@ async fn start(settings: &Settings) -> Result<Helper, FetchError> {
     match (first.ready, first.error) {
         (true, _) => Ok(h),
         (_, Some(e)) => Err(FetchError::Browser(format!("{e} — {INSTALL_HINT}"))),
-        _ => Err(FetchError::Browser(format!("unexpected helper reply — {INSTALL_HINT}"))),
+        _ => Err(FetchError::Browser(format!(
+            "unexpected helper reply — {INSTALL_HINT}"
+        ))),
     }
 }
 

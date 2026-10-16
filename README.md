@@ -10,6 +10,35 @@ jobup.ch) or Singapore (LinkedIn, MyCareersFuture, JobStreet).
 - **Score** jobs against your profile with any OpenAI-compatible model (DeepSeek by default, or a local ollama). Each score comes with a one-line verdict, strengths and gaps.
 - **Export** the visible list to CSV.
 
+## Install
+
+Signed builds for macOS (Apple Silicon and Intel), Windows and Linux are on
+[JobScout's page](https://mayorana.ch/en/apps/jobscout):
+
+- **macOS**: open `jobscout-macos.dmg` and drag JobScout to Applications.
+- **Windows**: run `jobscout-setup.exe`. It needs the Microsoft Edge WebView2
+  Runtime, which Windows 11 and up-to-date Windows 10 already have.
+- **Linux**: extract `jobscout-linux-x86_64.tar.gz`, then run
+  `sudo ./setup-linux.sh` once for the libraries and the launcher.
+
+JobStreet (Singapore) also needs Camoufox: `pip install -U camoufox && python -m camoufox fetch`.
+
+JobScout checks mayorana.ch for a newer version shortly after it starts. Set
+`DISABLE_UPDATE_CHECK=1` to turn that off.
+
+## Releasing
+
+`./scripts/release.sh` bumps the version, stamps `CHANGELOG.md`, tags and
+pushes; the Release workflow then builds, signs and publishes to mayorana.ch.
+`./scripts/setup-github.sh` sets the secrets it needs, once.
+
+## Licence
+
+Source-available under the [PolyForm Noncommercial License 1.0.0](LICENSE):
+free for personal use. Commercial use requires a licence, which is
+[JobScout Pro](https://mayorana.ch/en/apps/jobscout). The name and icon are
+covered by [TRADEMARK.md](TRADEMARK.md).
+
 ## Run
 
 ```sh

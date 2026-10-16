@@ -33,7 +33,11 @@ struct Raw {
 
 pub async fn score(settings: &Settings, profile: &str, job: &Job) -> Result<Score, String> {
     let detail = job.detail.as_ref().ok_or("no description fetched yet")?;
-    let description: String = detail.description.chars().take(MAX_DESCRIPTION_CHARS).collect();
+    let description: String = detail
+        .description
+        .chars()
+        .take(MAX_DESCRIPTION_CHARS)
+        .collect();
     let criteria: Vec<String> = detail
         .criteria
         .iter()
@@ -56,7 +60,10 @@ pub async fn score(settings: &Settings, profile: &str, job: &Job) -> Result<Scor
             { "role": "user", "content": user },
         ],
     });
-    let url = format!("{}/chat/completions", settings.llm_base_url.trim_end_matches('/'));
+    let url = format!(
+        "{}/chat/completions",
+        settings.llm_base_url.trim_end_matches('/')
+    );
     let mut req = client().post(url).json(&body);
     if let Some(key) = api_key(&settings.llm_key_env)? {
         req = req.bearer_auth(key);
@@ -65,7 +72,10 @@ pub async fn score(settings: &Settings, profile: &str, job: &Job) -> Result<Scor
     let status = resp.status();
     let v: Value = resp.json().await.map_err(|e| e.to_string())?;
     if !status.is_success() {
-        let msg = v["error"]["message"].as_str().map(str::to_string).unwrap_or_else(|| v.to_string());
+        let msg = v["error"]["message"]
+            .as_str()
+            .map(str::to_string)
+            .unwrap_or_else(|| v.to_string());
         return Err(format!("{status}: {msg}"));
     }
     let content = v["choices"][0]["message"]["content"]
@@ -120,7 +130,9 @@ fn api_key(var: &str) -> Result<Option<String>, String> {
         .trim()
         .to_string();
     if value.is_empty() {
-        return Err(format!("{var} is not set — export it in your shell profile, or change it in Settings"));
+        return Err(format!(
+            "{var} is not set — export it in your shell profile, or change it in Settings"
+        ));
     }
     std::env::set_var(var, &value);
     Ok(Some(value))
@@ -128,6 +140,9 @@ fn api_key(var: &str) -> Result<Option<String>, String> {
 
 fn strip_fences(s: &str) -> &str {
     let s = s.trim();
-    let s = s.strip_prefix("```json").or_else(|| s.strip_prefix("```")).unwrap_or(s);
+    let s = s
+        .strip_prefix("```json")
+        .or_else(|| s.strip_prefix("```"))
+        .unwrap_or(s);
     s.strip_suffix("```").unwrap_or(s).trim()
 }

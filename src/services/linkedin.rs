@@ -159,7 +159,10 @@ mod tests {
     #[test]
     fn id_from_view_url() {
         assert_eq!(
-            id_from_url("https://ch.linkedin.com/jobs/view/senior-rust-at-keyrock-4451499757?position=1").as_deref(),
+            id_from_url(
+                "https://ch.linkedin.com/jobs/view/senior-rust-at-keyrock-4451499757?position=1"
+            )
+            .as_deref(),
             Some("4451499757")
         );
         assert_eq!(id_from_url("https://example.com/jobs/").as_deref(), None);
@@ -202,7 +205,10 @@ mod tests {
             <span class="description__job-criteria-text">Mid-Senior</span></li>"#;
         let d = parse_detail(detail).unwrap();
         assert_eq!(d.description, "About us\n\n• Rust\n• Tokio");
-        assert_eq!(d.criteria, vec![("Seniority level".into(), "Mid-Senior".into())]);
+        assert_eq!(
+            d.criteria,
+            vec![("Seniority level".into(), "Mid-Senior".into())]
+        );
         assert!(parse_detail("<html>blocked</html>").is_none());
     }
 
@@ -212,13 +218,19 @@ mod tests {
         let search = include_str!("../../tests/fixtures/search.html");
         let jobs = parse_search(search, "rust developer · Switzerland");
         assert_eq!(jobs.len(), 10);
-        assert!(jobs.iter().all(|j| !j.id.is_empty() && !j.title.is_empty() && !j.company.is_empty()));
+        assert!(jobs
+            .iter()
+            .all(|j| !j.id.is_empty() && !j.title.is_empty() && !j.company.is_empty()));
         assert_eq!(jobs[0].id, "4451499757");
 
         let detail = parse_detail(include_str!("../../tests/fixtures/job.html")).unwrap();
         assert!(detail.description.len() > 200);
         assert_eq!(detail.criteria.len(), 3);
         assert!(detail.applicants.is_some());
-        eprintln!("{:#?}\n{}", jobs[0], &detail.description[..400.min(detail.description.len())]);
+        eprintln!(
+            "{:#?}\n{}",
+            jobs[0],
+            &detail.description[..400.min(detail.description.len())]
+        );
     }
 }

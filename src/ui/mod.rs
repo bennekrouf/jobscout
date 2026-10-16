@@ -36,6 +36,17 @@ pub fn App() -> Element {
     // Watches run on their own for as long as the app is open.
     use_future(move || scheduler(st));
 
+    // A newer release on mayorana.ch, offered in a banner. After the window
+    // is up, never in its way; DISABLE_UPDATE_CHECK turns it off.
+    let mut update = use_signal(|| Option::<crate::services::update_check::UpdateInfo>::None);
+    let mut update_dismissed = use_signal(|| false);
+    use_future(move || async move {
+        tokio::time::sleep(std::time::Duration::from_secs(3)).await;
+        if let Some(info) = crate::services::update_check::check().await {
+            update.set(Some(info));
+        }
+    });
+
     // Fetch descriptions queued while busy, as soon as nothing else runs.
     use_effect(move || {
         let idle = st.busy.read().is_none();
@@ -53,6 +64,33 @@ pub fn App() -> Element {
     rsx! {
         style { {CSS} }
         theme::ThemeToggle {}
+        if let (Some(info), false) = (update(), update_dismissed()) {
+            div { class: "update-banner", role: "status",
+                span { class: "update-text",
+                    "JobScout "
+                    strong { "{info.latest_version}" }
+                    " is available (you have {env!(\"CARGO_PKG_VERSION\")})."
+                }
+                {
+                    // A button, not a link: the URL must open in the browser,
+                    // never in the app's own webview.
+                    let url = info.release_url.clone();
+                    rsx! {
+                        button {
+                            class: "btn btn-primary btn-small",
+                            onclick: move |_| pro::open_url(&url),
+                            "Download"
+                        }
+                    }
+                }
+                button {
+                    class: "btn btn-ghost btn-small",
+                    title: "Hide until the next start",
+                    onclick: move |_| update_dismissed.set(true),
+                    "Not now"
+                }
+            }
+        }
         // Each column has a minimum, and the job pane gets what is left: on a
         // narrow window the list gives way before the job pane disappears.
         div {

@@ -62,7 +62,9 @@ fn migrate_in(root: &Path) {
     let search = ch.join("search.json");
     if !search.exists() {
         let old: Option<serde_json::Value> = load(&root.join("settings.json"));
-        if let Some(p) = old.and_then(|v| serde_json::from_value::<SearchParams>(v["search"].clone()).ok()) {
+        if let Some(p) =
+            old.and_then(|v| serde_json::from_value::<SearchParams>(v["search"].clone()).ok())
+        {
             save(&search, &p);
         }
     }
@@ -93,8 +95,8 @@ pub fn save_watches(country: Country, watches: &[Watch]) {
 }
 
 pub fn load_search(country: Country) -> SearchParams {
-    let mut p: SearchParams =
-        load(&country_dir(country).join("search.json")).unwrap_or_else(|| SearchParams::for_country(country));
+    let mut p: SearchParams = load(&country_dir(country).join("search.json"))
+        .unwrap_or_else(|| SearchParams::for_country(country));
     // A source the country does not have (or no longer has) is dropped.
     p.sources.retain(|s| country.sources().contains(s));
     p
@@ -119,8 +121,16 @@ pub fn to_csv(jobs: &[&Job]) -> String {
     }
     let mut out = String::from("score,status,source,title,company,location,posted,url,verdict\n");
     for j in jobs {
-        let score = j.score.as_ref().map(|s| s.score.to_string()).unwrap_or_default();
-        let verdict = j.score.as_ref().map(|s| s.verdict.as_str()).unwrap_or_default();
+        let score = j
+            .score
+            .as_ref()
+            .map(|s| s.score.to_string())
+            .unwrap_or_default();
+        let verdict = j
+            .score
+            .as_ref()
+            .map(|s| s.verdict.as_str())
+            .unwrap_or_default();
         let row = [
             score.as_str(),
             j.status.label(),
@@ -149,19 +159,29 @@ mod tests {
         std::fs::create_dir_all(&root).unwrap();
         std::fs::write(root.join("jobs.json"), "[]").unwrap();
         std::fs::write(root.join("profile.md"), "me").unwrap();
-        std::fs::write(root.join("settings.json"), r#"{"search":{"keywords":"rust","location":"Zug"}}"#).unwrap();
+        std::fs::write(
+            root.join("settings.json"),
+            r#"{"search":{"keywords":"rust","location":"Zug"}}"#,
+        )
+        .unwrap();
 
         migrate_in(&root);
         let ch = root.join("ch");
         assert!(!root.join("jobs.json").exists());
-        assert_eq!(std::fs::read_to_string(ch.join("profile.md")).unwrap(), "me");
+        assert_eq!(
+            std::fs::read_to_string(ch.join("profile.md")).unwrap(),
+            "me"
+        );
         let p: SearchParams = load(&ch.join("search.json")).unwrap();
         assert_eq!((p.keywords.as_str(), p.location.as_str()), ("rust", "Zug"));
 
         // A stray old file never replaces what is already in ch/.
         std::fs::write(root.join("profile.md"), "stale").unwrap();
         migrate_in(&root);
-        assert_eq!(std::fs::read_to_string(ch.join("profile.md")).unwrap(), "me");
+        assert_eq!(
+            std::fs::read_to_string(ch.join("profile.md")).unwrap(),
+            "me"
+        );
         let _ = std::fs::remove_dir_all(&root);
     }
 }

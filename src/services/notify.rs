@@ -110,7 +110,10 @@ pub fn matches_message(watch: &str, jobs: &[Job]) -> (String, String) {
             if many.len() > 3 {
                 lines.push(format!("+{} more", many.len() - 3));
             }
-            (format!("{} new matches for “{watch}”", many.len()), lines.join("\n"))
+            (
+                format!("{} new matches for “{watch}”", many.len()),
+                lines.join("\n"),
+            )
         }
     }
 }

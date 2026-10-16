@@ -125,7 +125,13 @@ impl AppState {
         self.detail_queue.set(vec![]);
         self.settings.write().country = to;
         store::save_settings(&self.settings.peek());
-        self.log(format!("{} {}: {} jobs, {} watches.", to.flag(), to.label(), self.jobs.peek().len(), self.watches.peek().len()));
+        self.log(format!(
+            "{} {}: {} jobs, {} watches.",
+            to.flag(),
+            to.label(),
+            self.jobs.peek().len(),
+            self.watches.peek().len()
+        ));
     }
 
     pub fn save_jobs(self) {
@@ -138,7 +144,11 @@ impl AppState {
 
     pub fn log(mut self, msg: impl AsRef<str>) {
         let mut log = self.log.write();
-        log.push(format!("{}  {}", Local::now().format("%H:%M:%S"), msg.as_ref()));
+        log.push(format!(
+            "{}  {}",
+            Local::now().format("%H:%M:%S"),
+            msg.as_ref()
+        ));
         let excess = log.len().saturating_sub(300);
         log.drain(..excess);
     }
@@ -167,7 +177,8 @@ impl AppState {
     /// the copy found later is dropped.
     fn merge(mut self, found: Vec<Job>) -> Vec<String> {
         let mut jobs = self.jobs.write();
-        let mut ids: std::collections::HashSet<String> = jobs.iter().map(|j| j.id.clone()).collect();
+        let mut ids: std::collections::HashSet<String> =
+            jobs.iter().map(|j| j.id.clone()).collect();
         let mut keys: std::collections::HashMap<String, Source> = jobs
             .iter()
             .map(|j| (sources::same_posting_key(j), j.source))
@@ -269,7 +280,11 @@ async fn search_source(
     query: &str,
 ) -> Vec<String> {
     let name = source.label();
-    let minutes = if use_cache { settings.search_cache_minutes } else { 0 };
+    let minutes = if use_cache {
+        settings.search_cache_minutes
+    } else {
+        0
+    };
     let ttl = std::time::Duration::from_secs(minutes * 60);
     let mut added = vec![];
     let mut seen = std::collections::HashSet::new();
@@ -295,7 +310,10 @@ async fn search_source(
                 let n = found.len();
                 let new = st.merge(sources::within_posted(source, found, p.posted));
                 let from = if cached { " (cached)" } else { "" };
-                st.log(format!("{name} page {page}{from}: {n} jobs, {} new.", new.len()));
+                st.log(format!(
+                    "{name} page {page}{from}: {n} jobs, {} new.",
+                    new.len()
+                ));
                 added.extend(new);
             }
             Err(FetchError::RateLimited(code)) => {
@@ -306,7 +324,9 @@ async fn search_source(
             }
             // Past the first page, LinkedIn answers the end of results with an error status.
             Err(FetchError::Status(code)) if page > 1 => {
-                st.log(format!("{name} page {page}: HTTP {code}, treated as the end of results."));
+                st.log(format!(
+                    "{name} page {page}: HTTP {code}, treated as the end of results."
+                ));
                 break;
             }
             Err(e) => {
@@ -441,7 +461,10 @@ async fn score_loop(st: AppState, ids: &[String]) {
             break;
         }
         st.set_busy(format!("Scoring {}/{total}", i + 1));
-        let title = st.job(id).map(|j| format!("{} @ {}", j.title, j.company)).unwrap_or_default();
+        let title = st
+            .job(id)
+            .map(|j| format!("{} @ {}", j.title, j.company))
+            .unwrap_or_default();
         match score_inner(st, id).await {
             Ok(n) => st.log(format!("{n:>3}  {title}")),
             Err(e) => {
@@ -490,7 +513,12 @@ pub async fn run_watch(st: AppState, watch_id: String) {
     }
 
     let result = if has_profile {
-        format!("{} new, {} at {}+", new_ids.len(), matches.len(), w.min_score)
+        format!(
+            "{} new, {} at {}+",
+            new_ids.len(),
+            matches.len(),
+            w.min_score
+        )
     } else {
         format!("{} new, not scored (no profile)", new_ids.len())
     };
@@ -512,7 +540,12 @@ pub async fn scheduler(st: AppState) {
             continue;
         }
         let now = Utc::now();
-        let due = st.watches.peek().iter().find(|w| w.is_due(now)).map(|w| w.id.clone());
+        let due = st
+            .watches
+            .peek()
+            .iter()
+            .find(|w| w.is_due(now))
+            .map(|w| w.id.clone());
         if let Some(id) = due {
             run_watch(st, id).await;
         }
@@ -569,13 +602,29 @@ mod tests {
         let s = Settings::default(); // 12 h TTL
         let now = Utc::now();
         assert_eq!(freshness(&job(None, None), &s, now), Freshness::Missing);
-        assert_eq!(freshness(&job(Some(Duration::hours(1)), None), &s, now), Freshness::Fresh);
-        assert_eq!(freshness(&job(Some(Duration::hours(13)), None), &s, now), Freshness::Stale);
-        assert_eq!(freshness(&job(None, Some(Duration::minutes(10))), &s, now), Freshness::Failed);
-        assert_eq!(freshness(&job(None, Some(Duration::hours(2))), &s, now), Freshness::Missing);
+        assert_eq!(
+            freshness(&job(Some(Duration::hours(1)), None), &s, now),
+            Freshness::Fresh
+        );
+        assert_eq!(
+            freshness(&job(Some(Duration::hours(13)), None), &s, now),
+            Freshness::Stale
+        );
+        assert_eq!(
+            freshness(&job(None, Some(Duration::minutes(10))), &s, now),
+            Freshness::Failed
+        );
+        assert_eq!(
+            freshness(&job(None, Some(Duration::hours(2))), &s, now),
+            Freshness::Missing
+        );
         // A description in hand wins over an older failure.
         assert_eq!(
-            freshness(&job(Some(Duration::hours(1)), Some(Duration::minutes(5))), &s, now),
+            freshness(
+                &job(Some(Duration::hours(1)), Some(Duration::minutes(5))),
+                &s,
+                now
+            ),
             Freshness::Fresh
         );
     }
