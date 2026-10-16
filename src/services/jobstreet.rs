@@ -62,7 +62,9 @@ fn daterange(posted: Posted) -> Option<&'static str> {
 
 pub fn parse_search(html: &str, query: &str) -> Vec<Job> {
     let now = Utc::now();
-    let Some(state) = redux_state(html) else { return vec![] };
+    let Some(state) = redux_state(html) else {
+        return vec![];
+    };
     state["results"]["results"]["jobs"]
         .as_array()
         .map(|jobs| jobs.iter().filter_map(|j| to_job(j, query, now)).collect())
@@ -86,7 +88,10 @@ pub fn parse_detail(html: &str) -> Option<JobDetail> {
         }
     };
     push("Work type", str_of(&job["workTypes"]["label"]));
-    push("Work arrangement", labels(&result["workArrangements"]["arrangements"]));
+    push(
+        "Work arrangement",
+        labels(&result["workArrangements"]["arrangements"]),
+    );
     push("Classification", labels(&job["classifications"]));
     push("Salary", str_of(&job["salary"]["label"]));
     push("Advertiser", str_of(&job["advertiser"]["name"]));
@@ -118,7 +123,11 @@ fn to_job(j: &Value, query: &str, now: DateTime<Utc>) -> Option<Job> {
         company: str_of(&j["companyName"])
             .or_else(|| str_of(&j["advertiser"]["description"]))
             .unwrap_or_default(),
-        location: if location.is_empty() { "Singapore".into() } else { location.join(", ") },
+        location: if location.is_empty() {
+            "Singapore".into()
+        } else {
+            location.join(", ")
+        },
         posted: str_of(&j["listingDate"]).map(|d| d.chars().take(10).collect()),
         salary: str_of(&j["salaryLabel"]),
         found_at: now,
@@ -136,7 +145,12 @@ fn to_job(j: &Value, query: &str, now: DateTime<Utc>) -> Option<Job> {
 fn redux_state(html: &str) -> Option<Value> {
     const MARK: &str = "window.SEEK_REDUX_DATA = ";
     let rest = &html[html.find(MARK)? + MARK.len()..];
-    let parse = |s: &str| serde_json::Deserializer::from_str(s).into_iter::<Value>().next()?.ok();
+    let parse = |s: &str| {
+        serde_json::Deserializer::from_str(s)
+            .into_iter::<Value>()
+            .next()?
+            .ok()
+    };
     parse(rest).or_else(|| {
         let end = rest.find(";\n").unwrap_or(rest.len());
         parse(&rest[..end].replace(":undefined", ":null"))
@@ -144,12 +158,19 @@ fn redux_state(html: &str) -> Option<Value> {
 }
 
 fn str_of(v: &Value) -> Option<String> {
-    v.as_str().map(str::trim).filter(|s| !s.is_empty()).map(str::to_string)
+    v.as_str()
+        .map(str::trim)
+        .filter(|s| !s.is_empty())
+        .map(str::to_string)
 }
 
 /// `[{"label": "On-site"}, {"label": "Hybrid"}]` → `On-site, Hybrid`.
 fn labels(list: &Value) -> Option<String> {
-    let labels: Vec<String> = list.as_array()?.iter().filter_map(|x| str_of(&x["label"])).collect();
+    let labels: Vec<String> = list
+        .as_array()?
+        .iter()
+        .filter_map(|x| str_of(&x["label"]))
+        .collect();
     (!labels.is_empty()).then(|| labels.join(", "))
 }
 
@@ -159,8 +180,15 @@ mod tests {
 
     #[test]
     fn keywords_come_first() {
-        let mut p = SearchParams { keywords: "rust dev".into(), location: "Singapore".into(), ..SearchParams::default() };
-        assert_eq!(search_url(&p, 1), "https://sg.jobstreet.com/jobs?keywords=rust+dev&daterange=7");
+        let mut p = SearchParams {
+            keywords: "rust dev".into(),
+            location: "Singapore".into(),
+            ..SearchParams::default()
+        };
+        assert_eq!(
+            search_url(&p, 1),
+            "https://sg.jobstreet.com/jobs?keywords=rust+dev&daterange=7"
+        );
         p.location = "Central Region".into();
         p.posted = Posted::Any;
         assert_eq!(
@@ -172,7 +200,10 @@ mod tests {
     /// Trimmed from real pages: the SEEK state with only what is read here.
     #[test]
     fn parses_saved_pages() {
-        let jobs = parse_search(include_str!("../../tests/fixtures/jobstreet_search.html"), "q");
+        let jobs = parse_search(
+            include_str!("../../tests/fixtures/jobstreet_search.html"),
+            "q",
+        );
         assert_eq!(jobs.len(), 10);
         let j = &jobs[0];
         assert_eq!(j.id, "95305071");
@@ -182,13 +213,21 @@ mod tests {
         assert_eq!(j.posted.as_deref(), Some("2026-10-16"));
         assert_eq!(j.salary.as_deref(), Some("$4,500 – $6,000 per month"));
         assert_eq!(j.url, "https://sg.jobstreet.com/job/95305071");
-        assert!(jobs.iter().all(|j| j.source == Source::JobStreet && !j.company.is_empty()));
+        assert!(jobs
+            .iter()
+            .all(|j| j.source == Source::JobStreet && !j.company.is_empty()));
 
         let d = parse_detail(include_str!("../../tests/fixtures/jobstreet_detail.html")).unwrap();
         assert!(d.description.contains("Responsibilities"));
-        assert!(d.criteria.contains(&("Work type".into(), "Full time".into())));
-        assert!(d.criteria.contains(&("Work arrangement".into(), "On-site".into())));
-        assert!(d.criteria.contains(&("Salary".into(), "Up to $6k + AWS + VB".into())));
+        assert!(d
+            .criteria
+            .contains(&("Work type".into(), "Full time".into())));
+        assert!(d
+            .criteria
+            .contains(&("Work arrangement".into(), "On-site".into())));
+        assert!(d
+            .criteria
+            .contains(&("Salary".into(), "Up to $6k + AWS + VB".into())));
         assert!(parse_detail("<html>Just a moment...</html>").is_none());
         assert!(parse_search("<html></html>", "q").is_empty());
     }
@@ -223,10 +262,19 @@ mod tests {
         let page1 = parse_search(&page(1).await.unwrap().0, "q");
         let page2 = parse_search(&page(2).await.unwrap().0, "q");
         assert!(page1.len() >= 20, "page 1: {}", page1.len());
-        assert!(page2.iter().any(|j| !page1.iter().any(|k| k.id == j.id)), "page 2 is new");
+        assert!(
+            page2.iter().any(|j| !page1.iter().any(|k| k.id == j.id)),
+            "page 2 is new"
+        );
         let far = parse_search(&page(999).await.unwrap().0, "q");
         assert!(far.is_empty(), "past the end: {}", far.len());
-        let d = parse_detail(&sources::fetch_detail(&page1[0], &settings).await.unwrap()).expect("detail parses");
-        eprintln!("{} — {} chars, {:?}", page1[0].title, d.description.len(), d.criteria);
+        let d = parse_detail(&sources::fetch_detail(&page1[0], &settings).await.unwrap())
+            .expect("detail parses");
+        eprintln!(
+            "{} — {} chars, {:?}",
+            page1[0].title,
+            d.description.len(),
+            d.criteria
+        );
     }
 }

@@ -44,7 +44,9 @@ pub fn JobList() -> Element {
         .collect();
     match *sort.read() {
         Sort::Found => {}
-        Sort::Score => visible.sort_by_key(|j| std::cmp::Reverse(j.score.as_ref().map(|s| s.score as i16).unwrap_or(-1))),
+        Sort::Score => visible.sort_by_key(|j| {
+            std::cmp::Reverse(j.score.as_ref().map(|s| s.score as i16).unwrap_or(-1))
+        }),
         Sort::Posted => visible.sort_by(|a, b| b.posted.cmp(&a.posted)),
     }
 

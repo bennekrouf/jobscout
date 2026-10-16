@@ -61,4 +61,3 @@ fn walk(el: ElementRef, out: &mut String) {
         out.push_str("\n\n");
     }
 }
-

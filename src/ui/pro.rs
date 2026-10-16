@@ -32,7 +32,8 @@ pub fn watch_count(st: AppState) -> usize {
         .sum()
 }
 
-fn open_url(url: &str) {
+/// Opens `url` in the default browser.
+pub fn open_url(url: &str) {
     use std::process::Command;
     let _ = if cfg!(target_os = "macos") {
         Command::new("open").arg(url).spawn()

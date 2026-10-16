@@ -34,7 +34,11 @@ pub fn ThemeToggle() -> Element {
         ));
     });
 
-    let label = if is_light() { "Switch to dark mode" } else { "Switch to light mode" };
+    let label = if is_light() {
+        "Switch to dark mode"
+    } else {
+        "Switch to light mode"
+    };
     rsx! {
         button {
             class: "btn-theme",

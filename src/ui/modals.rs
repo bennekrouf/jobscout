@@ -244,7 +244,11 @@ fn WatchRow(watch: Watch, busy: bool) -> Element {
     let mut filters: Vec<String> = p.sources.iter().map(|s| s.label().to_string()).collect();
     filters.push(p.posted.label().to_string());
     filters.push(format!("{} pages each", p.pages));
-    for (on, name) in [(p.onsite, "on-site"), (p.hybrid, "hybrid"), (p.remote, "remote")] {
+    for (on, name) in [
+        (p.onsite, "on-site"),
+        (p.hybrid, "hybrid"),
+        (p.remote, "remote"),
+    ] {
         if on {
             filters.push(name.into());
         }

@@ -64,7 +64,12 @@ pub async fn get_cached(
 /// every other request.
 pub async fn get_json(url: &str, settings: &Settings) -> Result<String, FetchError> {
     pace(settings.delay_ms).await;
-    send(client().get(url).header(reqwest::header::ACCEPT, "application/json")).await
+    send(
+        client()
+            .get(url)
+            .header(reqwest::header::ACCEPT, "application/json"),
+    )
+    .await
 }
 
 /// POSTs `body` as JSON; cached like `get_cached`, keyed by URL and body.
@@ -110,7 +115,11 @@ fn cache_store(url: &str, body: &str, ttl: Duration) {
     let mut cache = cache().lock().unwrap_or_else(|e| e.into_inner());
     cache.retain(|_, (at, _)| at.elapsed() < ttl);
     if cache.len() >= CACHE_MAX_ENTRIES {
-        if let Some(oldest) = cache.iter().min_by_key(|(_, (at, _))| *at).map(|(k, _)| k.clone()) {
+        if let Some(oldest) = cache
+            .iter()
+            .min_by_key(|(_, (at, _))| *at)
+            .map(|(k, _)| k.clone())
+        {
             cache.remove(&oldest);
         }
     }

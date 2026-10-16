@@ -20,7 +20,11 @@ pub fn JobDetailPane() -> Element {
     let fresh = freshness(&job, &st.settings.read(), chrono::Utc::now());
     let fetched = match (&job.detail, job.detail_failed_at) {
         (Some(d), _) => {
-            let stale = if fresh == Freshness::Stale { " · stale" } else { "" };
+            let stale = if fresh == Freshness::Stale {
+                " · stale"
+            } else {
+                ""
+            };
             format!("Fetched {}{stale}", age(d.fetched_at))
         }
         (None, Some(at)) => format!("Page failed {}", age(at)),

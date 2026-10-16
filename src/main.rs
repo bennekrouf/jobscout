@@ -24,5 +24,7 @@ fn main() {
                 .with_title(format!("JobScout {}", env!("CARGO_PKG_VERSION")))
                 .with_inner_size(LogicalSize::new(1360.0, 860.0)),
         );
-    dioxus::LaunchBuilder::desktop().with_cfg(cfg).launch(ui::App);
+    dioxus::LaunchBuilder::desktop()
+        .with_cfg(cfg)
+        .launch(ui::App);
 }

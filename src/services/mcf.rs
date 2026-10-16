@@ -20,7 +20,10 @@ pub const PAGE_SIZE: u32 = 20;
 
 /// `page` is 1-based, like the other sources.
 pub fn search_url(page: u32) -> String {
-    format!("{API}/search?limit={PAGE_SIZE}&page={}", page.saturating_sub(1))
+    format!(
+        "{API}/search?limit={PAGE_SIZE}&page={}",
+        page.saturating_sub(1)
+    )
 }
 
 pub fn search_body(p: &SearchParams) -> Value {
@@ -53,11 +56,16 @@ pub fn parse_detail(body: &str) -> Option<JobDetail> {
             criteria.push((name.to_string(), v));
         }
     };
-    push("Employment type", names(&v["employmentTypes"], "employmentType"));
+    push(
+        "Employment type",
+        names(&v["employmentTypes"], "employmentType"),
+    );
     push("Seniority", names(&v["positionLevels"], "position"));
     push(
         "Experience",
-        v["minimumYearsExperience"].as_u64().map(|n| format!("{n}+ years")),
+        v["minimumYearsExperience"]
+            .as_u64()
+            .map(|n| format!("{n}+ years")),
     );
     push("Category", names(&v["categories"], "category"));
     push("Salary", salary(&v["salary"]));
@@ -89,7 +97,8 @@ fn to_job(r: &Value, query: &str, now: DateTime<Utc>) -> Option<Job> {
         source: Source::Mcf,
         title: str_of(&r["title"])?,
         company,
-        location: names(&r["address"]["districts"], "location").unwrap_or_else(|| "Singapore".into()),
+        location: names(&r["address"]["districts"], "location")
+            .unwrap_or_else(|| "Singapore".into()),
         posted: str_of(&meta["newPostingDate"]).map(|d| d.chars().take(10).collect()),
         salary: salary(&r["salary"]),
         found_at: now,
@@ -103,12 +112,19 @@ fn to_job(r: &Value, query: &str, now: DateTime<Utc>) -> Option<Job> {
 }
 
 fn str_of(v: &Value) -> Option<String> {
-    v.as_str().map(str::trim).filter(|s| !s.is_empty()).map(str::to_string)
+    v.as_str()
+        .map(str::trim)
+        .filter(|s| !s.is_empty())
+        .map(str::to_string)
 }
 
 /// `[{"skill": "Rust"}, {"skill": "SQL"}]` → `Rust, SQL`.
 fn names(list: &Value, field: &str) -> Option<String> {
-    let names: Vec<String> = list.as_array()?.iter().filter_map(|x| str_of(&x[field])).collect();
+    let names: Vec<String> = list
+        .as_array()?
+        .iter()
+        .filter_map(|x| str_of(&x[field]))
+        .collect();
     (!names.is_empty()).then(|| names.join(", "))
 }
 
@@ -116,7 +132,11 @@ fn names(list: &Value, field: &str) -> Option<String> {
 fn salary(v: &Value) -> Option<String> {
     let k = |n: f64| {
         let k = n / 1000.0;
-        if k.fract() == 0.0 { format!("{k}k") } else { format!("{k:.1}k") }
+        if k.fract() == 0.0 {
+            format!("{k}k")
+        } else {
+            format!("{k:.1}k")
+        }
     };
     let range = match (v["minimum"].as_f64(), v["maximum"].as_f64()) {
         (Some(lo), Some(hi)) if lo > 0.0 && hi > lo => format!("{}–{}", k(lo), k(hi)),
@@ -138,9 +158,18 @@ mod tests {
 
     #[test]
     fn urls_are_zero_based_pages() {
-        assert_eq!(search_url(1), "https://api.mycareersfuture.gov.sg/v2/search?limit=20&page=0");
-        assert_eq!(search_url(3), "https://api.mycareersfuture.gov.sg/v2/search?limit=20&page=2");
-        let p = SearchParams { keywords: " rust ".into(), ..SearchParams::default() };
+        assert_eq!(
+            search_url(1),
+            "https://api.mycareersfuture.gov.sg/v2/search?limit=20&page=0"
+        );
+        assert_eq!(
+            search_url(3),
+            "https://api.mycareersfuture.gov.sg/v2/search?limit=20&page=2"
+        );
+        let p = SearchParams {
+            keywords: " rust ".into(),
+            ..SearchParams::default()
+        };
         assert_eq!(search_body(&p)["search"], "rust");
     }
 
@@ -157,13 +186,22 @@ mod tests {
         assert_eq!(j.posted.as_deref(), Some("2026-10-16"));
         assert_eq!(j.salary.as_deref(), Some("SGD 8k–9k / month"));
         assert!(j.url.starts_with("https://www.mycareersfuture.gov.sg/job/"));
-        assert!(jobs.iter().all(|j| j.source == Source::Mcf && !j.company.is_empty()));
+        assert!(jobs
+            .iter()
+            .all(|j| j.source == Source::Mcf && !j.company.is_empty()));
 
         let d = parse_detail(include_str!("../../tests/fixtures/mcf_detail.json")).unwrap();
         assert!(d.description.contains("About the Opportunity"));
-        assert!(d.criteria.contains(&("Salary".into(), "SGD 7.5k–10k / month".into())));
-        assert!(d.criteria.contains(&("Experience".into(), "3+ years".into())));
-        assert!(d.criteria.iter().any(|(k, v)| k == "Skills" && v.contains("Rust")));
+        assert!(d
+            .criteria
+            .contains(&("Salary".into(), "SGD 7.5k–10k / month".into())));
+        assert!(d
+            .criteria
+            .contains(&("Experience".into(), "3+ years".into())));
+        assert!(d
+            .criteria
+            .iter()
+            .any(|(k, v)| k == "Skills" && v.contains("Rust")));
         assert!(parse_detail("{}").is_none());
         assert!(parse_search("not json", "q").is_empty());
     }
@@ -173,15 +211,32 @@ mod tests {
     #[ignore]
     async fn live_mcf_search_and_detail() {
         use crate::services::fetch;
-        let settings = crate::model::Settings { delay_ms: 1000, ..Default::default() };
-        let p = SearchParams { keywords: "software engineer".into(), ..SearchParams::default() };
+        let settings = crate::model::Settings {
+            delay_ms: 1000,
+            ..Default::default()
+        };
+        let p = SearchParams {
+            keywords: "software engineer".into(),
+            ..SearchParams::default()
+        };
         let ttl = std::time::Duration::ZERO;
-        let (b1, _) = fetch::post_json_cached(&search_url(1), &search_body(&p), ttl, &settings).await.unwrap();
-        let (b2, _) = fetch::post_json_cached(&search_url(2), &search_body(&p), ttl, &settings).await.unwrap();
+        let (b1, _) = fetch::post_json_cached(&search_url(1), &search_body(&p), ttl, &settings)
+            .await
+            .unwrap();
+        let (b2, _) = fetch::post_json_cached(&search_url(2), &search_body(&p), ttl, &settings)
+            .await
+            .unwrap();
         let (page1, page2) = (parse_search(&b1, "q"), parse_search(&b2, "q"));
         assert_eq!(page1.len(), 20);
-        assert!(page2.iter().all(|j| !page1.iter().any(|k| k.id == j.id)), "page 2 is new");
-        let d = parse_detail(&fetch::get_json(&detail_url(&page1[0].id), &settings).await.unwrap());
+        assert!(
+            page2.iter().all(|j| !page1.iter().any(|k| k.id == j.id)),
+            "page 2 is new"
+        );
+        let d = parse_detail(
+            &fetch::get_json(&detail_url(&page1[0].id), &settings)
+                .await
+                .unwrap(),
+        );
         assert!(d.is_some_and(|d| !d.description.is_empty()));
     }
 }

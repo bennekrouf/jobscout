@@ -32,12 +32,15 @@ pub async fn fetch_search(
     settings: &Settings,
 ) -> Result<(String, bool), FetchError> {
     match source {
-        Source::LinkedIn => fetch::get_cached(&linkedin::search_url(p, offset), ttl, settings).await,
+        Source::LinkedIn => {
+            fetch::get_cached(&linkedin::search_url(p, offset), ttl, settings).await
+        }
         Source::JobsCh | Source::Jobup => {
             fetch::get_cached(&jobcloud::search_url(source, p, page), ttl, settings).await
         }
         Source::Mcf => {
-            fetch::post_json_cached(&mcf::search_url(page), &mcf::search_body(p), ttl, settings).await
+            fetch::post_json_cached(&mcf::search_url(page), &mcf::search_body(p), ttl, settings)
+                .await
         }
         Source::JobStreet => {
             fetch::get_cached(&jobstreet::search_url(p, page), ttl, &in_browser(settings)).await
@@ -78,7 +81,9 @@ pub fn within_posted(source: Source, jobs: Vec<Job>, posted: Posted) -> Vec<Job>
     let Some(days) = posted.days().filter(|_| source != Source::LinkedIn) else {
         return jobs;
     };
-    let oldest = (Utc::now() - chrono::Duration::days(days)).format("%Y-%m-%d").to_string();
+    let oldest = (Utc::now() - chrono::Duration::days(days))
+        .format("%Y-%m-%d")
+        .to_string();
     jobs.into_iter()
         .filter(|j| j.posted.as_deref().is_none_or(|d| d >= oldest.as_str()))
         .collect()

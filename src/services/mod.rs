@@ -10,4 +10,5 @@ pub mod notify;
 pub mod sources;
 pub mod store;
 pub mod text;
+pub mod update_check;
 pub mod webkit;

@@ -50,7 +50,12 @@ pub fn parse_search(source: Source, html: &str, query: &str) -> Vec<Job> {
     json_ld(html)
         .iter()
         .filter(|v| is_type(v, "ItemList"))
-        .flat_map(|list| list["itemListElement"].as_array().cloned().unwrap_or_default())
+        .flat_map(|list| {
+            list["itemListElement"]
+                .as_array()
+                .cloned()
+                .unwrap_or_default()
+        })
         .filter_map(|el| {
             let item = &el["item"];
             is_type(item, "JobPosting").then(|| to_job(source, item, query, now))?
@@ -61,7 +66,9 @@ pub fn parse_search(source: Source, html: &str, query: &str) -> Vec<Job> {
 /// The full posting; `None` when the page has no `JobPosting` with a
 /// description — a removed posting lands on a search page instead.
 pub fn parse_detail(html: &str) -> Option<JobDetail> {
-    let posting = json_ld(html).into_iter().find(|v| is_type(v, "JobPosting"))?;
+    let posting = json_ld(html)
+        .into_iter()
+        .find(|v| is_type(v, "JobPosting"))?;
     let description = markup_to_text(posting["description"].as_str()?);
     if description.is_empty() {
         return None;
@@ -128,7 +135,10 @@ fn is_type(v: &Value, t: &str) -> bool {
 }
 
 fn str_of(v: &Value) -> Option<String> {
-    v.as_str().map(str::trim).filter(|s| !s.is_empty()).map(str::to_string)
+    v.as_str()
+        .map(str::trim)
+        .filter(|s| !s.is_empty())
+        .map(str::to_string)
 }
 
 /// `jobLocation` is one place or a list of them.
@@ -159,7 +169,9 @@ fn salary(v: &Value) -> Option<String> {
         _ => return None,
     };
     let currency = str_of(&v["currency"]).unwrap_or_default();
-    let unit = str_of(&value["unitText"]).map(|u| format!(" / {}", u.to_lowercase())).unwrap_or_default();
+    let unit = str_of(&value["unitText"])
+        .map(|u| format!(" / {}", u.to_lowercase()))
+        .unwrap_or_default();
     Some(format!("{currency} {range}{unit}").trim().to_string())
 }
 
@@ -176,8 +188,14 @@ mod tests {
 
     #[test]
     fn country_is_not_a_location() {
-        let mut p = SearchParams { keywords: "rust".into(), ..SearchParams::default() };
-        assert_eq!(search_url(Source::JobsCh, &p, 1), "https://www.jobs.ch/en/vacancies/?term=rust");
+        let mut p = SearchParams {
+            keywords: "rust".into(),
+            ..SearchParams::default()
+        };
+        assert_eq!(
+            search_url(Source::JobsCh, &p, 1),
+            "https://www.jobs.ch/en/vacancies/?term=rust"
+        );
         p.location = "Zürich".into();
         p.posted = Posted::Any;
         assert_eq!(
@@ -189,24 +207,40 @@ mod tests {
     /// JSON-LD saved from real jobs.ch and jobup.ch pages.
     #[test]
     fn parses_saved_pages() {
-        let jobs = parse_search(Source::JobsCh, include_str!("../../tests/fixtures/jobsch_search.html"), "q");
+        let jobs = parse_search(
+            Source::JobsCh,
+            include_str!("../../tests/fixtures/jobsch_search.html"),
+            "q",
+        );
         assert_eq!(jobs.len(), 20);
         let j = &jobs[0];
         assert_eq!(j.id, "a20d74c5-df85-4b13-9300-158fe2f456a0");
         assert_eq!(j.company, "VZ VermögensZentrum");
         assert_eq!(j.location, "Zürich");
         assert_eq!(j.posted.as_deref(), Some("2026-10-02"));
-        assert!(j.url.starts_with("https://www.jobs.ch/en/vacancies/detail/"));
+        assert!(j
+            .url
+            .starts_with("https://www.jobs.ch/en/vacancies/detail/"));
 
-        let jobup = parse_search(Source::Jobup, include_str!("../../tests/fixtures/jobup_search.html"), "q");
+        let jobup = parse_search(
+            Source::Jobup,
+            include_str!("../../tests/fixtures/jobup_search.html"),
+            "q",
+        );
         assert_eq!(jobup.len(), 20);
-        assert!(jobup.iter().all(|j| j.source == Source::Jobup && !j.title.is_empty()));
+        assert!(jobup
+            .iter()
+            .all(|j| j.source == Source::Jobup && !j.title.is_empty()));
 
         let d = parse_detail(include_str!("../../tests/fixtures/jobsch_detail.html")).unwrap();
         assert!(d.description.contains("What you bring"));
         assert!(d.description.contains("• Master's degree"));
-        assert!(d.criteria.contains(&("Salary".into(), "CHF 77k–117k / year".into())));
-        assert!(d.criteria.contains(&("Employment type".into(), "Permanent position".into())));
+        assert!(d
+            .criteria
+            .contains(&("Salary".into(), "CHF 77k–117k / year".into())));
+        assert!(d
+            .criteria
+            .contains(&("Employment type".into(), "Permanent position".into())));
         assert!(parse_detail("<html><body>Search results</body></html>").is_none());
     }
 
@@ -215,9 +249,15 @@ mod tests {
     #[tokio::test]
     #[ignore]
     async fn live_search_paging_and_detail() {
-        let settings = crate::model::Settings { delay_ms: 1000, ..Default::default() };
+        let settings = crate::model::Settings {
+            delay_ms: 1000,
+            ..Default::default()
+        };
         for source in [Source::JobsCh, Source::Jobup] {
-            let p = SearchParams { keywords: "software engineer".into(), ..SearchParams::default() };
+            let p = SearchParams {
+                keywords: "software engineer".into(),
+                ..SearchParams::default()
+            };
             let get = |url: String| {
                 let settings = settings.clone();
                 async move { crate::services::fetch::get(&url, &settings).await.unwrap() }
@@ -225,11 +265,24 @@ mod tests {
             let page1 = parse_search(source, &get(search_url(source, &p, 1)).await, "q");
             let page2 = parse_search(source, &get(search_url(source, &p, 2)).await, "q");
             assert!(page1.len() >= 10, "{source:?} page 1: {}", page1.len());
-            assert!(page2.iter().any(|j| !page1.iter().any(|k| k.id == j.id)), "{source:?} page 2 is new");
+            assert!(
+                page2.iter().any(|j| !page1.iter().any(|k| k.id == j.id)),
+                "{source:?} page 2 is new"
+            );
             let far = parse_search(source, &get(search_url(source, &p, 400)).await, "q");
-            eprintln!("{source:?}: page1 {} page2 {} page400 {}", page1.len(), page2.len(), far.len());
+            eprintln!(
+                "{source:?}: page1 {} page2 {} page400 {}",
+                page1.len(),
+                page2.len(),
+                far.len()
+            );
             let d = parse_detail(&get(page1[0].url.clone()).await).expect("detail parses");
-            eprintln!("  {} — {} chars, {:?}", page1[0].title, d.description.len(), d.criteria);
+            eprintln!(
+                "  {} — {} chars, {:?}",
+                page1[0].title,
+                d.description.len(),
+                d.criteria
+            );
         }
     }
 }
