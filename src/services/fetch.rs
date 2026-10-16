@@ -1,4 +1,4 @@
-//! One way in to LinkedIn for every request, so pacing is global: a search and
+//! One way out for every request, to any source, so pacing is global: a search and
 //! a description fetch started at the same time still go out one gap apart.
 
 use std::collections::HashMap;
@@ -25,7 +25,7 @@ pub enum FetchError {
 impl std::fmt::Display for FetchError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            FetchError::RateLimited(c) => write!(f, "rate-limited by LinkedIn (HTTP {c})"),
+            FetchError::RateLimited(c) => write!(f, "rate-limited (HTTP {c})"),
             FetchError::Status(c) => write!(f, "HTTP {c}"),
             FetchError::Network(e) => write!(f, "network error: {e}"),
             FetchError::Browser(e) => write!(f, "Camoufox: {e}"),
@@ -56,6 +56,35 @@ pub async fn get_cached(
     let body = get(url, settings).await?;
     cache_store(url, &body, ttl);
     Ok((body, false))
+}
+
+/// A JSON API, over plain HTTP whatever the backend: an API answer is not a
+/// page a browser needs to render, and Camoufox only loads URLs. Paced like
+/// every other request.
+pub async fn get_json(url: &str, settings: &Settings) -> Result<String, FetchError> {
+    pace(settings.delay_ms).await;
+    send(client().get(url).header(reqwest::header::ACCEPT, "application/json")).await
+}
+
+/// POSTs `body` as JSON; cached like `get_cached`, keyed by URL and body.
+pub async fn post_json_cached(
+    url: &str,
+    body: &serde_json::Value,
+    ttl: Duration,
+    settings: &Settings,
+) -> Result<(String, bool), FetchError> {
+    let key = format!("POST {url} {body}");
+    if let Some(cached) = cache_lookup(&key, ttl) {
+        return Ok((cached, true));
+    }
+    pace(settings.delay_ms).await;
+    let req = client()
+        .post(url)
+        .header(reqwest::header::ACCEPT, "application/json")
+        .json(body);
+    let resp = send(req).await?;
+    cache_store(&key, &resp, ttl);
+    Ok((resp, false))
 }
 
 const CACHE_MAX_ENTRIES: usize = 200;
@@ -96,8 +125,11 @@ pub fn classify(status: u16, body: String) -> Result<String, FetchError> {
 }
 
 async fn http_get(url: &str) -> Result<String, FetchError> {
-    let resp = client()
-        .get(url)
+    send(client().get(url)).await
+}
+
+async fn send(req: reqwest::RequestBuilder) -> Result<String, FetchError> {
+    let resp = req
         .send()
         .await
         .map_err(|e| FetchError::Network(e.to_string()))?;

@@ -1,21 +1,25 @@
 use dioxus::prelude::*;
 
-use crate::model::{Posted, Source, Watch, EXPERIENCE};
+use crate::model::{Country, Posted, Source, Watch, EXPERIENCE};
 use crate::services::store;
 use crate::state::{run_search, AppState, Modal};
 
+/// Keyed by country in `ui::App`: switching country mounts a fresh form,
+/// started from that country's last search.
 #[component]
 pub fn SearchPanel() -> Element {
     let mut st = use_context::<AppState>();
-    let mut p = use_signal(|| st.settings.peek().search.clone());
+    let mut pro = use_context::<super::pro::Pro>();
+    let country = *st.country.read();
+    let mut p = use_signal(|| st.search.peek().clone());
     let busy = st.busy.read().is_some();
     let profile_len = st.profile.read().trim().chars().count();
     let n_watches = st.watches.read().len();
 
     let mut submit = move || {
         let params = p.read().clone();
-        st.settings.write().search = params.clone();
-        store::save_settings(&st.settings.read());
+        st.search.set(params.clone());
+        store::save_search(country, &params);
         spawn(run_search(st, params));
     };
 
@@ -26,6 +30,21 @@ pub fn SearchPanel() -> Element {
             div { class: "brand",
                 span { class: "brand-mark", "◎" }
                 span { "JobScout" }
+            }
+
+            div { class: "countries",
+                for c in Country::ALL {
+                    button {
+                        key: "{c.code()}",
+                        class: if c == country { "country on" } else { "country" },
+                        r#type: "button",
+                        disabled: busy && c != country,
+                        title: if busy && c != country { "Wait for the current task to finish, or stop it".to_string() } else { format!("Load the {} context", c.label()) },
+                        onclick: move |_| st.switch_country(c),
+                        span { class: "flag", "{c.flag()}" }
+                        span { "{c.label()}" }
+                    }
+                }
             }
 
             form {
@@ -43,7 +62,7 @@ pub fn SearchPanel() -> Element {
                 label { class: "field-label", "Location" }
                 input {
                     class: "input",
-                    placeholder: "Switzerland, Zurich, Remote…",
+                    placeholder: country.location_hint(),
                     value: "{current.location}",
                     oninput: move |e| p.write().location = e.value(),
                 }
@@ -64,7 +83,7 @@ pub fn SearchPanel() -> Element {
 
                 label { class: "field-label", "Sources" }
                 div { class: "checks",
-                    for source in Source::ALL {
+                    for &source in country.sources() {
                         Check {
                             key: "{source.label()}",
                             label: source.label(),
@@ -74,10 +93,16 @@ pub fn SearchPanel() -> Element {
                                 w.sources.retain(|s| *s != source);
                                 if v {
                                     w.sources.push(source);
-                                    w.sources.sort_by_key(|s| Source::ALL.iter().position(|x| x == s));
+                                    w.sources.sort_by_key(|s| country.sources().iter().position(|x| x == s));
                                 }
                             },
                         }
+                    }
+                }
+
+                if current.sources.contains(&Source::JobStreet) {
+                    p { class: "muted small",
+                        "JobStreet is read through Camoufox, whatever the backend: set a Python with camoufox installed in Settings."
                     }
                 }
 
@@ -130,9 +155,15 @@ pub fn SearchPanel() -> Element {
                     disabled: current.keywords.trim().is_empty(),
                     title: "Run this search on a schedule and notify about high scores",
                     onclick: move |_| {
+                        // Without Pro, a second watch asks for Pro first.
+                        let status = pro.status.read().clone();
+                        if !crate::services::licence::may_add_watch(&status, super::pro::watch_count(st)) {
+                            pro.open.set(true);
+                            return;
+                        }
                         let w = Watch::new(p.read().clone());
                         st.watches.write().push(w);
-                        store::save_watches(&st.watches.read());
+                        st.save_watches();
                         st.modal.set(Modal::Watches);
                     },
                     "Watch this search…"
@@ -150,6 +181,7 @@ pub fn SearchPanel() -> Element {
                     onclick: move |_| st.modal.set(Modal::Watches),
                     if n_watches == 0 { "Watches" } else { "Watches ({n_watches})" }
                 }
+                super::pro::ProButton {}
                 button {
                     class: "btn btn-wide btn-ghost",
                     onclick: move |_| st.modal.set(Modal::Settings),

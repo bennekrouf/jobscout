@@ -17,6 +17,8 @@
     --src-jobsch: #d9534f;
     --src-jobup: #e08a2a;
     --src-linkedin: #4f8fd6;
+    --src-mcf: #b07fe0;
+    --src-jobstreet: #3fb98a;
     color-scheme: dark;
     --mono: 'SF Mono', 'Menlo', 'Monaco', 'Cascadia Code', 'Consolas', monospace;
     --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -39,6 +41,8 @@ body.light {
     --src-jobsch: #b8322d;
     --src-jobup: #a65a0a;
     --src-linkedin: #2a64a8;
+    --src-mcf: #7a45b0;
+    --src-jobstreet: #1d7f57;
     color-scheme: light;
 }
 
@@ -147,6 +151,25 @@ body {
 }
 .brand { display: flex; align-items: center; gap: 8px; font: 600 15px var(--mono); margin-bottom: 6px; }
 .brand-mark { color: var(--accent); font-size: 18px; }
+
+/* One country's context at a time: the flags switch it. */
+.countries { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin: 4px 0 10px; }
+.country {
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+    padding: 7px 6px;
+    font: 12px var(--sans);
+    color: var(--text2);
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    cursor: pointer;
+    min-width: 0;
+}
+.country span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.country:hover:not(:disabled) { color: var(--text1); border-color: var(--text3); }
+.country.on { color: var(--text1); border-color: var(--accent); background: var(--bg3); }
+.country:disabled { opacity: 0.45; cursor: not-allowed; }
+.country .flag { font-size: 16px; line-height: 1; }
 .search-form .btn-primary { margin-top: 18px; }
 .sidebar-foot { margin-top: auto; padding-top: 16px; display: flex; flex-direction: column; gap: 8px; }
 
@@ -206,6 +229,8 @@ body {
 .src-jobsch { color: var(--src-jobsch); }
 .src-jobup { color: var(--src-jobup); }
 .src-linkedin { color: var(--src-linkedin); }
+.src-mcf { color: var(--src-mcf); }
+.src-jobstreet { color: var(--src-jobstreet); }
 .pill { padding: 1px 7px; border-radius: 10px; font-size: 10px; border: 1px solid currentColor; }
 .pill-saved { color: var(--accent); }
 .pill-applied { color: var(--good); }
@@ -353,3 +378,12 @@ body {
     fill: none; stroke: currentColor; stroke-width: 1.75;
     stroke-linecap: round; stroke-linejoin: round;
 }
+
+/* ── JobScout Pro ─────────────────────────────────────────────── */
+.pro-btn { border-color: var(--accent); color: var(--accent); background: transparent; }
+.pro-btn.active { font-weight: 600; letter-spacing: .04em; }
+.pro-btn.renew { border-color: var(--mid); color: var(--mid); }
+.pro-buy { align-self: flex-start; margin: 12px 0 8px; }
+.pro-ok { color: var(--good); }
+.pro-error { color: var(--bad); }
+.licence-key { width: 100%; margin: 6px 0; padding: 8px; border-radius: 7px; resize: vertical; background: var(--bg0); color: var(--text1); border: 1px solid var(--border); font: 12px var(--mono); }

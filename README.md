@@ -1,10 +1,11 @@
 # JobScout
 
-A desktop app (Rust + Dioxus) that collects job posts from LinkedIn, jobs.ch
-and jobup.ch and ranks them against your profile.
+A desktop app (Rust + Dioxus) that collects job posts and ranks them against
+your profile, for one country at a time: Switzerland (LinkedIn, jobs.ch,
+jobup.ch) or Singapore (LinkedIn, MyCareersFuture, JobStreet).
 
 - **Search** LinkedIn's public guest endpoints. No login is used, so no account is at risk. You can filter by keywords, location, date posted, workplace type and experience level, and choose how many pages to fetch.
-- **Keep** every job found in `~/Library/Application Support/JobScout/jobs.json`, deduplicated by job id. Each job has a status (New / Saved / Applied / Hidden).
+- **Keep** every job found in `~/Library/Application Support/JobScout/<country>/jobs.json`, deduplicated by job id. Each job has a status (New / Saved / Applied / Hidden).
 - **Read** the full description and criteria inside the app. A job's description is fetched when you first open it.
 - **Score** jobs against your profile with any OpenAI-compatible model (DeepSeek by default, or a local ollama). Each score comes with a one-line verdict, strengths and gaps.
 - **Export** the visible list to CSV.
@@ -19,20 +20,36 @@ cargo test           # parsers, including real saved LinkedIn pages
 For scoring, export the key named in Settings (default `DEEPSEEK_API_KEY`).
 The key is read from the environment and never written to disk.
 
+## Countries
+
+The flags at the top of the sidebar pick the country. Each country is its own
+context, kept in its own folder of the data directory (`ch/`, `sg/`): jobs,
+watches, profile and last search. Switching unloads one and loads the other,
+so nothing found in Switzerland shows up in Singapore, or the other way
+round. Settings (model, backend, pacing) are shared. Switching is disabled
+while a search, scoring run or watch is running. Only the loaded country's
+watches run.
+
+Data from before countries existed was all Swiss. On first start it moves
+into `ch/`, and a file already in `ch/` is never overwritten.
+
 ## Sources
 
-| Source | Read from | Search filters |
-|---|---|---|
-| LinkedIn | Public guest endpoints (`/jobs-guest/...`), no login | All filters |
-| jobs.ch, jobup.ch | Public search and job pages, via their schema.org `JobPosting` JSON-LD. Not `/api/`, which their robots.txt disallows | Keywords, location, date posted (filtered in the app). Workplace and experience don't apply |
+| Country | Source | Read from | Search filters |
+|---|---|---|---|
+| Both | LinkedIn | Public guest endpoints (`/jobs-guest/...`), no login | All filters |
+| 🇨🇭 | jobs.ch, jobup.ch | Public search and job pages, via their schema.org `JobPosting` JSON-LD. Not `/api/`, which their robots.txt disallows | Keywords, location, date posted (filtered in the app). Workplace and experience don't apply |
+| 🇸🇬 | MyCareersFuture | The public JSON API its site uses (`api.mycareersfuture.gov.sg/v2`), always over plain HTTP | Keywords, date posted (filtered in the app). All of Singapore. Workplace and experience don't apply |
+| 🇸🇬 | JobStreet | Public search (`/jobs?keywords=…`, the only query strings its robots.txt allows) and job pages, via the `SEEK_REDUX_DATA` state they embed. Always through Camoufox: the site sits behind a Cloudflare challenge that plain HTTP never passes | Keywords, location (a region; "Singapore" means all), date posted. Workplace and experience don't apply |
 
 Both JobCloud sites (jobs.ch and jobup.ch) share posting ids, so a job listed on
 both appears once. Across LinkedIn and JobCloud, a job with the same title and
 company is listed once: the copy found first is kept. A location of
 "Switzerland" (or empty) means the whole country on jobs.ch and jobup.ch.
 
-`cargo test live_ -- --ignored` runs the JobCloud parser against the live
-sites, to catch markup changes the saved fixtures can't.
+`cargo test live_ -- --ignored` runs the parsers against the live sites, to
+catch changes the saved fixtures can't. The JobStreet one needs Camoufox:
+`CAMOUFOX_PYTHON=/path/to/python cargo test live_jobstreet -- --ignored`.
 
 The **Copy** button in a job's pane puts the posting on the clipboard as plain
 text: title, company, location, link, criteria and description. Text in the
@@ -43,10 +60,12 @@ pane can also be selected and copied with Cmd+C.
 | Backend | How | When |
 |---|---|---|
 | Direct HTTP (default) | `reqwest` against `/jobs-guest/jobs/api/...` | Normal use |
-| Camoufox | `helper/camoufox_fetch.py`, a long-lived Camoufox browser spoken to over JSON lines | If plain HTTP starts getting blocked |
+| Camoufox | `helper/camoufox_fetch.py`, a long-lived Camoufox browser spoken to over JSON lines | If plain HTTP starts getting blocked. JobStreet always uses it |
 
 Camoufox setup: `pip install -U camoufox && python -m camoufox fetch`. Then
-pick the backend in Settings and point it at that Python. The helper's stderr
+pick the backend in Settings and point it at that Python. When a page comes
+back as a Cloudflare challenge ("Just a moment…"), the helper waits up to 30 s
+for the browser to get through. If it never does, the page counts as HTTP 403. The helper's stderr
 goes to `camoufox.log` in the data directory.
 
 All requests share one pacer (2.5 s by default, plus jitter). A 429 or 999

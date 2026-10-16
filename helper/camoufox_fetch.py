@@ -11,6 +11,41 @@ Setup: pip install -U camoufox && python -m camoufox fetch
 
 import json
 import sys
+import time
+
+# Cloudflare's interstitial ("Just a moment...") runs a script in the page
+# and then reloads it with the real content. A browser gets through by
+# waiting; returning straight away would hand back the interstitial.
+CHALLENGE_TITLES = ("just a moment", "un instant", "einen moment")
+CHALLENGE_WAIT_S = 30
+
+
+def is_challenge(page):
+    # An empty or unreadable title is a page mid-reload, not one through.
+    try:
+        title = page.title().strip().lower()
+        return not title or title.startswith(CHALLENGE_TITLES) or "_cf_chl_opt" in page.content()
+    except Exception:
+        return True
+
+
+def load(page, url):
+    resp = page.goto(url, wait_until="domcontentloaded", timeout=45000)
+    status = resp.status if resp else 0
+    if not is_challenge(page):
+        return status
+    deadline = time.monotonic() + CHALLENGE_WAIT_S
+    while time.monotonic() < deadline:
+        page.wait_for_timeout(1000)
+        if not is_challenge(page):
+            try:
+                page.wait_for_load_state("domcontentloaded", timeout=15000)
+            except Exception:
+                pass
+            if not is_challenge(page):  # still through once it has settled
+                return 200
+    # Never got through: report the block, never the interstitial as a page.
+    return status if status >= 400 else 403
 
 
 def reply(obj):
@@ -36,8 +71,8 @@ def main():
                     continue
                 try:
                     url = json.loads(line)["url"]
-                    resp = page.goto(url, wait_until="domcontentloaded", timeout=45000)
-                    reply({"status": resp.status if resp else 0, "html": page.content()})
+                    status = load(page, url)
+                    reply({"status": status, "html": page.content()})
                 except Exception as e:  # one bad page must not end the session
                     reply({"error": str(e)})
     except Exception as e:

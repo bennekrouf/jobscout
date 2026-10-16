@@ -34,6 +34,56 @@ impl Status {
     }
 }
 
+/// The market being searched. Each country is its own context: its own
+/// sources, jobs, watches, profile and last search, kept in its own folder
+/// (see `services::store`). Nothing found in one shows up in the other.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub enum Country {
+    #[default]
+    Switzerland,
+    Singapore,
+}
+
+impl Country {
+    pub const ALL: [Country; 2] = [Country::Switzerland, Country::Singapore];
+
+    /// Folder name under the data directory.
+    pub fn code(self) -> &'static str {
+        match self {
+            Country::Switzerland => "ch",
+            Country::Singapore => "sg",
+        }
+    }
+
+    pub fn label(self) -> &'static str {
+        match self {
+            Country::Switzerland => "Switzerland",
+            Country::Singapore => "Singapore",
+        }
+    }
+
+    pub fn flag(self) -> &'static str {
+        match self {
+            Country::Switzerland => "🇨🇭",
+            Country::Singapore => "🇸🇬",
+        }
+    }
+
+    pub fn sources(self) -> &'static [Source] {
+        match self {
+            Country::Switzerland => &[Source::LinkedIn, Source::JobsCh, Source::Jobup],
+            Country::Singapore => &[Source::LinkedIn, Source::Mcf, Source::JobStreet],
+        }
+    }
+
+    pub fn location_hint(self) -> &'static str {
+        match self {
+            Country::Switzerland => "Switzerland, Zurich, Remote…",
+            Country::Singapore => "Singapore",
+        }
+    }
+}
+
 /// Where a job was found.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum Source {
@@ -43,16 +93,22 @@ pub enum Source {
     JobsCh,
     /// jobup.ch: same JobCloud platform as jobs.ch, French-speaking first.
     Jobup,
+    /// MyCareersFuture, Singapore's government job board. Employers who
+    /// sponsor an Employment Pass generally advertise here first.
+    Mcf,
+    /// JobStreet (SEEK), the largest commercial board in Singapore. Behind
+    /// Cloudflare: always read through the Camoufox browser.
+    JobStreet,
 }
 
 impl Source {
-    pub const ALL: [Source; 3] = [Source::LinkedIn, Source::JobsCh, Source::Jobup];
-
     pub fn label(self) -> &'static str {
         match self {
             Source::LinkedIn => "LinkedIn",
             Source::JobsCh => "jobs.ch",
             Source::Jobup => "jobup.ch",
+            Source::Mcf => "MyCareersFuture",
+            Source::JobStreet => "JobStreet",
         }
     }
 
@@ -61,6 +117,8 @@ impl Source {
             Source::LinkedIn => "src-linkedin",
             Source::JobsCh => "src-jobsch",
             Source::Jobup => "src-jobup",
+            Source::Mcf => "src-mcf",
+            Source::JobStreet => "src-jobstreet",
         }
     }
 }
@@ -216,23 +274,30 @@ pub struct SearchParams {
     pub remote: bool,
     pub hybrid: bool,
     pub experience: Vec<u8>,
-    /// Pages per source: 10 jobs a page on LinkedIn, about 20 on jobs.ch/jobup.ch.
+    /// Pages per source: 10 jobs a page on LinkedIn, about 20 elsewhere.
     pub pages: u32,
     pub sources: Vec<Source>,
 }
 
 impl Default for SearchParams {
     fn default() -> Self {
+        Self::for_country(Country::default())
+    }
+}
+
+impl SearchParams {
+    /// A first search in `country`: the whole country, on all its sources.
+    pub fn for_country(country: Country) -> Self {
         Self {
             keywords: String::new(),
-            location: "Switzerland".into(),
+            location: country.label().into(),
             posted: Posted::Week,
             onsite: false,
             remote: false,
             hybrid: false,
             experience: vec![],
             pages: 3,
-            sources: Source::ALL.to_vec(),
+            sources: country.sources().to_vec(),
         }
     }
 }
@@ -308,7 +373,9 @@ pub struct Settings {
     /// Name of the environment variable holding the API key — the key itself
     /// is never written to disk. Empty for a local model.
     pub llm_key_env: String,
-    pub search: SearchParams,
+    /// The country whose context is loaded. The search itself is kept per
+    /// country, next to its jobs.
+    pub country: Country,
     /// How long a fetched description counts as fresh. Opening a job with an
     /// older one shows it and refreshes it in the background.
     pub detail_ttl_hours: u64,
@@ -330,7 +397,7 @@ impl Default for Settings {
             llm_base_url: "https://api.deepseek.com".into(),
             llm_model: "deepseek-chat".into(),
             llm_key_env: "DEEPSEEK_API_KEY".into(),
-            search: SearchParams::default(),
+            country: Country::default(),
             detail_ttl_hours: 12,
             search_cache_minutes: 10,
             sidebar_width: 270.0,
