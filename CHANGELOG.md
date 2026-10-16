@@ -3,6 +3,16 @@
 What changed in each version of JobScout, for the people using it. Also
 published at <https://mayorana.ch/en/apps/jobscout/releases>.
 
+## [Unreleased]
+
+### Fixed
+
+- JobScout has its own icon in the Dock, Finder, the Start menu and your
+  Linux app launcher, instead of a blank or generic one.
+- Switching country loads that country's own search. Before, the form kept
+  the last country's search, so searching right after picking Singapore
+  could fill Singapore's list with Swiss jobs from jobs.ch and jobup.
+
 ## [0.1.1] - 2026-10-16
 
 ### Added
