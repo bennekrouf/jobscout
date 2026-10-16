@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#3cc4c9"/>
+      <stop offset="100%" stop-color="#0d4f54"/>
+    </linearGradient>
+    <radialGradient id="glow" gradientUnits="userSpaceOnUse" cx="512" cy="360" r="720">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="100%" stop-color="#e6fdfd"/>
+    </radialGradient>
+    <filter id="soft" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="14" result="b"/>
+      <feMerge>
+        <feMergeNode in="b"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <rect x="0" y="0" width="1024" height="1024" rx="230" fill="url(#bg)"/>
+
+  <!-- A magnifying glass scouting a briefcase: the same reduced-geometry,
+       glowing-white language as the sibling app icons (branch glyph,
+       play triangle, A-mark, dot-chain). -->
+  <g filter="url(#soft)" fill="none" stroke="url(#glow)" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="448" cy="448" r="208" stroke-width="40"/>
+    <path d="M 612 612 L 768 768" stroke-width="72"/>
+  </g>
+
+  <g filter="url(#soft)" fill="none" stroke="url(#glow)" stroke-width="30" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="352" y="410" width="192" height="132" rx="22"/>
+    <path d="M 404 410 L 404 380 Q 404 360 424 360 L 472 360 Q 492 360 492 380 L 492 410"/>
+    <path d="M 352 468 L 544 468"/>
+  </g>
+</svg>

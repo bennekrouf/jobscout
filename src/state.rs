@@ -256,10 +256,18 @@ async fn search_pages(
 ) -> Vec<String> {
     let query = format!("{} · {}", p.keywords.trim(), p.location.trim());
     let mut added = vec![];
-    if p.sources.is_empty() {
+    // The jobs go into the loaded country, so only its sources may run.
+    let country = *st.country.peek();
+    let sources: Vec<Source> = p
+        .sources
+        .iter()
+        .copied()
+        .filter(|s| country.sources().contains(s))
+        .collect();
+    if sources.is_empty() {
         st.log("No source selected.");
     }
-    for &source in &p.sources {
+    for source in sources {
         if st.stopped() {
             break;
         }

@@ -96,7 +96,12 @@ pub fn App() -> Element {
         div {
             class: if drag.read().is_some() { "shell dragging" } else { "shell" },
             style: "grid-template-columns: minmax(200px, {sidebar_w}px) {SPLITTER}px minmax(280px, {list_w}px) {SPLITTER}px minmax(320px, 1fr);",
-            search::SearchPanel { key: "{st.country.read().code()}" }
+            // A key only takes effect in a list: in a list of one, a new
+            // country mounts a fresh form instead of keeping the last
+            // country's search in it.
+            for country in [*st.country.read()] {
+                search::SearchPanel { key: "{country.code()}" }
+            }
             Splitter { which: Drag::Sidebar, drag }
             jobs::JobList {}
             Splitter { which: Drag::List, drag }
