@@ -1,8 +1,11 @@
 pub mod camoufox;
 pub mod fetch;
 pub mod jobcloud;
+pub mod jobstreet;
+pub mod licence;
 pub mod linkedin;
 pub mod llm;
+pub mod mcf;
 pub mod notify;
 pub mod sources;
 pub mod store;

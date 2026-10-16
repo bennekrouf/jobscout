@@ -13,6 +13,8 @@ use dioxus::desktop::{Config, LogicalSize, WindowBuilder};
 fn main() {
     // Before anything can raise a notification — see services::notify.
     services::notify::init();
+    // Data from before countries is Swiss: move it into its country folder.
+    services::store::migrate();
     // The default menu stays: without its Edit menu, macOS text fields lose
     // copy and paste, and the app loses Cmd+Q.
     let cfg = Config::new()

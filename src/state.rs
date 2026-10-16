@@ -6,7 +6,7 @@
 use chrono::{DateTime, Duration, Local, Utc};
 use dioxus::prelude::*;
 
-use crate::model::{Job, SearchParams, Settings, Source, Watch};
+use crate::model::{Country, Job, SearchParams, Settings, Source, Watch};
 
 /// A page that could not be read is not asked for again before this.
 const DETAIL_RETRY_AFTER: Duration = Duration::hours(1);
@@ -56,7 +56,7 @@ pub fn age(at: DateTime<Utc>) -> String {
         m => format!("{} d ago", m / (60 * 24)),
     }
 }
-use crate::services::fetch::{self, FetchError};
+use crate::services::fetch::FetchError;
 use crate::services::{llm, notify, sources, store};
 
 #[derive(Clone, Copy, PartialEq)]
@@ -69,6 +69,11 @@ pub enum Modal {
 
 #[derive(Clone, Copy)]
 pub struct AppState {
+    /// The country whose context is loaded: `jobs`, `profile`, `watches` and
+    /// `search` all belong to it. See `switch_country`.
+    pub country: Signal<Country>,
+    /// The last search run in this country; the sidebar starts from it.
+    pub search: Signal<SearchParams>,
     pub jobs: Signal<Vec<Job>>,
     pub selected: Signal<Option<String>>,
     pub settings: Signal<Settings>,
@@ -86,18 +91,49 @@ pub struct AppState {
 
 impl AppState {
     pub fn new() -> Self {
+        let settings = store::load_settings();
+        let country = settings.country;
         Self {
-            jobs: Signal::new(store::load_jobs()),
+            country: Signal::new(country),
+            search: Signal::new(store::load_search(country)),
+            jobs: Signal::new(store::load_jobs(country)),
             selected: Signal::new(None),
-            settings: Signal::new(store::load_settings()),
-            profile: Signal::new(store::load_profile()),
+            settings: Signal::new(settings),
+            profile: Signal::new(store::load_profile(country)),
             busy: Signal::new(None),
             stop: Signal::new(false),
             detail_queue: Signal::new(vec![]),
             log: Signal::new(vec![]),
             modal: Signal::new(Modal::None),
-            watches: Signal::new(store::load_watches()),
+            watches: Signal::new(store::load_watches(country)),
         }
+    }
+
+    /// Unloads the current country and loads `to`: its jobs, watches,
+    /// profile and last search. Refused while anything runs, since a search
+    /// or watch in flight would write into the country just loaded.
+    pub fn switch_country(mut self, to: Country) {
+        if *self.country.peek() == to || self.busy.peek().is_some() {
+            return;
+        }
+        self.country.set(to);
+        self.search.set(store::load_search(to));
+        self.jobs.set(store::load_jobs(to));
+        self.profile.set(store::load_profile(to));
+        self.watches.set(store::load_watches(to));
+        self.selected.set(None);
+        self.detail_queue.set(vec![]);
+        self.settings.write().country = to;
+        store::save_settings(&self.settings.peek());
+        self.log(format!("{} {}: {} jobs, {} watches.", to.flag(), to.label(), self.jobs.peek().len(), self.watches.peek().len()));
+    }
+
+    pub fn save_jobs(self) {
+        store::save_jobs(*self.country.peek(), &self.jobs.peek());
+    }
+
+    pub fn save_watches(self) {
+        store::save_watches(*self.country.peek(), &self.watches.peek());
     }
 
     pub fn log(mut self, msg: impl AsRef<str>) {
@@ -115,14 +151,14 @@ impl AppState {
         if let Some(job) = self.jobs.write().iter_mut().find(|j| j.id == id) {
             f(job);
         }
-        store::save_jobs(&self.jobs.read());
+        self.save_jobs();
     }
 
     pub fn update_watch(mut self, id: &str, f: impl FnOnce(&mut Watch)) {
         if let Some(w) = self.watches.write().iter_mut().find(|w| w.id == id) {
             f(w);
         }
-        store::save_watches(&self.watches.read());
+        self.save_watches();
     }
 
     /// Adds jobs not seen before, newest first; returns their ids.
@@ -149,7 +185,7 @@ impl AppState {
         let ids = fresh.iter().map(|j| j.id.clone()).collect();
         jobs.splice(0..0, fresh);
         drop(jobs);
-        store::save_jobs(&self.jobs.read());
+        self.save_jobs();
         ids
     }
 
@@ -244,8 +280,7 @@ async fn search_source(
             st.log("Search stopped.");
             break;
         }
-        let url = sources::search_url(source, p, page, offset);
-        match fetch::get_cached(&url, ttl, settings).await {
+        match sources::fetch_search(source, p, page, offset, ttl, settings).await {
             Ok((html, cached)) => {
                 let found = sources::parse_search(source, &html, query);
                 offset += found.len() as u32;
@@ -286,7 +321,7 @@ async fn search_source(
 async fn fetch_detail_inner(st: AppState, id: &str) -> Result<(), String> {
     let settings = st.settings.peek().clone();
     let job = st.job(id).ok_or("job no longer listed")?;
-    let html = match fetch::get(&sources::detail_url(&job), &settings).await {
+    let html = match sources::fetch_detail(&job, &settings).await {
         Ok(html) => html,
         // The page itself answered with an error: remember it, so opening the
         // job again does not ask again. Network trouble and rate limits are

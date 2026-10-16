@@ -12,11 +12,13 @@ pub fn ProfileModal() -> Element {
     rsx! {
         div { class: "modal-bg",
             div { class: "modal wide",
-                h2 { "Your profile" }
+                h2 { "Your profile · {st.country.read().flag()} {st.country.read().label()}" }
                 p { class: "muted",
                     "Paste your CV and what you are looking for: target roles, seniority, \
                      locations, remote or not, salary floor, languages, deal-breakers. \
-                     Every score compares a job with this text."
+                     Every score compares a job with this text. Each country keeps its \
+                     own profile: say here what this market means for you (permits, visa \
+                     sponsorship, relocation)."
                 }
                 textarea {
                     class: "input profile-text",
@@ -48,7 +50,7 @@ pub fn ProfileModal() -> Element {
                         class: "btn btn-primary",
                         onclick: move |_| {
                             let t = text.read().clone();
-                            store::save_profile(&t);
+                            store::save_profile(*st.country.peek(), &t);
                             st.profile.set(t);
                             st.modal.set(Modal::None);
                         },
@@ -161,9 +163,9 @@ pub fn SettingsModal() -> Element {
                         class: "btn btn-primary",
                         onclick: move |_| {
                             let mut next = s.read().clone();
-                            // The search form owns these; keep its latest values.
-                            next.search = st.settings.peek().search.clone();
-                            // So are the column widths.
+                            // The flags own the country, the splitters the
+                            // column widths; keep their latest values.
+                            next.country = st.settings.peek().country;
                             next.sidebar_width = st.settings.peek().sidebar_width;
                             next.list_width = st.settings.peek().list_width;
                             store::save_settings(&next);
@@ -293,7 +295,7 @@ fn WatchRow(watch: Watch, busy: bool) -> Element {
                     class: "btn btn-small btn-danger",
                     onclick: move |_| {
                         st.watches.write().retain(|w| w.id != id_del);
-                        store::save_watches(&st.watches.read());
+                        st.save_watches();
                     },
                     "Delete"
                 }

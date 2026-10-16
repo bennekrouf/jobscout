@@ -1,6 +1,7 @@
 mod detail;
 mod jobs;
 mod modals;
+pub mod pro;
 mod search;
 mod theme;
 
@@ -24,6 +25,11 @@ const CSS: &str = include_str!("../../assets/main.css");
 #[component]
 pub fn App() -> Element {
     let mut st = use_context_provider(AppState::new);
+    // JobScout Pro: the free version keeps one watch.
+    use_context_provider(|| pro::Pro {
+        open: Signal::new(false),
+        status: Signal::new(crate::services::licence::current()),
+    });
     let modal = *st.modal.read();
     let mut drag = use_signal(|| Option::<Drag>::None);
 
@@ -52,7 +58,7 @@ pub fn App() -> Element {
         div {
             class: if drag.read().is_some() { "shell dragging" } else { "shell" },
             style: "grid-template-columns: minmax(200px, {sidebar_w}px) {SPLITTER}px minmax(280px, {list_w}px) {SPLITTER}px minmax(320px, 1fr);",
-            search::SearchPanel {}
+            search::SearchPanel { key: "{st.country.read().code()}" }
             Splitter { which: Drag::Sidebar, drag }
             jobs::JobList {}
             Splitter { which: Drag::List, drag }
@@ -91,6 +97,7 @@ pub fn App() -> Element {
             Modal::Watches => rsx! { modals::WatchesModal {} },
             Modal::None => rsx! {},
         }
+        pro::ProWindow {}
     }
 }
 
