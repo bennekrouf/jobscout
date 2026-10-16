@@ -77,9 +77,16 @@ pub fn SettingsModal() -> Element {
                 label { class: "field-label", "Backend" }
                 select {
                     class: "input",
-                    onchange: move |e| s.write().backend = if e.value() == "camoufox" { Backend::Camoufox } else { Backend::Http },
+                    onchange: move |e| {
+                        s.write().backend = match e.value().as_str() {
+                            "camoufox" => Backend::Camoufox,
+                            "webkit" => Backend::WebKit,
+                            _ => Backend::Http,
+                        }
+                    },
                     option { value: "http", selected: cur.backend == Backend::Http, "Direct HTTP (guest endpoints)" }
-                    option { value: "camoufox", selected: cur.backend == Backend::Camoufox, "Camoufox browser" }
+                    option { value: "webkit", selected: cur.backend == Backend::WebKit, "Built-in browser (WebKit)" }
+                    option { value: "camoufox", selected: cur.backend == Backend::Camoufox, "Camoufox browser (needs Python)" }
                 }
                 label { class: "field-label", "Delay between requests (ms)" }
                 input {

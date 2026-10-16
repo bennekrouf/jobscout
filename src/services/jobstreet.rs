@@ -1,8 +1,9 @@
 //! JobStreet Singapore (sg.jobstreet.com), SEEK's board for South-East Asia.
 //!
 //! The site is behind a Cloudflare challenge that plain HTTP never gets
-//! past, so every request goes through the Camoufox browser, whatever the
-//! backend in Settings (see `sources`). The helper waits out the challenge.
+//! past, so every request goes through a browser: the built-in WebKit one,
+//! or Camoufox when that is the backend in Settings (see `sources`). Both
+//! wait out the challenge.
 //!
 //!   * search: `/jobs?keywords=…&where=…&daterange=N&page=N`, 30 postings a
 //!     page. robots.txt disallows query strings except those starting with
@@ -239,12 +240,15 @@ mod tests {
 
     /// Against the live site, through Camoufox: `CAMOUFOX_PYTHON=/path/to/python
     /// cargo test live_jobstreet -- --ignored` (a Python with camoufox installed).
+    /// Camoufox, because the built-in browser needs the main thread, which a
+    /// test does not run on.
     #[tokio::test]
     #[ignore]
     async fn live_jobstreet_search_paging_and_detail() {
         use crate::services::sources;
         let settings = crate::model::Settings {
             delay_ms: 1500,
+            backend: crate::model::Backend::Camoufox,
             python: std::env::var("CAMOUFOX_PYTHON").unwrap_or_else(|_| "python3".into()),
             ..Default::default()
         };

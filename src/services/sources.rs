@@ -9,12 +9,14 @@ use super::{jobcloud, jobstreet, linkedin, mcf};
 use crate::model::{Backend, Job, JobDetail, Posted, SearchParams, Settings, Source};
 
 /// JobStreet answers plain HTTP with a Cloudflare challenge, so it is read
-/// through Camoufox even when the other sources use direct HTTP.
+/// in a browser even when the other sources use direct HTTP: Camoufox if
+/// that is the backend, the built-in WebKit one otherwise.
 fn in_browser(settings: &Settings) -> Settings {
-    Settings {
-        backend: Backend::Camoufox,
-        ..settings.clone()
-    }
+    let backend = match settings.backend {
+        Backend::Camoufox => Backend::Camoufox,
+        Backend::Http | Backend::WebKit => Backend::WebKit,
+    };
+    Settings { backend, ..settings.clone() }
 }
 
 /// One search page, reused from the page cache for `ttl`. Returns the body

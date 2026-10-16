@@ -7,7 +7,7 @@ use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 
 use tokio::sync::Mutex;
 
-use super::camoufox;
+use super::{camoufox, webkit};
 use crate::model::{Backend, Settings};
 
 const USER_AGENT: &str = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 \
@@ -28,7 +28,7 @@ impl std::fmt::Display for FetchError {
             FetchError::RateLimited(c) => write!(f, "rate-limited (HTTP {c})"),
             FetchError::Status(c) => write!(f, "HTTP {c}"),
             FetchError::Network(e) => write!(f, "network error: {e}"),
-            FetchError::Browser(e) => write!(f, "Camoufox: {e}"),
+            FetchError::Browser(e) => write!(f, "browser: {e}"),
         }
     }
 }
@@ -38,6 +38,7 @@ pub async fn get(url: &str, settings: &Settings) -> Result<String, FetchError> {
     match settings.backend {
         Backend::Http => http_get(url).await,
         Backend::Camoufox => camoufox::get(url, settings).await,
+        Backend::WebKit => webkit::get(url).await,
     }
 }
 
@@ -59,7 +60,7 @@ pub async fn get_cached(
 }
 
 /// A JSON API, over plain HTTP whatever the backend: an API answer is not a
-/// page a browser needs to render, and Camoufox only loads URLs. Paced like
+/// page a browser needs to render, and the browsers only load URLs. Paced like
 /// every other request.
 pub async fn get_json(url: &str, settings: &Settings) -> Result<String, FetchError> {
     pace(settings.delay_ms).await;

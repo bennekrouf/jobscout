@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
 
-use crate::model::{Country, Posted, Source, Watch, EXPERIENCE};
+use crate::model::{Country, Posted, Watch, EXPERIENCE};
 use crate::services::store;
 use crate::state::{run_search, AppState, Modal};
 
@@ -97,12 +97,6 @@ pub fn SearchPanel() -> Element {
                                 }
                             },
                         }
-                    }
-                }
-
-                if current.sources.contains(&Source::JobStreet) {
-                    p { class: "muted small",
-                        "JobStreet is read through Camoufox, whatever the backend: set a Python with camoufox installed in Settings."
                     }
                 }
 
