@@ -356,6 +356,9 @@ pub enum Backend {
     Http,
     /// The same URLs, loaded in a Camoufox browser through helper/camoufox_fetch.py.
     Camoufox,
+    /// The same URLs, loaded in the WebKit view macOS ships (services::webkit).
+    /// Nothing to install.
+    WebKit,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]

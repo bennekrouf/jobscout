@@ -61,7 +61,7 @@ pub async fn get(url: &str, settings: &Settings) -> Result<String, FetchError> {
     let h = slot.as_mut().expect("just started");
     match request(h, url).await {
         Ok(reply) => match reply.error {
-            Some(e) => Err(FetchError::Browser(e)),
+            Some(e) => Err(FetchError::Browser(format!("Camoufox: {e}"))),
             None => classify(reply.status, reply.html),
         },
         Err(e) => {

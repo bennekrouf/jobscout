@@ -40,7 +40,7 @@ into `ch/`, and a file already in `ch/` is never overwritten.
 | Both | LinkedIn | Public guest endpoints (`/jobs-guest/...`), no login | All filters |
 | 🇨🇭 | jobs.ch, jobup.ch | Public search and job pages, via their schema.org `JobPosting` JSON-LD. Not `/api/`, which their robots.txt disallows | Keywords, location, date posted (filtered in the app). Workplace and experience don't apply |
 | 🇸🇬 | MyCareersFuture | The public JSON API its site uses (`api.mycareersfuture.gov.sg/v2`), always over plain HTTP | Keywords, date posted (filtered in the app). All of Singapore. Workplace and experience don't apply |
-| 🇸🇬 | JobStreet | Public search (`/jobs?keywords=…`, the only query strings its robots.txt allows) and job pages, via the `SEEK_REDUX_DATA` state they embed. Always through Camoufox: the site sits behind a Cloudflare challenge that plain HTTP never passes | Keywords, location (a region; "Singapore" means all), date posted. Workplace and experience don't apply |
+| 🇸🇬 | JobStreet | Public search (`/jobs?keywords=…`, the only query strings its robots.txt allows) and job pages, via the `SEEK_REDUX_DATA` state they embed. Always in a browser: the site sits behind a Cloudflare challenge that plain HTTP never passes. The built-in WebKit one, or Camoufox when that is the backend | Keywords, location (a region; "Singapore" means all), date posted. Workplace and experience don't apply |
 
 Both JobCloud sites (jobs.ch and jobup.ch) share posting ids, so a job listed on
 both appears once. Across LinkedIn and JobCloud, a job with the same title and
@@ -48,7 +48,8 @@ company is listed once: the copy found first is kept. A location of
 "Switzerland" (or empty) means the whole country on jobs.ch and jobup.ch.
 
 `cargo test live_ -- --ignored` runs the parsers against the live sites, to
-catch changes the saved fixtures can't. The JobStreet one needs Camoufox:
+catch changes the saved fixtures can't. The JobStreet one runs through
+Camoufox, because WebKit needs the main thread and tests don't run there:
 `CAMOUFOX_PYTHON=/path/to/python cargo test live_jobstreet -- --ignored`.
 
 The **Copy** button in a job's pane puts the posting on the clipboard as plain
@@ -60,7 +61,8 @@ pane can also be selected and copied with Cmd+C.
 | Backend | How | When |
 |---|---|---|
 | Direct HTTP (default) | `reqwest` against `/jobs-guest/jobs/api/...` | Normal use |
-| Camoufox | `helper/camoufox_fetch.py`, a long-lived Camoufox browser spoken to over JSON lines | If plain HTTP starts getting blocked. JobStreet always uses it |
+| Built-in browser (WebKit) | An offscreen `WKWebView`, the engine the window already renders in (`services/webkit.rs`). Nothing to install. macOS only | JobStreet always uses it, unless Camoufox is picked. Can be picked for LinkedIn too |
+| Camoufox | `helper/camoufox_fetch.py`, a long-lived Camoufox browser spoken to over JSON lines. Needs Python with `camoufox` installed | Optional, for power users, if the other backends get blocked |
 
 Camoufox setup: `pip install -U camoufox && python -m camoufox fetch`. Then
 pick the backend in Settings and point it at that Python. When a page comes
