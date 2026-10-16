@@ -21,3 +21,11 @@ arboard = "3"
 # Checks JobScout Pro licence keys, offline (see src/services/licence.rs).
 base64 = "0.22"
 ed25519-dalek = { version = "2", default-features = false, features = ["std"] }
+
+# The built-in browser backend (src/services/webkit.rs): the same WebKit the
+# window renders in, already linked through wry, so nothing extra ships.
+[target.'cfg(target_os = "macos")'.dependencies]
+objc2 = "0.6"
+block2 = "0.6"
+objc2-foundation = { version = "0.3", features = ["NSString", "NSURL", "NSURLRequest", "NSGeometry"] }
+objc2-web-kit = { version = "0.3", features = ["std", "objc2-app-kit", "block2", "WKWebView", "WKWebViewConfiguration", "WKWebsiteDataStore", "WKNavigation"] }

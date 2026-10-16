@@ -10,3 +10,4 @@ pub mod notify;
 pub mod sources;
 pub mod store;
 pub mod text;
+pub mod webkit;
