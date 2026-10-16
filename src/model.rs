@@ -1,0 +1,340 @@
+//! What JobScout keeps: job posts, the search that finds them, and settings.
+
+use chrono::{DateTime, Duration, Utc};
+use serde::{Deserialize, Serialize};
+
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+pub enum Status {
+    #[default]
+    New,
+    Saved,
+    Applied,
+    Hidden,
+}
+
+impl Status {
+    pub const ALL: [Status; 4] = [Status::New, Status::Saved, Status::Applied, Status::Hidden];
+
+    pub fn label(self) -> &'static str {
+        match self {
+            Status::New => "New",
+            Status::Saved => "Saved",
+            Status::Applied => "Applied",
+            Status::Hidden => "Hidden",
+        }
+    }
+
+    pub fn class(self) -> &'static str {
+        match self {
+            Status::New => "new",
+            Status::Saved => "saved",
+            Status::Applied => "applied",
+            Status::Hidden => "hidden",
+        }
+    }
+}
+
+/// Where a job was found.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub enum Source {
+    #[default]
+    LinkedIn,
+    /// jobs.ch, the largest Swiss board (German-speaking first).
+    JobsCh,
+    /// jobup.ch: same JobCloud platform as jobs.ch, French-speaking first.
+    Jobup,
+}
+
+impl Source {
+    pub const ALL: [Source; 3] = [Source::LinkedIn, Source::JobsCh, Source::Jobup];
+
+    pub fn label(self) -> &'static str {
+        match self {
+            Source::LinkedIn => "LinkedIn",
+            Source::JobsCh => "jobs.ch",
+            Source::Jobup => "jobup.ch",
+        }
+    }
+
+    pub fn class(self) -> &'static str {
+        match self {
+            Source::LinkedIn => "src-linkedin",
+            Source::JobsCh => "src-jobsch",
+            Source::Jobup => "src-jobup",
+        }
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct Job {
+    /// The source's own posting id — the dedupe key. LinkedIn's are numeric,
+    /// JobCloud's are UUIDs shared by jobs.ch and jobup.ch, so a posting
+    /// listed on both is one job here.
+    pub id: String,
+    /// Older saved jobs predate sources; they all came from LinkedIn.
+    #[serde(default)]
+    pub source: Source,
+    pub title: String,
+    pub company: String,
+    pub location: String,
+    pub url: String,
+    /// Posting date as LinkedIn lists it (yyyy-mm-dd).
+    #[serde(default)]
+    pub posted: Option<String>,
+    #[serde(default)]
+    pub salary: Option<String>,
+    pub found_at: DateTime<Utc>,
+    /// The search that first found it.
+    #[serde(default)]
+    pub query: String,
+    #[serde(default)]
+    pub status: Status,
+    #[serde(default)]
+    pub detail: Option<JobDetail>,
+    /// Last time the job page could not be read (removed, or a block page):
+    /// not asked for again until `DETAIL_RETRY_AFTER` has passed.
+    #[serde(default)]
+    pub detail_failed_at: Option<DateTime<Utc>>,
+    #[serde(default)]
+    pub score: Option<Score>,
+    /// A watch already raised a notification for it.
+    #[serde(default)]
+    pub notified: bool,
+}
+
+impl Job {
+    /// The posting as plain text, for the clipboard: a header, the criteria,
+    /// then the description when it has been fetched.
+    pub fn as_text(&self) -> String {
+        let mut out = format!("{}\n{} · {}\n", self.title, self.company, self.location);
+        if let Some(p) = &self.posted {
+            out.push_str(&format!("Posted {p}\n"));
+        }
+        if let Some(s) = &self.salary {
+            out.push_str(&format!("{s}\n"));
+        }
+        out.push_str(&format!("{}\n", self.url));
+        if let Some(d) = &self.detail {
+            if !d.criteria.is_empty() {
+                out.push('\n');
+                for (k, v) in &d.criteria {
+                    out.push_str(&format!("{k}: {v}\n"));
+                }
+            }
+            out.push('\n');
+            out.push_str(&d.description);
+            out.push('\n');
+        }
+        out
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct JobDetail {
+    /// Plain text, never HTML: the webview shares a process with the app, so
+    /// markup from a third-party page is not rendered as markup.
+    pub description: String,
+    #[serde(default)]
+    pub criteria: Vec<(String, String)>,
+    #[serde(default)]
+    pub applicants: Option<String>,
+    #[serde(default)]
+    pub posted_ago: Option<String>,
+    pub fetched_at: DateTime<Utc>,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct Score {
+    pub score: u8,
+    pub verdict: String,
+    #[serde(default)]
+    pub strengths: Vec<String>,
+    #[serde(default)]
+    pub gaps: Vec<String>,
+    pub scored_at: DateTime<Utc>,
+}
+
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+pub enum Posted {
+    Any,
+    Day,
+    #[default]
+    Week,
+    Month,
+}
+
+impl Posted {
+    pub const ALL: [Posted; 4] = [Posted::Any, Posted::Day, Posted::Week, Posted::Month];
+
+    /// LinkedIn's `f_TPR` value.
+    pub fn code(self) -> Option<&'static str> {
+        match self {
+            Posted::Any => None,
+            Posted::Day => Some("r86400"),
+            Posted::Week => Some("r604800"),
+            Posted::Month => Some("r2592000"),
+        }
+    }
+
+    /// The same window in days, for sources filtered on our side.
+    pub fn days(self) -> Option<i64> {
+        match self {
+            Posted::Any => None,
+            Posted::Day => Some(1),
+            Posted::Week => Some(7),
+            Posted::Month => Some(30),
+        }
+    }
+
+    pub fn label(self) -> &'static str {
+        match self {
+            Posted::Any => "Any time",
+            Posted::Day => "Past 24 hours",
+            Posted::Week => "Past week",
+            Posted::Month => "Past month",
+        }
+    }
+}
+
+/// LinkedIn's `f_E` experience levels.
+pub const EXPERIENCE: [(u8, &str); 6] = [
+    (1, "Internship"),
+    (2, "Entry"),
+    (3, "Associate"),
+    (4, "Mid-Senior"),
+    (5, "Director"),
+    (6, "Executive"),
+];
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(default)]
+pub struct SearchParams {
+    pub keywords: String,
+    pub location: String,
+    pub posted: Posted,
+    pub onsite: bool,
+    pub remote: bool,
+    pub hybrid: bool,
+    pub experience: Vec<u8>,
+    /// Pages per source: 10 jobs a page on LinkedIn, about 20 on jobs.ch/jobup.ch.
+    pub pages: u32,
+    pub sources: Vec<Source>,
+}
+
+impl Default for SearchParams {
+    fn default() -> Self {
+        Self {
+            keywords: String::new(),
+            location: "Switzerland".into(),
+            posted: Posted::Week,
+            onsite: false,
+            remote: false,
+            hybrid: false,
+            experience: vec![],
+            pages: 3,
+            sources: Source::ALL.to_vec(),
+        }
+    }
+}
+
+/// A saved search that runs on its own every `every_hours`, scores what is
+/// new and raises a notification for anything at or above `min_score`.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct Watch {
+    pub id: String,
+    pub search: SearchParams,
+    pub every_hours: u32,
+    pub min_score: u8,
+    pub enabled: bool,
+    #[serde(default)]
+    pub last_run: Option<DateTime<Utc>>,
+    #[serde(default)]
+    pub last_result: Option<String>,
+}
+
+impl Watch {
+    pub const INTERVALS: [u32; 6] = [1, 3, 6, 12, 24, 72];
+
+    pub fn new(search: SearchParams) -> Self {
+        Self {
+            id: Utc::now().timestamp_millis().to_string(),
+            search,
+            every_hours: 6,
+            min_score: 75,
+            enabled: true,
+            last_run: None,
+            last_result: None,
+        }
+    }
+
+    pub fn name(&self) -> String {
+        let loc = self.search.location.trim();
+        if loc.is_empty() {
+            self.search.keywords.trim().to_string()
+        } else {
+            format!("{} · {loc}", self.search.keywords.trim())
+        }
+    }
+
+    pub fn is_due(&self, now: DateTime<Utc>) -> bool {
+        self.enabled
+            && self
+                .last_run
+                .is_none_or(|at| now - at >= Duration::hours(self.every_hours as i64))
+    }
+}
+
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+pub enum Backend {
+    /// Plain HTTP against LinkedIn's public guest endpoints.
+    #[default]
+    Http,
+    /// The same URLs, loaded in a Camoufox browser through helper/camoufox_fetch.py.
+    Camoufox,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(default)]
+pub struct Settings {
+    pub backend: Backend,
+    /// Minimum gap between two LinkedIn requests; up to half as much again is
+    /// added at random.
+    pub delay_ms: u64,
+    pub python: String,
+    pub headed: bool,
+    /// Any OpenAI-compatible chat endpoint: DeepSeek, OpenAI, ollama's /v1 …
+    pub llm_base_url: String,
+    pub llm_model: String,
+    /// Name of the environment variable holding the API key — the key itself
+    /// is never written to disk. Empty for a local model.
+    pub llm_key_env: String,
+    pub search: SearchParams,
+    /// How long a fetched description counts as fresh. Opening a job with an
+    /// older one shows it and refreshes it in the background.
+    pub detail_ttl_hours: u64,
+    /// How long a search results page is reused for the same URL.
+    pub search_cache_minutes: u64,
+    /// Column widths in px, set by dragging the splitters. The job pane
+    /// takes the rest.
+    pub sidebar_width: f64,
+    pub list_width: f64,
+}
+
+impl Default for Settings {
+    fn default() -> Self {
+        Self {
+            backend: Backend::Http,
+            delay_ms: 2500,
+            python: "python3".into(),
+            headed: false,
+            llm_base_url: "https://api.deepseek.com".into(),
+            llm_model: "deepseek-chat".into(),
+            llm_key_env: "DEEPSEEK_API_KEY".into(),
+            search: SearchParams::default(),
+            detail_ttl_hours: 12,
+            search_cache_minutes: 10,
+            sidebar_width: 270.0,
+            list_width: 480.0,
+        }
+    }
+}

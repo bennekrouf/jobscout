@@ -1,0 +1,9 @@
+[application]
+name = "jobscout"
+default_platform = "desktop"
+
+[desktop]
+title = "JobScout"
+
+[bundle]
+identifier = "ch.mayorana.jobscout"
