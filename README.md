@@ -2,8 +2,10 @@
 
 A desktop app (Rust + Dioxus) that collects job posts and ranks them against
 your profile, for one country at a time: Switzerland (LinkedIn, jobs.ch,
-jobup.ch), Singapore (LinkedIn, MyCareersFuture, JobStreet) or Germany
-(LinkedIn, Arbeitsagentur, StepStone).
+jobup.ch), Singapore (LinkedIn, MyCareersFuture, JobStreet), Germany
+(LinkedIn, Arbeitsagentur, StepStone), France (LinkedIn, France Travail), the
+United Kingdom (LinkedIn, Totaljobs, Reed) or the United Arab Emirates
+(LinkedIn, Bayt).
 
 - **Search** LinkedIn's public guest endpoints. No login is used, so no account is at risk. You can filter by keywords, location, date posted, workplace type and experience level, and choose how many pages to fetch.
 - **Keep** every job found in `~/Library/Application Support/JobScout/<country>/jobs.json`, deduplicated by job id. Each job has a status (New / Saved / Applied / Hidden).
@@ -41,8 +43,8 @@ The server and the window share the same files. The server reads, changes
 and writes a file in one go, and the window reloads any file another process
 changed (checked every 2 s). Watches still run only in the window. The
 built-in WebKit backend needs the window's main thread, so through MCP
-LinkedIn is read over plain HTTP, and JobStreet, and StepStone's job pages,
-only work with Camoufox.
+LinkedIn is read over plain HTTP, and JobStreet, Bayt, and StepStone's and
+Totaljobs' job pages, only work with Camoufox.
 
 ## Releasing
 
@@ -67,6 +69,19 @@ cargo test           # parsers, including real saved LinkedIn pages
 For scoring, export the key named in Settings (default `DEEPSEEK_API_KEY`).
 The key is read from the environment and never written to disk.
 
+France Travail (France) needs your own free API application: register one at
+[francetravail.io](https://francetravail.io), subscribe it to "Offres d'emploi
+v2", put its client id in Settings and export its secret as
+`FRANCE_TRAVAIL_CLIENT_SECRET` (or the variable named in Settings). The secret
+is read like the scoring key and never written to disk. The live test needs
+both: `FRANCE_TRAVAIL_CLIENT_ID=… FRANCE_TRAVAIL_CLIENT_SECRET=… cargo test
+live_francetravail -- --ignored`.
+
+Reed (United Kingdom) needs a free API key from
+[reed.co.uk/developers](https://www.reed.co.uk/developers): export it as
+`REED_API_KEY` (or the variable named in Settings). Its live test:
+`REED_API_KEY=… cargo test live_reed -- --ignored`.
+
 ## Countries
 
 The flags at the top of the sidebar pick the country. Each country is its own
@@ -90,6 +105,10 @@ into `ch/`, and a file already in `ch/` is never overwritten.
 | 🇸🇬 | JobStreet | Public search (`/jobs?keywords=…`, the only query strings its robots.txt allows) and job pages, via the `SEEK_REDUX_DATA` state they embed. Always in a browser: the site sits behind a Cloudflare challenge that plain HTTP never passes. The built-in WebKit one, or Camoufox when that is the backend | Keywords, location (a region; "Singapore" means all), date posted. Workplace and experience don't apply |
 | 🇩🇪 | Arbeitsagentur | The Jobbörse's public JSON API (`rest.arbeitsagentur.de/jobboerse/jobsuche-service`, v6 search, v4 job details), with the public `X-API-Key` every client sends. Always over plain HTTP | Keywords, date posted. All of Germany. Workplace and experience don't apply |
 | 🇩🇪 | StepStone | Public search (`/jobs/{keywords}?q=…`, the only query strings its robots.txt allows under `/jobs/`) via the `__PRELOADED_STATE__` it embeds, and job pages via their schema.org `JobPosting` JSON-LD. Search over plain HTTP; job pages always in a browser, since Akamai resets plain connections to them | Keywords, date posted (last day or week on the site, a month in the app). All of Germany. Workplace and experience don't apply |
+| 🇫🇷 | France Travail | The official "Offres d'emploi v2" API (`api.francetravail.io`), with an OAuth token from your own application's client id and secret. Not the site's search, which its robots.txt disallows (`motsCles=`). Always over plain HTTP. A search result is the whole posting, so descriptions come with the search | Keywords, date posted (on the API's side). All of France. Workplace and experience don't apply |
+| 🇬🇧 | Totaljobs | The StepStone platform, read like StepStone: public search via `__PRELOADED_STATE__`, job pages via JSON-LD in a browser. Its robots.txt allows `/jobs/{keywords}?q=…` with nothing after `q` (`/jobs/*?q=*&` is disallowed), so only the first page, 25 postings, and no filter on the site | Keywords, date posted (filtered in the app). All of the UK. Workplace and experience don't apply |
+| 🇬🇧 | Reed | The official jobseeker API (`reed.co.uk/api/1.0`), with your own key as the Basic auth user name. Not the site, whose robots.txt disallows `/jobs/`. Always over plain HTTP, 100 postings a page | Keywords, date posted (filtered in the app). All of the UK. Workplace and experience don't apply |
+| 🇦🇪 | Bayt | Public search (`/en/uae/jobs/{keywords}-jobs/?page=N`; its robots.txt disallows only the country-less `/en/jobs/…-jobs/`) read from the job cards, and job pages via their schema.org `JobPosting` JSON-LD. Always in a browser: the site sits behind a Cloudflare challenge. GulfTalent was left out: its keyword search exists only in the page's JavaScript | Keywords, date posted (filtered in the app). All of the UAE. Workplace and experience don't apply |
 
 Both JobCloud sites (jobs.ch and jobup.ch) share posting ids, so a job listed on
 both appears once. Across LinkedIn and JobCloud, a job with the same title and
@@ -110,7 +129,7 @@ pane can also be selected and copied with Cmd+C.
 | Backend | How | When |
 |---|---|---|
 | Direct HTTP (default) | `reqwest` against `/jobs-guest/jobs/api/...` | Normal use |
-| Built-in browser (WebKit) | An offscreen `WKWebView`, the engine the window already renders in (`services/webkit.rs`). Nothing to install. macOS only | JobStreet, and StepStone's job pages, always use it, unless Camoufox is picked. Can be picked for LinkedIn too |
+| Built-in browser (WebKit) | An offscreen `WKWebView`, the engine the window already renders in (`services/webkit.rs`). Nothing to install. macOS only | JobStreet and Bayt, and StepStone's and Totaljobs' job pages, always use it, unless Camoufox is picked. Can be picked for LinkedIn too |
 | Camoufox | `helper/camoufox_fetch.py`, a long-lived Camoufox browser spoken to over JSON lines. Needs Python with `camoufox` installed | Optional, for power users, if the other backends get blocked |
 
 Camoufox setup: `pip install -U camoufox && python -m camoufox fetch`. Then

@@ -1,6 +1,8 @@
 pub mod arbeitsagentur;
+pub mod bayt;
 pub mod camoufox;
 pub mod fetch;
+pub mod francetravail;
 pub mod jobcloud;
 pub mod jobstreet;
 pub mod licence;
@@ -8,6 +10,7 @@ pub mod linkedin;
 pub mod llm;
 pub mod mcf;
 pub mod notify;
+pub mod reed;
 pub mod sources;
 pub mod stepstone;
 pub mod store;

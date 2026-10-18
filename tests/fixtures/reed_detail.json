@@ -1,0 +1,23 @@
+{
+ "employerId": 600001,
+ "employerName": "Example Systems Ltd",
+ "jobId": 51234567,
+ "jobTitle": "Rust Developer",
+ "locationName": "Manchester",
+ "minimumSalary": 55000.0,
+ "maximumSalary": 70000.0,
+ "yearlyMinimumSalary": 55000.0,
+ "yearlyMaximumSalary": 70000.0,
+ "currency": "GBP",
+ "salaryType": "per annum",
+ "salary": "£55,000 - £70,000 per annum",
+ "datePosted": "16/10/2026",
+ "expirationDate": "27/11/2026",
+ "externalUrl": "https://careers.example.co.uk/jobs/rust-developer",
+ "jobUrl": "https://www.reed.co.uk/jobs/rust-developer/51234567",
+ "partTime": false,
+ "fullTime": true,
+ "contractType": "Permanent",
+ "jobDescription": "<p>We are looking for a Rust developer to join our platform team.</p><ul><li>Build services in Rust</li><li>Review code</li></ul>",
+ "applicationCount": 12
+}

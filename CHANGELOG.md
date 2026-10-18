@@ -3,6 +3,36 @@
 What changed in each version of JobScout, for the people using it. Also
 published at <https://mayorana.ch/en/apps/jobscout/releases>.
 
+## [Unreleased]
+
+### Added
+
+- France. Pick the French flag to search LinkedIn and France Travail, the
+  public employment service and the largest job database in France, with full
+  descriptions, contract type, experience and salary as the employer gives
+  them. France Travail only lets apps in through its official API, so it
+  needs a free application of your own: register one at francetravail.io,
+  subscribe it to the "Offres d'emploi v2" API, then enter its client id in
+  Settings and export its secret as `FRANCE_TRAVAIL_CLIENT_SECRET` (or the
+  variable you name there). The secret is never saved. Until then, France
+  searches LinkedIn only and the log says what is missing. Like the other
+  countries, France keeps its own jobs, watches, profile, last search and
+  activity log.
+- United Kingdom. Pick the British flag to search LinkedIn, Totaljobs and
+  Reed across the whole UK. Totaljobs is the country's largest commercial job
+  board; it only lets apps read the first page of a search, so each search
+  brings its 25 best matches from there. Its descriptions open in the built-in
+  browser, so on Windows and Linux they need the Camoufox backend. Reed needs
+  a free API key from reed.co.uk/developers: export it as `REED_API_KEY` (or
+  the variable you name in Settings). The key is never saved, and until it is
+  set Reed is skipped and the log says so. The UK keeps its own jobs,
+  watches, profile, last search and activity log, like every country.
+- United Arab Emirates. Pick the UAE flag to search LinkedIn and Bayt,
+  the largest job board in the Middle East, across the whole UAE. Bayt opens
+  in the built-in browser, searches included, so on Windows and Linux it
+  needs the Camoufox backend. The UAE keeps its own jobs, watches, profile,
+  last search and activity log, like every country.
+
 ## [0.1.4] - 2026-10-18
 
 ### Added
