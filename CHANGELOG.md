@@ -3,6 +3,13 @@
 What changed in each version of JobScout, for the people using it. Also
 published at <https://mayorana.ch/en/apps/jobscout/releases>.
 
+## [Unreleased]
+
+### Added
+
+- Added support for StepStone, Germany's largest commercial job board. You can
+  now search and view jobs from StepStone directly within JobScout.
+
 ## [0.1.3] - 2026-10-18
 
 ### Added
