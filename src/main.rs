@@ -3,6 +3,7 @@
 //! One window, three columns: the search, the jobs found so far, and the one
 //! selected. Everything found is kept between runs (see `services::store`).
 
+mod mcp;
 mod model;
 mod services;
 mod state;
@@ -11,6 +12,12 @@ mod ui;
 use dioxus::desktop::{Config, LogicalSize, WindowBuilder};
 
 fn main() {
+    // `jobscout mcp`: the jobs over stdio for an MCP client, and no window.
+    // Before the notification bundle is claimed, which needs one.
+    if std::env::args().nth(1).as_deref() == Some("mcp") {
+        services::store::migrate();
+        return mcp::serve();
+    }
     // Before anything can raise a notification — see services::notify.
     services::notify::init();
     // Data from before countries is Swiss: move it into its country folder.

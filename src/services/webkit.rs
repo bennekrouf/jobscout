@@ -21,7 +21,9 @@ const POLL: Duration = Duration::from_millis(500);
 /// Cloudflare's interstitial, by its title or its script.
 fn is_challenge(title: &str, html: &str) -> bool {
     let t = title.trim().to_lowercase();
-    ["just a moment", "un instant", "einen moment"].iter().any(|p| t.starts_with(p))
+    ["just a moment", "un instant", "einen moment"]
+        .iter()
+        .any(|p| t.starts_with(p))
         || html.contains("_cf_chl_opt")
 }
 
@@ -59,7 +61,8 @@ mod mac {
 
     /// Set on the page being left, so the new page can be told from it.
     const MARK_OLD: &str = "window.__jobscoutOld = true; ''";
-    const STATE: &str = "JSON.stringify([!window.__jobscoutOld, document.readyState, document.title])";
+    const STATE: &str =
+        "JSON.stringify([!window.__jobscoutOld, document.readyState, document.title])";
     const HTML: &str = "document.documentElement.outerHTML";
 
     fn view(mtm: MainThreadMarker) -> Retained<WKWebView> {
@@ -76,8 +79,9 @@ mod mac {
     }
 
     pub async fn get(url: &str) -> Result<String, FetchError> {
-        let mtm = MainThreadMarker::new()
-            .ok_or_else(|| FetchError::Browser("the built-in browser only runs on the main thread".into()))?;
+        let mtm = MainThreadMarker::new().ok_or_else(|| {
+            FetchError::Browser("the built-in browser only runs on the main thread".into())
+        })?;
         // One view, so one page at a time.
         static ONE_AT_A_TIME: Mutex<()> = Mutex::const_new(());
         let _turn = ONE_AT_A_TIME.lock().await;
@@ -92,8 +96,11 @@ mod mac {
         let mut challenged = false;
         while start.elapsed() < LOAD_LIMIT {
             tokio::time::sleep(POLL).await;
-            let Ok(state) = eval(&view, STATE).await else { continue };
-            let Ok((new, ready, title)) = serde_json::from_str::<(bool, String, String)>(&state) else {
+            let Ok(state) = eval(&view, STATE).await else {
+                continue;
+            };
+            let Ok((new, ready, title)) = serde_json::from_str::<(bool, String, String)>(&state)
+            else {
                 continue;
             };
             if !new || ready == "loading" {
@@ -111,7 +118,10 @@ mod mac {
             // Never got through: a block, the same as an HTTP 403.
             FetchError::Status(403)
         } else {
-            FetchError::Network(format!("page did not load within {} s", LOAD_LIMIT.as_secs()))
+            FetchError::Network(format!(
+                "page did not load within {} s",
+                LOAD_LIMIT.as_secs()
+            ))
         })
     }
 
@@ -144,13 +154,19 @@ mod tests {
     fn tells_the_interstitial_from_a_page() {
         assert!(is_challenge("Just a moment...", ""));
         assert!(is_challenge("", "<script>window._cf_chl_opt = {}</script>"));
-        assert!(!is_challenge("Rust Jobs in Singapore | Jobstreet", "<html>…</html>"));
+        assert!(!is_challenge(
+            "Rust Jobs in Singapore | Jobstreet",
+            "<html>…</html>"
+        ));
     }
 
     #[cfg(not(target_os = "macos"))]
     #[tokio::test]
     async fn other_platforms_get_a_clear_error() {
-        assert!(matches!(get("https://example.com").await, Err(FetchError::Browser(_))));
+        assert!(matches!(
+            get("https://example.com").await,
+            Err(FetchError::Browser(_))
+        ));
     }
 
     /// Off the main thread, as every test is: an error, never a crash.

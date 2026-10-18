@@ -65,6 +65,8 @@ pub enum Modal {
     Profile,
     Settings,
     Watches,
+    /// How to use JobScout from Claude.
+    Mcp,
 }
 
 #[derive(Clone, Copy)]
@@ -84,7 +86,11 @@ pub struct AppState {
     /// Jobs opened while something else was running, most recently opened
     /// first; their descriptions are fetched as soon as the app is idle.
     pub detail_queue: Signal<Vec<String>>,
+    /// The loaded country's activity log. The others wait in `other_logs`
+    /// until their country is loaded again, so each country shows only what
+    /// happened in it.
     pub log: Signal<Vec<String>>,
+    other_logs: Signal<std::collections::HashMap<Country, Vec<String>>>,
     pub modal: Signal<Modal>,
     pub watches: Signal<Vec<Watch>>,
 }
@@ -104,18 +110,23 @@ impl AppState {
             stop: Signal::new(false),
             detail_queue: Signal::new(vec![]),
             log: Signal::new(vec![]),
+            other_logs: Signal::new(Default::default()),
             modal: Signal::new(Modal::None),
             watches: Signal::new(store::load_watches(country)),
         }
     }
 
     /// Unloads the current country and loads `to`: its jobs, watches,
-    /// profile and last search. Refused while anything runs, since a search
+    /// profile, last search and activity log. Refused while anything runs, since a search
     /// or watch in flight would write into the country just loaded.
     pub fn switch_country(mut self, to: Country) {
-        if *self.country.peek() == to || self.busy.peek().is_some() {
+        let from = *self.country.peek();
+        if from == to || self.busy.peek().is_some() {
             return;
         }
+        let back = self.other_logs.write().remove(&to).unwrap_or_default();
+        let left = std::mem::replace(&mut *self.log.write(), back);
+        self.other_logs.write().insert(from, left);
         self.country.set(to);
         self.search.set(store::load_search(to));
         self.jobs.set(store::load_jobs(to));
@@ -132,6 +143,30 @@ impl AppState {
             self.jobs.peek().len(),
             self.watches.peek().len()
         ));
+    }
+
+    /// Loads what another process changed on disk in the loaded country:
+    /// `jobscout mcp`, driven by Claude, writes the same files as this
+    /// window. `ui::App` calls this every couple of seconds, so a job Claude
+    /// scored or marked shows up here, and this window's next save keeps it.
+    pub fn reload_changed(mut self) {
+        let country = *self.country.peek();
+        let mut what = vec![];
+        if store::changed_elsewhere(country, store::JOBS) {
+            self.jobs.set(store::load_jobs(country));
+            what.push("jobs");
+        }
+        if store::changed_elsewhere(country, store::WATCHES) {
+            self.watches.set(store::load_watches(country));
+            what.push("watches");
+        }
+        if store::changed_elsewhere(country, store::PROFILE) {
+            self.profile.set(store::load_profile(country));
+            what.push("profile");
+        }
+        if !what.is_empty() {
+            self.log(format!("Loaded {} changed outside this window.", what.join(", ")));
+        }
     }
 
     pub fn save_jobs(self) {
@@ -171,31 +206,10 @@ impl AppState {
         self.save_watches();
     }
 
-    /// Adds jobs not seen before, newest first; returns their ids.
-    /// A job seen again keeps its status, description and score. So does one
-    /// already found on another source under the same title and company:
-    /// the copy found later is dropped.
+    /// Adds jobs not seen before, newest first; returns their ids. See
+    /// `sources::merge_new` for what counts as seen.
     fn merge(mut self, found: Vec<Job>) -> Vec<String> {
-        let mut jobs = self.jobs.write();
-        let mut ids: std::collections::HashSet<String> =
-            jobs.iter().map(|j| j.id.clone()).collect();
-        let mut keys: std::collections::HashMap<String, Source> = jobs
-            .iter()
-            .map(|j| (sources::same_posting_key(j), j.source))
-            .collect();
-        let mut fresh = vec![];
-        for f in found {
-            let key = sources::same_posting_key(&f);
-            let elsewhere = keys.get(&key).is_some_and(|s| *s != f.source);
-            if elsewhere || !ids.insert(f.id.clone()) {
-                continue;
-            }
-            keys.insert(key, f.source);
-            fresh.push(f);
-        }
-        let ids = fresh.iter().map(|j| j.id.clone()).collect();
-        jobs.splice(0..0, fresh);
-        drop(jobs);
+        let ids = sources::merge_new(&mut self.jobs.write(), found);
         self.save_jobs();
         ids
     }
@@ -254,10 +268,11 @@ async fn search_pages(
     settings: &Settings,
     use_cache: bool,
 ) -> Vec<String> {
-    let query = format!("{} · {}", p.keywords.trim(), p.location.trim());
-    let mut added = vec![];
-    // The jobs go into the loaded country, so only its sources may run.
+    // The jobs go into the loaded country, so only its sources may run, and
+    // it is where they search.
     let country = *st.country.peek();
+    let query = format!("{} · {}", p.keywords.trim(), country.label());
+    let mut added = vec![];
     let sources: Vec<Source> = p
         .sources
         .iter()
@@ -271,7 +286,7 @@ async fn search_pages(
         if st.stopped() {
             break;
         }
-        added.extend(search_source(st, source, p, settings, use_cache, &query).await);
+        added.extend(search_source(st, source, country, p, settings, use_cache, &query).await);
     }
     st.log(format!("Search “{query}” done: {} new jobs.", added.len()));
     added
@@ -282,6 +297,7 @@ async fn search_pages(
 async fn search_source(
     st: AppState,
     source: Source,
+    country: Country,
     p: &SearchParams,
     settings: &Settings,
     use_cache: bool,
@@ -303,7 +319,7 @@ async fn search_source(
             st.log("Search stopped.");
             break;
         }
-        match sources::fetch_search(source, p, page, offset, ttl, settings).await {
+        match sources::fetch_search(source, country, p, page, offset, ttl, settings).await {
             Ok((html, cached)) => {
                 let found = sources::parse_search(source, &html, query);
                 offset += found.len() as u32;

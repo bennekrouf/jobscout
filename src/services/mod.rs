@@ -1,3 +1,4 @@
+pub mod arbeitsagentur;
 pub mod camoufox;
 pub mod fetch;
 pub mod jobcloud;

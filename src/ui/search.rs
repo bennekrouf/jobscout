@@ -59,14 +59,6 @@ pub fn SearchPanel() -> Element {
                     oninput: move |e| p.write().keywords = e.value(),
                 }
 
-                label { class: "field-label", "Location" }
-                input {
-                    class: "input",
-                    placeholder: country.location_hint(),
-                    value: "{current.location}",
-                    oninput: move |e| p.write().location = e.value(),
-                }
-
                 label { class: "field-label", "Date posted" }
                 select {
                     class: "input",
@@ -176,6 +168,12 @@ pub fn SearchPanel() -> Element {
                     if n_watches == 0 { "Watches" } else { "Watches ({n_watches})" }
                 }
                 super::pro::ProButton {}
+                button {
+                    class: "btn btn-wide btn-ghost",
+                    title: "Use JobScout from Claude Desktop or Claude Code",
+                    onclick: move |_| st.modal.set(Modal::Mcp),
+                    "MCP"
+                }
                 button {
                     class: "btn btn-wide btn-ghost",
                     onclick: move |_| st.modal.set(Modal::Settings),

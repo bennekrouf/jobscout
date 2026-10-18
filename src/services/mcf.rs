@@ -233,7 +233,7 @@ mod tests {
             "page 2 is new"
         );
         let d = parse_detail(
-            &fetch::get_json(&detail_url(&page1[0].id), &settings)
+            &fetch::get_json(&detail_url(&page1[0].id), &[], &settings)
                 .await
                 .unwrap(),
         );

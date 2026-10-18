@@ -26,6 +26,22 @@ JobStreet (Singapore) also needs Camoufox: `pip install -U camoufox && python -m
 JobScout checks mayorana.ch for a newer version shortly after it starts. Set
 `DISABLE_UPDATE_CHECK=1` to turn that off.
 
+## Use from Claude (MCP)
+
+`jobscout mcp` serves JobScout's jobs to an MCP client over stdio, with no
+window (`src/mcp.rs`). The **MCP** button in the sidebar shows the Claude
+Desktop config and the Claude Code command, pointing at the installed
+executable. The tools: `overview`, `list_jobs`, `get_job`, `search`,
+`score_jobs`, `set_status`, `get_profile`, `set_profile`, `list_watches`,
+`add_watch`, `update_watch`, `delete_watch` and `export_csv`. Each takes an
+optional `country` and defaults to the one open in the window.
+
+The server and the window share the same files. The server reads, changes
+and writes a file in one go, and the window reloads any file another process
+changed (checked every 2 s). Watches still run only in the window. The
+built-in WebKit backend needs the window's main thread, so through MCP
+LinkedIn is read over plain HTTP, and JobStreet only works with Camoufox.
+
 ## Releasing
 
 `./scripts/release.sh` bumps the version, stamps `CHANGELOG.md`, tags and
