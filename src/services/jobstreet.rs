@@ -5,7 +5,7 @@
 //! or Camoufox when that is the backend in Settings (see `sources`). Both
 //! wait out the challenge.
 //!
-//!   * search: `/jobs?keywords=…&where=…&daterange=N&page=N`, 30 postings a
+//!   * search: `/jobs?keywords=…&daterange=N&page=N`, 30 postings a
 //!     page. robots.txt disallows query strings except those starting with
 //!     `?keywords`, so `keywords` always comes first.
 //!   * detail: `/job/{id}`.
@@ -27,9 +27,6 @@ pub fn search_url(p: &SearchParams, page: u32) -> String {
     {
         let mut q = url.query_pairs_mut();
         q.append_pair("keywords", p.keywords.trim());
-        if let Some(loc) = location(&p.location) {
-            q.append_pair("where", loc);
-        }
         if let Some(days) = daterange(p.posted) {
             q.append_pair("daterange", days);
         }
@@ -42,12 +39,6 @@ pub fn search_url(p: &SearchParams, page: u32) -> String {
 
 pub fn detail_url(id: &str) -> String {
     format!("{SITE}/job/{id}")
-}
-
-/// The board is Singapore only: the country as a location adds nothing.
-fn location(loc: &str) -> Option<&str> {
-    let l = loc.trim();
-    (!["", "singapore", "sg"].contains(&l.to_lowercase().as_str())).then_some(l)
 }
 
 /// JobStreet's own `daterange` values, in days.
@@ -182,18 +173,16 @@ mod tests {
     fn keywords_come_first() {
         let mut p = SearchParams {
             keywords: "rust dev".into(),
-            location: "Singapore".into(),
             ..SearchParams::default()
         };
         assert_eq!(
             search_url(&p, 1),
             "https://sg.jobstreet.com/jobs?keywords=rust+dev&daterange=7"
         );
-        p.location = "Central Region".into();
         p.posted = Posted::Any;
         assert_eq!(
             search_url(&p, 3),
-            "https://sg.jobstreet.com/jobs?keywords=rust+dev&where=Central+Region&page=3"
+            "https://sg.jobstreet.com/jobs?keywords=rust+dev&page=3"
         );
     }
 
@@ -254,11 +243,20 @@ mod tests {
         };
         let p = SearchParams {
             keywords: "software engineer".into(),
-            location: "Singapore".into(),
             ..SearchParams::default()
         };
         let ttl = std::time::Duration::ZERO;
-        let page = |n| sources::fetch_search(Source::JobStreet, &p, n, 0, ttl, &settings);
+        let page = |n| {
+            sources::fetch_search(
+                Source::JobStreet,
+                crate::model::Country::Singapore,
+                &p,
+                n,
+                0,
+                ttl,
+                &settings,
+            )
+        };
         let page1 = parse_search(&page(1).await.unwrap().0, "q");
         let page2 = parse_search(&page(2).await.unwrap().0, "q");
         assert!(page1.len() >= 20, "page 1: {}", page1.len());

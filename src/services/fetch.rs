@@ -61,15 +61,36 @@ pub async fn get_cached(
 
 /// A JSON API, over plain HTTP whatever the backend: an API answer is not a
 /// page a browser needs to render, and the browsers only load URLs. Paced like
-/// every other request.
-pub async fn get_json(url: &str, settings: &Settings) -> Result<String, FetchError> {
+/// every other request. `headers` go along with it (an API key).
+pub async fn get_json(
+    url: &str,
+    headers: &[(&str, &str)],
+    settings: &Settings,
+) -> Result<String, FetchError> {
     pace(settings.delay_ms).await;
-    send(
-        client()
-            .get(url)
-            .header(reqwest::header::ACCEPT, "application/json"),
-    )
-    .await
+    let mut req = client()
+        .get(url)
+        .header(reqwest::header::ACCEPT, "application/json");
+    for (name, value) in headers {
+        req = req.header(*name, *value);
+    }
+    send(req).await
+}
+
+/// `get_json`, cached like `get_cached`.
+pub async fn get_json_cached(
+    url: &str,
+    headers: &[(&str, &str)],
+    ttl: Duration,
+    settings: &Settings,
+) -> Result<(String, bool), FetchError> {
+    let key = format!("GET-JSON {url}");
+    if let Some(cached) = cache_lookup(&key, ttl) {
+        return Ok((cached, true));
+    }
+    let body = get_json(url, headers, settings).await?;
+    cache_store(&key, &body, ttl);
+    Ok((body, false))
 }
 
 /// POSTs `body` as JSON; cached like `get_cached`, keyed by URL and body.

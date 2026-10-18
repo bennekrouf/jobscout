@@ -42,16 +42,18 @@ pub enum Country {
     #[default]
     Switzerland,
     Singapore,
+    Germany,
 }
 
 impl Country {
-    pub const ALL: [Country; 2] = [Country::Switzerland, Country::Singapore];
+    pub const ALL: [Country; 3] = [Country::Switzerland, Country::Singapore, Country::Germany];
 
     /// Folder name under the data directory.
     pub fn code(self) -> &'static str {
         match self {
             Country::Switzerland => "ch",
             Country::Singapore => "sg",
+            Country::Germany => "de",
         }
     }
 
@@ -59,6 +61,7 @@ impl Country {
         match self {
             Country::Switzerland => "Switzerland",
             Country::Singapore => "Singapore",
+            Country::Germany => "Germany",
         }
     }
 
@@ -66,6 +69,7 @@ impl Country {
         match self {
             Country::Switzerland => "🇨🇭",
             Country::Singapore => "🇸🇬",
+            Country::Germany => "🇩🇪",
         }
     }
 
@@ -73,13 +77,7 @@ impl Country {
         match self {
             Country::Switzerland => &[Source::LinkedIn, Source::JobsCh, Source::Jobup],
             Country::Singapore => &[Source::LinkedIn, Source::Mcf, Source::JobStreet],
-        }
-    }
-
-    pub fn location_hint(self) -> &'static str {
-        match self {
-            Country::Switzerland => "Switzerland, Zurich, Remote…",
-            Country::Singapore => "Singapore",
+            Country::Germany => &[Source::LinkedIn, Source::Arbeitsagentur],
         }
     }
 }
@@ -99,6 +97,9 @@ pub enum Source {
     /// JobStreet (SEEK), the largest commercial board in Singapore. Behind
     /// Cloudflare: always read through the Camoufox browser.
     JobStreet,
+    /// The Bundesagentur für Arbeit's Jobbörse, Germany's public employment
+    /// service and its largest board.
+    Arbeitsagentur,
 }
 
 impl Source {
@@ -109,6 +110,7 @@ impl Source {
             Source::Jobup => "jobup.ch",
             Source::Mcf => "MyCareersFuture",
             Source::JobStreet => "JobStreet",
+            Source::Arbeitsagentur => "Arbeitsagentur",
         }
     }
 
@@ -119,6 +121,7 @@ impl Source {
             Source::Jobup => "src-jobup",
             Source::Mcf => "src-mcf",
             Source::JobStreet => "src-jobstreet",
+            Source::Arbeitsagentur => "src-arbeitsagentur",
         }
     }
 }
@@ -268,7 +271,6 @@ pub const EXPERIENCE: [(u8, &str); 6] = [
 #[serde(default)]
 pub struct SearchParams {
     pub keywords: String,
-    pub location: String,
     pub posted: Posted,
     pub onsite: bool,
     pub remote: bool,
@@ -290,7 +292,6 @@ impl SearchParams {
     pub fn for_country(country: Country) -> Self {
         Self {
             keywords: String::new(),
-            location: country.label().into(),
             posted: Posted::Week,
             onsite: false,
             remote: false,
@@ -333,12 +334,7 @@ impl Watch {
     }
 
     pub fn name(&self) -> String {
-        let loc = self.search.location.trim();
-        if loc.is_empty() {
-            self.search.keywords.trim().to_string()
-        } else {
-            format!("{} · {loc}", self.search.keywords.trim())
-        }
+        self.search.keywords.trim().to_string()
     }
 
     pub fn is_due(&self, now: DateTime<Utc>) -> bool {

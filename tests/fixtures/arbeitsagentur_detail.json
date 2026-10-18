@@ -1,0 +1,51 @@
+{
+ "stellenangebotsart": "ARBEIT",
+ "stellenangebotsTitel": "Software Engineer (m/w/d)",
+ "quereinstiegGeeignet": false,
+ "stellenangebotsBeschreibung": "For our location in Hamburg we are seeking:\n\nEmbedded & Systems Software Developer for PETRA IV\nLimited: 2 years | Start: 01.01.2027 | ID: FSMA045/2026 | Deadline: 08.11.2026 | Full-time/Part-time | Remote work possible\n\nDESY, with more than 2900 employees at its two locations in Hamburg and Zeuthen, is one of the world's leading research centres. Its research focuses on decoding the structure and function of matter, from the smallest particles of the universe to the building blocks of life. In this way, DESY contributes to solving the major questions and urgent challenges facing science, society and industry. With its ultramodern research infrastructure, its interdisciplinary research platforms and its international networks, DESY offers a highly attractive working environment in the fields of science, technology and administration as well as for the education of highly qualified young scientists.\n\n\nThe DESY Photon-Science Detector Group designs and builds innovative and state-of-the-art X-ray cameras for us in a variety of scientific experiments, in Hamburg and world wide. We are developing new high-speed cameras for an upcoming major upgrade to our X-ray facilities, PETRA IV, and improved software is required for camera control, data handling, and interfacing to users and the facility's systems. We are looking for a software developer to work on these tasks together with our experts in detector engineering and scientific computing.\n\n\nWith the PETRA IV project, DESY is launching one of the most ambitious and innovative large-scale research projects worldwide. PETRA IV, the most brilliant synchrotron radiation source of the next generation, will be the ultimate 4D X-ray microscope, setting new standards in precision and performance. To implement the project, we are looking for motivated employees who want to get involved in a complex project with international appeal. More information about PETRA IV: PETRA IV\n \n\tDeveloping software for controlling and configuring a large camera system consisting of multiple units\n\tDeveloping a system for receiving detector data at high speed on a set of data acquisition PCs, in collaboration with experts in hardware acceleration\n\tDeveloping the interfaces between the X-ray camera and the facility's control and scientific computing systems\n \n\tMaster's degree in software engineering, computer science or equivalent\n\tExperience with embedded and/or systems programming\n\tExperience with both Python and a lower-level language (preferably C++)\n\tGood standard of English\n\tGood team player, and the ability to work effectively with experts in other fields (firmware developers and detector engineers)\n\tExperience with high performance computing\n\tExperience with high-speed networking\n Look forward to a unique working environment on our international research campus. Respectful cooperation and the well-being of our DESY employees are particularly important to us. Gender equality is an important aspect for us. To support work-life balance we offer flexible working hours, variable part-time, job-sharing models and participation in mobile work (up to 50%). You will benefit from our family-friendly and collegial atmosphere, our established health management and occupational pension provision. As a public funded employer, we offer you a secure workplace and facilitate your individual career with our comprehensive training and development opportunities. Remuneration is according to the regulations of the TV-AVH. DESY offers its employees a financial supplement for a German job ticket (Deutschland-Ticket) at both locations\n",
+ "arbeitszeitSchichtNachtWochenende": false,
+ "arbeitszeitTeilzeitAbend": false,
+ "arbeitszeitTeilzeitNachmittag": false,
+ "arbeitszeitTeilzeitVormittag": false,
+ "arbeitszeitTeilzeitFlexibel": false,
+ "arbeitszeitVollzeit": true,
+ "eintrittszeitraum": {
+  "von": "2026-10-13"
+ },
+ "verguetungsangabe": "JAHRESGEHALT",
+ "artDerVerguetung": "FESTGEHALT",
+ "festgehalt": 71321.79,
+ "vertragsdauer": "KEINE_ANGABE",
+ "istGeringfuegigeBeschaeftigung": false,
+ "istBehinderungGefordert": false,
+ "stellenlokationen": [
+  {
+   "adresse": {
+    "strasse": "Notkestraße",
+    "hausnummer": "85",
+    "plz": "22607",
+    "ort": "Hamburg",
+    "region": "HAMBURG",
+    "land": "DEUTSCHLAND"
+   },
+   "breite": 53.573346,
+   "laenge": 9.880605
+  }
+ ],
+ "homeofficemoeglich": true,
+ "homeofficetyp": "NACH_VEREINBARUNG",
+ "istPrivateArbeitsvermittlung": false,
+ "istArbeitnehmerUeberlassung": false,
+ "veroeffentlichungszeitraum": {
+  "von": "2026-10-13"
+ },
+ "datumErsteVeroeffentlichung": "2026-10-13",
+ "aenderungsdatum": "2026-10-13T14:43:09.862",
+ "externeURL": "https://www.jobvector.de/job/software-engineer-5ccc656c5430b764/?utm_source=arbeitsagentur&utm_medium=partner&utm_campaign=tmcfdae_job_jid273878&utm_content=b2c&utm_term=tmf8eca_uic4ea2fd9",
+ "istBetreut": false,
+ "hauptberuf": "Ingenieur/in - Systems Engineering",
+ "firma": "Deutsches Elektronen-Synchrotron DESY",
+ "allianzpartnerUrl": "www.jobvector.de",
+ "allianzpartnerName": "jobvector.de",
+ "referenznummer": "14225-5ccc656c5430b764-S"
+}

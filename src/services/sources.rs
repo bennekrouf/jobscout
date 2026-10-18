@@ -5,8 +5,8 @@ use std::time::Duration;
 use chrono::Utc;
 
 use super::fetch::{self, FetchError};
-use super::{jobcloud, jobstreet, linkedin, mcf};
-use crate::model::{Backend, Job, JobDetail, Posted, SearchParams, Settings, Source};
+use super::{arbeitsagentur, jobcloud, jobstreet, linkedin, mcf};
+use crate::model::{Backend, Country, Job, JobDetail, Posted, SearchParams, Settings, Source};
 
 /// JobStreet answers plain HTTP with a Cloudflare challenge, so it is read
 /// in a browser even when the other sources use direct HTTP: Camoufox if
@@ -16,7 +16,10 @@ fn in_browser(settings: &Settings) -> Settings {
         Backend::Camoufox => Backend::Camoufox,
         Backend::Http | Backend::WebKit => Backend::WebKit,
     };
-    Settings { backend, ..settings.clone() }
+    Settings {
+        backend,
+        ..settings.clone()
+    }
 }
 
 /// One search page, reused from the page cache for `ttl`. Returns the body
@@ -25,6 +28,7 @@ fn in_browser(settings: &Settings) -> Settings {
 /// page number).
 pub async fn fetch_search(
     source: Source,
+    country: Country,
     p: &SearchParams,
     page: u32,
     offset: u32,
@@ -33,7 +37,7 @@ pub async fn fetch_search(
 ) -> Result<(String, bool), FetchError> {
     match source {
         Source::LinkedIn => {
-            fetch::get_cached(&linkedin::search_url(p, offset), ttl, settings).await
+            fetch::get_cached(&linkedin::search_url(p, country, offset), ttl, settings).await
         }
         Source::JobsCh | Source::Jobup => {
             fetch::get_cached(&jobcloud::search_url(source, p, page), ttl, settings).await
@@ -45,6 +49,10 @@ pub async fn fetch_search(
         Source::JobStreet => {
             fetch::get_cached(&jobstreet::search_url(p, page), ttl, &in_browser(settings)).await
         }
+        Source::Arbeitsagentur => {
+            let url = arbeitsagentur::search_url(p, page);
+            fetch::get_json_cached(&url, &arbeitsagentur::HEADERS, ttl, settings).await
+        }
     }
 }
 
@@ -54,6 +62,7 @@ pub fn parse_search(source: Source, body: &str, query: &str) -> Vec<Job> {
         Source::JobsCh | Source::Jobup => jobcloud::parse_search(source, body, query),
         Source::Mcf => mcf::parse_search(body, query),
         Source::JobStreet => jobstreet::parse_search(body, query),
+        Source::Arbeitsagentur => arbeitsagentur::parse_search(body, query),
     }
 }
 
@@ -61,8 +70,12 @@ pub async fn fetch_detail(job: &Job, settings: &Settings) -> Result<String, Fetc
     match job.source {
         Source::LinkedIn => fetch::get(&linkedin::detail_url(&job.id), settings).await,
         Source::JobsCh | Source::Jobup => fetch::get(&job.url, settings).await,
-        Source::Mcf => fetch::get_json(&mcf::detail_url(&job.id), settings).await,
+        Source::Mcf => fetch::get_json(&mcf::detail_url(&job.id), &[], settings).await,
         Source::JobStreet => fetch::get(&job.url, &in_browser(settings)).await,
+        Source::Arbeitsagentur => {
+            let url = arbeitsagentur::detail_url(&job.id);
+            fetch::get_json(&url, &arbeitsagentur::HEADERS, settings).await
+        }
     }
 }
 
@@ -72,11 +85,13 @@ pub fn parse_detail(source: Source, body: &str) -> Option<JobDetail> {
         Source::JobsCh | Source::Jobup => jobcloud::parse_detail(body),
         Source::Mcf => mcf::parse_detail(body),
         Source::JobStreet => jobstreet::parse_detail(body),
+        Source::Arbeitsagentur => arbeitsagentur::parse_detail(body),
     }
 }
 
-/// LinkedIn filters by date itself; the other sources are not asked to, so
-/// their postings are filtered here. Undated postings are kept.
+/// LinkedIn filters by date itself. The other sources' postings are filtered
+/// here (the Arbeitsagentur also filters, by the same date, so nothing it
+/// returns is dropped). Undated postings are kept.
 pub fn within_posted(source: Source, jobs: Vec<Job>, posted: Posted) -> Vec<Job> {
     let Some(days) = posted.days().filter(|_| source != Source::LinkedIn) else {
         return jobs;
@@ -97,4 +112,32 @@ pub fn same_posting_key(job: &Job) -> String {
         .filter(|c| c.is_alphanumeric() || *c == '|')
         .flat_map(char::to_lowercase)
         .collect()
+}
+
+/// Adds the jobs in `found` that `jobs` does not have yet, newest first, and
+/// returns their ids. A job seen again keeps its status, description and
+/// score. So does one already found on another source under the same title
+/// and company: the copy found later is dropped.
+///
+/// The window and the MCP server both add jobs through this, so a posting
+/// is recognised the same way whichever of them found it.
+pub fn merge_new(jobs: &mut Vec<Job>, found: Vec<Job>) -> Vec<String> {
+    let mut ids: std::collections::HashSet<String> = jobs.iter().map(|j| j.id.clone()).collect();
+    let mut keys: std::collections::HashMap<String, Source> = jobs
+        .iter()
+        .map(|j| (same_posting_key(j), j.source))
+        .collect();
+    let mut fresh = vec![];
+    for f in found {
+        let key = same_posting_key(&f);
+        let elsewhere = keys.get(&key).is_some_and(|s| *s != f.source);
+        if elsewhere || !ids.insert(f.id.clone()) {
+            continue;
+        }
+        keys.insert(key, f.source);
+        fresh.push(f);
+    }
+    let ids = fresh.iter().map(|j| j.id.clone()).collect();
+    jobs.splice(0..0, fresh);
+    ids
 }

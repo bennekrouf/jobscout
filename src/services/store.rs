@@ -4,15 +4,27 @@
 //!
 //! Settings are shared. Everything else belongs to one country and lives in
 //! that country's folder (`ch/`, `sg/`): jobs, watches, profile, last search.
+//!
+//! Two processes can write these files: the window, and `jobscout mcp` when
+//! Claude drives it. Each file's modification time is noted whenever this
+//! process reads or writes it, so the window can tell a change it did not
+//! make (`changed_elsewhere`) and load it.
 
+use std::collections::HashMap;
 use std::path::{Path, PathBuf};
+use std::sync::{Mutex, OnceLock};
+use std::time::SystemTime;
 
 use serde::{de::DeserializeOwned, Serialize};
 
 use crate::model::{Country, Job, SearchParams, Settings, Watch};
 
+pub const JOBS: &str = "jobs.json";
+pub const WATCHES: &str = "watches.json";
+pub const PROFILE: &str = "profile.md";
+
 /// Files kept per country.
-const COUNTRY_FILES: [&str; 4] = ["jobs.json", "watches.json", "profile.md", "search.json"];
+const COUNTRY_FILES: [&str; 4] = [JOBS, WATCHES, PROFILE, "search.json"];
 
 pub fn data_dir() -> PathBuf {
     let dir = dirs::data_local_dir()
@@ -29,9 +41,9 @@ pub fn country_dir(country: Country) -> PathBuf {
 }
 
 fn load<T: DeserializeOwned>(path: &Path) -> Option<T> {
-    std::fs::read_to_string(path)
-        .ok()
-        .and_then(|s| serde_json::from_str(&s).ok())
+    let text = std::fs::read_to_string(path);
+    note(path);
+    text.ok().and_then(|s| serde_json::from_str(&s).ok())
 }
 
 fn save<T: Serialize + ?Sized>(path: &Path, value: &T) {
@@ -41,6 +53,39 @@ fn save<T: Serialize + ?Sized>(path: &Path, value: &T) {
             let _ = std::fs::rename(&tmp, path);
         }
     }
+    note(path);
+}
+
+/// Each file's modification time as this process last read or wrote it.
+fn seen() -> &'static Mutex<HashMap<PathBuf, Option<SystemTime>>> {
+    static SEEN: OnceLock<Mutex<HashMap<PathBuf, Option<SystemTime>>>> = OnceLock::new();
+    SEEN.get_or_init(Default::default)
+}
+
+fn mtime(path: &Path) -> Option<SystemTime> {
+    std::fs::metadata(path).and_then(|m| m.modified()).ok()
+}
+
+fn note(path: &Path) {
+    let mut seen = seen().lock().unwrap_or_else(|e| e.into_inner());
+    seen.insert(path.to_path_buf(), mtime(path));
+}
+
+/// Whether `path` changed on disk since this process last read or wrote it,
+/// that is, whether another process wrote it. Notes the current state, so
+/// each change is reported once. A file never read or written here is noted
+/// and reported unchanged.
+fn changed_since_seen(path: &Path) -> bool {
+    let now = mtime(path);
+    let mut seen = seen().lock().unwrap_or_else(|e| e.into_inner());
+    seen.insert(path.to_path_buf(), now)
+        .is_some_and(|before| before != now)
+}
+
+/// Whether `file` in `country`'s folder (`JOBS`, `WATCHES`, `PROFILE`) was
+/// changed by another process since this one last read or wrote it.
+pub fn changed_elsewhere(country: Country, file: &str) -> bool {
+    changed_since_seen(&country_dir(country).join(file))
 }
 
 /// Before countries, everything sat in the data directory itself and was
@@ -71,11 +116,11 @@ fn migrate_in(root: &Path) {
 }
 
 pub fn load_jobs(country: Country) -> Vec<Job> {
-    load(&country_dir(country).join("jobs.json")).unwrap_or_default()
+    load(&country_dir(country).join(JOBS)).unwrap_or_default()
 }
 
 pub fn save_jobs(country: Country, jobs: &[Job]) {
-    save(&country_dir(country).join("jobs.json"), jobs)
+    save(&country_dir(country).join(JOBS), jobs)
 }
 
 pub fn load_settings() -> Settings {
@@ -87,11 +132,11 @@ pub fn save_settings(settings: &Settings) {
 }
 
 pub fn load_watches(country: Country) -> Vec<Watch> {
-    load(&country_dir(country).join("watches.json")).unwrap_or_default()
+    load(&country_dir(country).join(WATCHES)).unwrap_or_default()
 }
 
 pub fn save_watches(country: Country, watches: &[Watch]) {
-    save(&country_dir(country).join("watches.json"), watches)
+    save(&country_dir(country).join(WATCHES), watches)
 }
 
 pub fn load_search(country: Country) -> SearchParams {
@@ -107,11 +152,16 @@ pub fn save_search(country: Country, p: &SearchParams) {
 }
 
 pub fn load_profile(country: Country) -> String {
-    std::fs::read_to_string(country_dir(country).join("profile.md")).unwrap_or_default()
+    let path = country_dir(country).join(PROFILE);
+    let text = std::fs::read_to_string(&path).unwrap_or_default();
+    note(&path);
+    text
 }
 
 pub fn save_profile(country: Country, text: &str) {
-    let _ = std::fs::write(country_dir(country).join("profile.md"), text);
+    let path = country_dir(country).join(PROFILE);
+    let _ = std::fs::write(&path, text);
+    note(&path);
 }
 
 /// CSV of the given jobs, for a spreadsheet.
@@ -173,7 +223,7 @@ mod tests {
             "me"
         );
         let p: SearchParams = load(&ch.join("search.json")).unwrap();
-        assert_eq!((p.keywords.as_str(), p.location.as_str()), ("rust", "Zug"));
+        assert_eq!(p.keywords, "rust");
 
         // A stray old file never replaces what is already in ch/.
         std::fs::write(root.join("profile.md"), "stale").unwrap();
@@ -183,5 +233,26 @@ mod tests {
             "me"
         );
         let _ = std::fs::remove_dir_all(&root);
+    }
+
+    #[test]
+    fn a_change_is_reported_only_when_another_process_made_it() {
+        let dir = std::env::temp_dir().join(format!("jobscout-seen-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(&dir).unwrap();
+        let path = dir.join("jobs.json");
+
+        save(&path, &Vec::<Job>::new());
+        assert!(!changed_since_seen(&path), "our own write is not a change");
+
+        // Another process writes it: a later modification time than ours.
+        std::thread::sleep(std::time::Duration::from_millis(20));
+        std::fs::write(&path, "[]").unwrap();
+        assert!(changed_since_seen(&path));
+        assert!(!changed_since_seen(&path), "reported once");
+
+        let _ = load::<Vec<Job>>(&path);
+        assert!(!changed_since_seen(&path));
+        let _ = std::fs::remove_dir_all(&dir);
     }
 }

@@ -13,19 +13,18 @@ use scraper::{ElementRef, Html, Selector};
 
 use super::text::{html_to_text, squash};
 
-use crate::model::{Job, JobDetail, SearchParams, Source, Status};
+use crate::model::{Country, Job, JobDetail, SearchParams, Source, Status};
 
 const BASE: &str = "https://www.linkedin.com/jobs-guest/jobs/api";
 
-pub fn search_url(p: &SearchParams, start: u32) -> String {
+/// LinkedIn covers every country, so the loaded one is the location.
+pub fn search_url(p: &SearchParams, country: Country, start: u32) -> String {
     let mut url = reqwest::Url::parse(&format!("{BASE}/seeMoreJobPostings/search"))
         .expect("constant URL parses");
     {
         let mut q = url.query_pairs_mut();
         q.append_pair("keywords", p.keywords.trim());
-        if !p.location.trim().is_empty() {
-            q.append_pair("location", p.location.trim());
-        }
+        q.append_pair("location", country.label());
         if let Some(code) = p.posted.code() {
             q.append_pair("f_TPR", code);
         }
@@ -177,8 +176,9 @@ mod tests {
             experience: vec![3, 4],
             ..SearchParams::default()
         };
-        let url = search_url(&p, 20);
+        let url = search_url(&p, Country::Singapore, 20);
         assert!(url.contains("keywords=rust+developer"));
+        assert!(url.contains("location=Singapore"));
         assert!(url.contains("f_WT=2%2C3"));
         assert!(url.contains("f_E=3%2C4"));
         assert!(url.contains("f_TPR=r604800"));

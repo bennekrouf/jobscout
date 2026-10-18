@@ -1,5 +1,6 @@
 mod detail;
 mod jobs;
+mod mcp;
 mod modals;
 pub mod pro;
 mod search;
@@ -35,6 +36,14 @@ pub fn App() -> Element {
 
     // Watches run on their own for as long as the app is open.
     use_future(move || scheduler(st));
+
+    // What Claude changes through `jobscout mcp` shows up here.
+    use_future(move || async move {
+        loop {
+            tokio::time::sleep(std::time::Duration::from_secs(2)).await;
+            st.reload_changed();
+        }
+    });
 
     // A newer release on mayorana.ch, offered in a banner. After the window
     // is up, never in its way; DISABLE_UPDATE_CHECK turns it off.
@@ -138,6 +147,7 @@ pub fn App() -> Element {
             Modal::Profile => rsx! { modals::ProfileModal {} },
             Modal::Settings => rsx! { modals::SettingsModal {} },
             Modal::Watches => rsx! { modals::WatchesModal {} },
+            Modal::Mcp => rsx! { mcp::McpModal {} },
             Modal::None => rsx! {},
         }
         pro::ProWindow {}

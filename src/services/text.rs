@@ -16,7 +16,27 @@ pub fn markup_to_text(markup: &str) -> String {
 pub fn html_to_text(root: ElementRef) -> String {
     let mut raw = String::new();
     walk(root, &mut raw);
+    fold(&raw)
+}
 
+/// The same for a description that is already plain text: `- ` and `* `
+/// list markers become bullets.
+pub fn plain_to_text(text: &str) -> String {
+    let raw: Vec<String> = text
+        .lines()
+        .map(|l| {
+            let l = l.trim_start();
+            match l.strip_prefix("- ").or_else(|| l.strip_prefix("* ")) {
+                Some(item) => format!("• {item}"),
+                None => l.to_string(),
+            }
+        })
+        .collect();
+    fold(&raw.join("\n"))
+}
+
+/// One squashed line per line, runs of blank lines folded into one.
+fn fold(raw: &str) -> String {
     let mut out = String::new();
     let mut blank = true;
     for line in raw.lines().map(squash) {

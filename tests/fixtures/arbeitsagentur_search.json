@@ -1,0 +1,1104 @@
+{
+ "ergebnisliste": [
+  {
+   "stellenangebotsart": "ARBEIT",
+   "stellenangebotsTitel": "Software Engineer (m/w/d)",
+   "quereinstiegGeeignet": false,
+   "arbeitszeitVollzeit": true,
+   "eintrittszeitraum": {
+    "von": "2026-10-16"
+   },
+   "verguetungsangabe": "STUNDENLOHN",
+   "artDerVerguetung": "GEHALTSSPANNE",
+   "gehaltsspanneVon": 38.0,
+   "gehaltsspanneBis": 43.71,
+   "vertragsdauer": "KEINE_ANGABE",
+   "istGeringfuegigeBeschaeftigung": false,
+   "stellenlokationen": [
+    {
+     "adresse": {
+      "plz": "22880",
+      "ort": "Wedel",
+      "region": "SCHLESWIG_HOLSTEIN",
+      "land": "DEUTSCHLAND"
+     },
+     "breite": 53.590789934,
+     "laenge": 9.70761554
+    }
+   ],
+   "veroeffentlichungszeitraum": {
+    "von": "2026-10-16"
+   },
+   "datumErsteVeroeffentlichung": "2026-10-16",
+   "aenderungsdatum": "2026-10-16T12:04:37.995",
+   "hauptberuf": "Softwareentwickler/in",
+   "firma": "akut... Kompetente Lösungen GmbH",
+   "arbeitgeberKundennummerHash": "wJWNLL23ZnzDHg654iF4A5byJuQfyZLceQv_9tJAU9o=",
+   "referenznummer": "12160-13898397-S",
+   "alleBerufe": [
+    "Softwareentwickler/in"
+   ]
+  },
+  {
+   "stellenangebotsart": "ARBEIT",
+   "stellenangebotsTitel": "Software Engineer (m/w/d)",
+   "quereinstiegGeeignet": false,
+   "arbeitszeitSchichtNachtWochenende": false,
+   "arbeitszeitTeilzeitAbend": false,
+   "arbeitszeitTeilzeitNachmittag": false,
+   "arbeitszeitTeilzeitVormittag": false,
+   "arbeitszeitTeilzeitFlexibel": false,
+   "arbeitszeitVollzeit": true,
+   "eintrittszeitraum": {
+    "von": "2026-12-01"
+   },
+   "verguetungsangabe": "JAHRESGEHALT",
+   "artDerVerguetung": "GEHALTSSPANNE",
+   "gehaltsspanneVon": 68000.0,
+   "gehaltsspanneBis": 75000.0,
+   "vertragsdauer": "UNBEFRISTET",
+   "istGeringfuegigeBeschaeftigung": false,
+   "stellenlokationen": [
+    {
+     "adresse": {
+      "plz": "85077",
+      "ort": "Manching",
+      "region": "BAYERN",
+      "land": "DEUTSCHLAND"
+     },
+     "breite": 48.7124303,
+     "laenge": 11.5032827
+    }
+   ],
+   "homeofficemoeglich": true,
+   "homeofficetyp": "NACH_VEREINBARUNG",
+   "veroeffentlichungszeitraum": {
+    "von": "2026-10-14"
+   },
+   "datumErsteVeroeffentlichung": "2026-10-14",
+   "aenderungsdatum": "2026-10-14T12:35:40.930",
+   "hauptberuf": "Informatiker/in",
+   "firma": "fabplus GmbH",
+   "arbeitgeberKundennummerHash": "CGQS0jt5WJx7XROEOaWZYAV89g8WyCPk-9k7iaKdfOs=",
+   "referenznummer": "15339-1804-1800115-0-S",
+   "alleBerufe": [
+    "Informatiker/in"
+   ]
+  },
+  {
+   "stellenangebotsart": "ARBEIT",
+   "stellenangebotsTitel": "(Junior) Software Engineer (m/w/d)",
+   "quereinstiegGeeignet": false,
+   "arbeitszeitVollzeit": true,
+   "eintrittszeitraum": {
+    "von": "2026-10-12"
+   },
+   "verguetungsangabe": "JAHRESGEHALT",
+   "artDerVerguetung": "GEHALTSSPANNE",
+   "gehaltsspanneVon": 60000.0,
+   "gehaltsspanneBis": 75000.0,
+   "vertragsdauer": "KEINE_ANGABE",
+   "istGeringfuegigeBeschaeftigung": false,
+   "stellenlokationen": [
+    {
+     "adresse": {
+      "plz": "80687",
+      "ort": "München",
+      "region": "BAYERN",
+      "land": "DEUTSCHLAND"
+     },
+     "breite": 48.140433435,
+     "laenge": 11.506015614
+    }
+   ],
+   "chiffrenummer": "VA91-12446-MC",
+   "veroeffentlichungszeitraum": {
+    "von": "2026-10-12"
+   },
+   "datumErsteVeroeffentlichung": "2026-10-12",
+   "aenderungsdatum": "2026-10-12T07:53:17.403",
+   "hauptberuf": "Ingenieurinformatiker/in",
+   "alternativBeruf1": "Machine Learning Engineer",
+   "firma": "FERCHAU GmbH Niederlassung München Mobility",
+   "arbeitgeberKundennummerHash": "ufkpF47n0WlVnSWOu05UslNXOl0xb1KTvoxjP-2lFfM=",
+   "referenznummer": "12265-305102_JB5269941-S",
+   "alleBerufe": [
+    "Machine Learning Engineer",
+    "Ingenieurinformatiker/in"
+   ]
+  },
+  {
+   "stellenangebotsart": "ARBEIT",
+   "stellenangebotsTitel": "Data Software Engineer (m/w/d)",
+   "quereinstiegGeeignet": false,
+   "arbeitszeitVollzeit": true,
+   "eintrittszeitraum": {
+    "von": "2026-10-16"
+   },
+   "verguetungsangabe": "JAHRESGEHALT",
+   "artDerVerguetung": "GEHALTSSPANNE",
+   "gehaltsspanneVon": 55000.0,
+   "gehaltsspanneBis": 70000.0,
+   "vertragsdauer": "KEINE_ANGABE",
+   "istGeringfuegigeBeschaeftigung": false,
+   "stellenlokationen": [
+    {
+     "adresse": {
+      "plz": "83543",
+      "ort": "Rott am Inn",
+      "region": "BAYERN",
+      "land": "DEUTSCHLAND"
+     },
+     "breite": 47.986080224,
+     "laenge": 12.129937625
+    }
+   ],
+   "chiffrenummer": "VA80-07542-RH",
+   "veroeffentlichungszeitraum": {
+    "von": "2026-10-16"
+   },
+   "datumErsteVeroeffentlichung": "2026-10-16",
+   "aenderungsdatum": "2026-10-16T07:41:43.959",
+   "hauptberuf": "Softwareentwickler/in",
+   "firma": "FERCHAU GmbH Niederlassung Rosenheim",
+   "arbeitgeberKundennummerHash": "zfq5KJr-wHxluxN17M6AXNFAgB-djaTuJWrtFozj5ho=",
+   "referenznummer": "12265-507913_JB5274316-S",
+   "alleBerufe": [
+    "Softwareentwickler/in"
+   ]
+  },
+  {
+   "stellenangebotsart": "ARBEIT",
+   "stellenangebotsTitel": "Software Engineer (m/w/d) ",
+   "quereinstiegGeeignet": false,
+   "arbeitszeitVollzeit": true,
+   "eintrittszeitraum": {
+    "von": "2026-10-17"
+   },
+   "verguetungsangabe": "JAHRESGEHALT",
+   "artDerVerguetung": "GEHALTSSPANNE",
+   "gehaltsspanneVon": 65000.0,
+   "gehaltsspanneBis": 70000.0,
+   "vertragsdauer": "UNBEFRISTET",
+   "istGeringfuegigeBeschaeftigung": false,
+   "stellenlokationen": [
+    {
+     "adresse": {
+      "plz": "64283",
+      "ort": "Darmstadt",
+      "region": "HESSEN",
+      "land": "DEUTSCHLAND"
+     },
+     "breite": 49.870748732,
+     "laenge": 8.652460249
+    }
+   ],
+   "veroeffentlichungszeitraum": {
+    "von": "2026-10-17"
+   },
+   "datumErsteVeroeffentlichung": "2026-10-17",
+   "aenderungsdatum": "2026-10-17T13:05:59.343",
+   "hauptberuf": "Softwareentwickler/in",
+   "firma": "adesta GmbH & Co. KG",
+   "arbeitgeberKundennummerHash": "5_35s6N0gCtEnjs0aipL2r7GpXoPcvwPGzbv8i2dSwc=",
+   "referenznummer": "18384-QT6EQFWNNNMY62TO-S",
+   "alleBerufe": [
+    "Softwareentwickler/in"
+   ]
+  },
+  {
+   "stellenangebotsart": "ARBEIT",
+   "stellenangebotsTitel": "Software Engineer (m/w/d)",
+   "quereinstiegGeeignet": false,
+   "arbeitszeitVollzeit": true,
+   "eintrittszeitraum": {
+    "von": "2026-10-15"
+   },
+   "verguetungsangabe": "KEINE_ANGABEN",
+   "vertragsdauer": "UNBEFRISTET",
+   "istGeringfuegigeBeschaeftigung": false,
+   "stellenlokationen": [
+    {
+     "adresse": {
+      "plz": "28199",
+      "ort": "Bremen",
+      "region": "BREMEN",
+      "land": "DEUTSCHLAND"
+     },
+     "breite": 53.055337808001,
+     "laenge": 8.7892346
+    }
+   ],
+   "chiffrenummer": "JN -082025-65981",
+   "veroeffentlichungszeitraum": {
+    "von": "2026-10-15"
+   },
+   "datumErsteVeroeffentlichung": "2026-10-15",
+   "aenderungsdatum": "2026-10-15T13:02:43.860",
+   "hauptberuf": "Software-Architect",
+   "firma": "Akkodis Germany Tech Experts GmbH",
+   "arbeitgeberKundennummerHash": "grv4CFZ2JqoiB0c3VvS5H8ZQ3k-sOk3PLaE2PR3903A=",
+   "referenznummer": "12634-BB-646226-7878-8725-S",
+   "alleBerufe": [
+    "Software-Architect"
+   ]
+  },
+  {
+   "stellenangebotsart": "ARBEIT",
+   "stellenangebotsTitel": "#15099 Software Engineer (m/w/d)",
+   "arbeitszeitSchichtNachtWochenende": false,
+   "arbeitszeitTeilzeitAbend": false,
+   "arbeitszeitTeilzeitNachmittag": false,
+   "arbeitszeitTeilzeitVormittag": false,
+   "arbeitszeitTeilzeitFlexibel": false,
+   "arbeitszeitVollzeit": true,
+   "eintrittszeitraum": {
+    "von": "2026-10-13"
+   },
+   "verguetungsangabe": "KEINE_ANGABEN",
+   "vertragsdauer": "BEFRISTET",
+   "befristungInMonaten": 5,
+   "stellenlokationen": [
+    {
+     "adresse": {
+      "ort": "Köln",
+      "region": "NORDRHEIN_WESTFALEN",
+      "land": "DEUTSCHLAND"
+     },
+     "breite": 50.9455298,
+     "laenge": 6.970144
+    }
+   ],
+   "chiffrenummer": "15099",
+   "veroeffentlichungszeitraum": {
+    "von": "2026-10-13"
+   },
+   "datumErsteVeroeffentlichung": "2026-10-13",
+   "aenderungsdatum": "2026-10-13T11:56:50.255",
+   "hauptberuf": "IT-Berater/in",
+   "firma": "Constaff GmbH",
+   "arbeitgeberKundennummerHash": "tFCs7QsZ6k0PCbbabXGWRRbK3PBA8ZR1m5ZJY1MHbfw=",
+   "referenznummer": "10001-1003848174-S",
+   "alleBerufe": [
+    "IT-Berater/in"
+   ]
+  },
+  {
+   "stellenangebotsart": "ARBEIT",
+   "stellenangebotsTitel": "IoT Software Engineer (m/w/d)",
+   "arbeitszeitTeilzeitNachmittag": true,
+   "arbeitszeitTeilzeitVormittag": true,
+   "arbeitszeitVollzeit": true,
+   "eintrittszeitraum": {
+    "von": "2026-10-14"
+   },
+   "verguetungsangabe": "KEINE_ANGABEN",
+   "vertragsdauer": "UNBEFRISTET",
+   "stellenlokationen": [
+    {
+     "adresse": {
+      "strasse": "Calwer Str.",
+      "hausnummer": "11",
+      "plz": "75395",
+      "ort": "Ostelsheim",
+      "region": "BADEN_WUERTTEMBERG",
+      "land": "DEUTSCHLAND"
+     },
+     "breite": 48.7272964,
+     "laenge": 8.8502125
+    }
+   ],
+   "veroeffentlichungszeitraum": {
+    "von": "2026-10-14"
+   },
+   "datumErsteVeroeffentlichung": "2026-10-14",
+   "aenderungsdatum": "2026-10-14T09:56:06.482",
+   "hauptberuf": "Informatiker/in (Weiterbildung)",
+   "firma": "SOTEC GmbH & Co KG",
+   "arbeitgeberKundennummerHash": "Cag3Fjh-Kvrfv6TTDxZxr_zojz5fRpefKdYNnTxNOGM=",
+   "referenznummer": "10001-1003853035-S",
+   "alleBerufe": [
+    "Informatiker/in (Weiterbildung)"
+   ]
+  },
+  {
+   "stellenangebotsart": "ARBEIT",
+   "stellenangebotsTitel": "Software Engineer (d/f/m)",
+   "arbeitszeitVollzeit": true,
+   "eintrittszeitraum": {
+    "von": "2026-10-15"
+   },
+   "verguetungsangabe": "JAHRESGEHALT",
+   "artDerVerguetung": "FESTGEHALT",
+   "festgehalt": 63141,
+   "vertragsdauer": "UNBEFRISTET",
+   "stellenlokationen": [
+    {
+     "adresse": {
+      "ort": "Manching",
+      "region": "BAYERN",
+      "land": "DEUTSCHLAND"
+     },
+     "breite": 48.712430303,
+     "laenge": 11.503282748
+    }
+   ],
+   "homeofficemoeglich": true,
+   "homeofficetyp": "NACH_VEREINBARUNG",
+   "chiffrenummer": "10444265",
+   "veroeffentlichungszeitraum": {
+    "von": "2026-10-15"
+   },
+   "datumErsteVeroeffentlichung": "2026-10-15",
+   "aenderungsdatum": "2026-10-15T10:09:56.437",
+   "hauptberuf": "Informatiker/in",
+   "firma": "Ingenieurbüro Heimann Gunnar Heimann",
+   "arbeitgeberKundennummerHash": "AqNjVBhHnXYjyBHysWIjxm6_yzsfANqG-HLZXqlrK1M=",
+   "referenznummer": "10001-1003860342-S",
+   "alleBerufe": [
+    "Informatiker/in"
+   ]
+  },
+  {
+   "stellenangebotsart": "ARBEIT",
+   "stellenangebotsTitel": "Senior Software Engineer (m/w/d)",
+   "quereinstiegGeeignet": false,
+   "arbeitszeitSchichtNachtWochenende": false,
+   "arbeitszeitTeilzeitAbend": false,
+   "arbeitszeitTeilzeitNachmittag": false,
+   "arbeitszeitTeilzeitVormittag": false,
+   "arbeitszeitTeilzeitFlexibel": false,
+   "arbeitszeitVollzeit": true,
+   "eintrittszeitraum": {
+    "von": "2027-01-01"
+   },
+   "verguetungsangabe": "KEINE_ANGABEN",
+   "vertragsdauer": "UNBEFRISTET",
+   "istGeringfuegigeBeschaeftigung": false,
+   "stellenlokationen": [
+    {
+     "adresse": {
+      "land": "DEUTSCHLAND"
+     }
+    }
+   ],
+   "homeofficemoeglich": true,
+   "homeofficetyp": "NACH_VEREINBARUNG",
+   "chiffrenummer": "70791",
+   "veroeffentlichungszeitraum": {
+    "von": "2026-10-13"
+   },
+   "datumErsteVeroeffentlichung": "2026-10-13",
+   "aenderungsdatum": "2026-10-13T14:52:33.829",
+   "hauptberuf": "IT-Manager/in",
+   "firma": "BWI GmbH",
+   "arbeitgeberKundennummerHash": "YllzIWAR0MdjVsi5dNGOXHuiLy55xF0e_EGmKFbGKr4=",
+   "referenznummer": "13509-00002111593001-S",
+   "alleBerufe": [
+    "IT-Manager/in"
+   ]
+  },
+  {
+   "stellenangebotsart": "ARBEIT",
+   "stellenangebotsTitel": "Software Engineer (m/w/d)",
+   "quereinstiegGeeignet": false,
+   "arbeitszeitSchichtNachtWochenende": false,
+   "arbeitszeitTeilzeitAbend": false,
+   "arbeitszeitTeilzeitNachmittag": false,
+   "arbeitszeitTeilzeitVormittag": false,
+   "arbeitszeitTeilzeitFlexibel": false,
+   "arbeitszeitVollzeit": true,
+   "eintrittszeitraum": {
+    "von": "2026-10-13"
+   },
+   "verguetungsangabe": "JAHRESGEHALT",
+   "artDerVerguetung": "FESTGEHALT",
+   "festgehalt": 71321.79,
+   "vertragsdauer": "KEINE_ANGABE",
+   "istGeringfuegigeBeschaeftigung": false,
+   "stellenlokationen": [
+    {
+     "adresse": {
+      "strasse": "Notkestraße",
+      "hausnummer": "85",
+      "plz": "22607",
+      "ort": "Hamburg",
+      "region": "HAMBURG",
+      "land": "DEUTSCHLAND"
+     },
+     "breite": 53.573346,
+     "laenge": 9.880605
+    }
+   ],
+   "homeofficemoeglich": true,
+   "homeofficetyp": "NACH_VEREINBARUNG",
+   "veroeffentlichungszeitraum": {
+    "von": "2026-10-13"
+   },
+   "datumErsteVeroeffentlichung": "2026-10-13",
+   "aenderungsdatum": "2026-10-13T14:43:09.862",
+   "externeURL": "https://www.jobvector.de/job/software-engineer-5ccc656c5430b764/?utm_source=arbeitsagentur&utm_medium=partner&utm_campaign=tmcfdae_job_jid273878&utm_content=b2c&utm_term=tmf8eca_uic4ea2fd9",
+   "hauptberuf": "Ingenieur/in - Systems Engineering",
+   "firma": "Deutsches Elektronen-Synchrotron DESY",
+   "referenznummer": "14225-5ccc656c5430b764-S",
+   "alleBerufe": [
+    "Ingenieur/in - Systems Engineering"
+   ]
+  },
+  {
+   "stellenangebotsart": "ARBEIT",
+   "stellenangebotsTitel": "Senior Software Engineer (m/w/d)",
+   "quereinstiegGeeignet": false,
+   "arbeitszeitSchichtNachtWochenende": false,
+   "arbeitszeitTeilzeitAbend": false,
+   "arbeitszeitTeilzeitNachmittag": false,
+   "arbeitszeitTeilzeitVormittag": false,
+   "arbeitszeitTeilzeitFlexibel": false,
+   "arbeitszeitVollzeit": true,
+   "eintrittszeitraum": {
+    "von": "2026-10-16"
+   },
+   "verguetungsangabe": "KEINE_ANGABEN",
+   "vertragsdauer": "KEINE_ANGABE",
+   "istGeringfuegigeBeschaeftigung": false,
+   "stellenlokationen": [
+    {
+     "adresse": {
+      "plz": "60486",
+      "ort": "Frankfurt am Main",
+      "region": "HESSEN",
+      "land": "DEUTSCHLAND"
+     },
+     "breite": 50.1143251,
+     "laenge": 8.629914
+    },
+    {
+     "adresse": {
+      "plz": "04109",
+      "ort": "Leipzig",
+      "region": "SACHSEN",
+      "land": "DEUTSCHLAND"
+     },
+     "breite": 51.3390296,
+     "laenge": 12.3665008
+    },
+    {
+     "adresse": {
+      "plz": "89075",
+      "ort": "Ulm, Donau",
+      "region": "BADEN_WUERTTEMBERG",
+      "land": "DEUTSCHLAND"
+     },
+     "breite": 48.3906475,
+     "laenge": 9.9558042
+    },
+    {
+     "adresse": {
+      "plz": "53119",
+      "ort": "Bonn",
+      "region": "NORDRHEIN_WESTFALEN",
+      "land": "DEUTSCHLAND"
+     },
+     "breite": 50.7469676,
+     "laenge": 7.0640968
+    },
+    {
+     "adresse": {
+      "plz": "80331",
+      "ort": "München",
+      "region": "BAYERN",
+      "land": "DEUTSCHLAND"
+     },
+     "breite": 48.1355827,
+     "laenge": 11.5739758
+    },
+    {
+     "adresse": {
+      "plz": "90402",
+      "ort": "Nürnberg, Mittelfranken",
+      "region": "BAYERN",
+      "land": "DEUTSCHLAND"
+     },
+     "breite": 49.4508466,
+     "laenge": 11.0896213
+    },
+    {
+     "adresse": {
+      "plz": "10115",
+      "ort": "Berlin",
+      "region": "BERLIN",
+      "land": "DEUTSCHLAND"
+     },
+     "breite": 52.5319761,
+     "laenge": 13.3867379
+    },
+    {
+     "adresse": {
+      "plz": "22587",
+      "ort": "Hamburg",
+      "region": "HAMBURG",
+      "land": "DEUTSCHLAND"
+     },
+     "breite": 53.5662274,
+     "laenge": 9.8038402
+    }
+   ],
+   "homeofficemoeglich": false,
+   "veroeffentlichungszeitraum": {
+    "von": "2026-10-16"
+   },
+   "datumErsteVeroeffentlichung": "2026-10-16",
+   "aenderungsdatum": "2026-10-16T09:12:13.636",
+   "externeURL": "https://gute-jobs.de/viewjob-awc7w?utm_source=jsba-premium&utm_medium=n-a&utm_campaign=jsba-premium&utm_term=senior-software-engineer-m-w-d",
+   "hauptberuf": "DevOps Engineer",
+   "firma": "BWI GmbH",
+   "referenznummer": "12336-a26f539j0456360-S",
+   "alleBerufe": [
+    "DevOps Engineer"
+   ]
+  },
+  {
+   "stellenangebotsart": "ARBEIT",
+   "stellenangebotsTitel": "Senior Embedded Software Engineer (m/w/d)",
+   "quereinstiegGeeignet": false,
+   "arbeitszeitVollzeit": true,
+   "eintrittszeitraum": {
+    "von": "2026-10-17"
+   },
+   "verguetungsangabe": "KEINE_ANGABEN",
+   "vertragsdauer": "KEINE_ANGABE",
+   "istGeringfuegigeBeschaeftigung": false,
+   "stellenlokationen": [
+    {
+     "adresse": {
+      "plz": "79100",
+      "ort": "Freiburg im Breisgau",
+      "region": "BADEN_WUERTTEMBERG",
+      "land": "DEUTSCHLAND"
+     },
+     "breite": 47.955167234,
+     "laenge": 7.863589616
+    }
+   ],
+   "veroeffentlichungszeitraum": {
+    "von": "2026-10-16"
+   },
+   "datumErsteVeroeffentlichung": "2026-10-16",
+   "aenderungsdatum": "2026-10-16T12:12:49.847",
+   "hauptberuf": "Ingenieur/in - Elektrotechnik",
+   "firma": "NewTec GmbH",
+   "arbeitgeberKundennummerHash": "PdW0rFbcKAhde9qW9-EGD7CTT4qNfiloFbqIgMoKWkE=",
+   "referenznummer": "15900-0068148971-S",
+   "alleBerufe": [
+    "Ingenieur/in - Elektrotechnik"
+   ]
+  },
+  {
+   "stellenangebotsart": "ARBEIT",
+   "stellenangebotsTitel": "Software Quality Engineer (m/w/d)",
+   "quereinstiegGeeignet": false,
+   "arbeitszeitVollzeit": true,
+   "eintrittszeitraum": {
+    "von": "2026-10-12"
+   },
+   "verguetungsangabe": "JAHRESGEHALT",
+   "artDerVerguetung": "GEHALTSSPANNE",
+   "gehaltsspanneVon": 85000.0,
+   "gehaltsspanneBis": 95000.0,
+   "vertragsdauer": "KEINE_ANGABE",
+   "istGeringfuegigeBeschaeftigung": false,
+   "stellenlokationen": [
+    {
+     "adresse": {
+      "plz": "60313",
+      "ort": "Frankfurt am Main",
+      "region": "HESSEN",
+      "land": "DEUTSCHLAND"
+     },
+     "breite": 50.115355959001,
+     "laenge": 8.683282209
+    }
+   ],
+   "chiffrenummer": "VA55-71224-F",
+   "veroeffentlichungszeitraum": {
+    "von": "2026-10-12"
+   },
+   "datumErsteVeroeffentlichung": "2026-10-12",
+   "aenderungsdatum": "2026-10-12T07:53:23.853",
+   "hauptberuf": "Qualitätsingenieur/in",
+   "firma": "FERCHAU GmbH Niederlassung Frankfurt",
+   "arbeitgeberKundennummerHash": "e2Wz0GWX0EPN8XEm3DWbpeR0E4RfJUCd4M2SVi60unk=",
+   "referenznummer": "12265-443530_JB5270015-S",
+   "alleBerufe": [
+    "Qualitätsingenieur/in"
+   ]
+  },
+  {
+   "stellenangebotsart": "ARBEIT",
+   "stellenangebotsTitel": "Software Engineer (d/w/m)",
+   "weitereBerufe": [
+    "DevOps Engineer",
+    "Fullstack Entwickler/in",
+    "Webentwickler/in",
+    "Softwareprogrammierer*"
+   ],
+   "arbeitszeitSchichtNachtWochenende": false,
+   "arbeitszeitTeilzeitAbend": false,
+   "arbeitszeitTeilzeitNachmittag": true,
+   "arbeitszeitTeilzeitVormittag": true,
+   "arbeitszeitTeilzeitFlexibel": false,
+   "arbeitszeitVollzeit": false,
+   "eintrittszeitraum": {
+    "von": "2027-04-01"
+   },
+   "verguetungsangabe": "JAHRESGEHALT",
+   "artDerVerguetung": "GEHALTSSPANNE",
+   "gehaltsspanneVon": 29000.0,
+   "gehaltsspanneBis": 32000.0,
+   "vertragsdauer": "BEFRISTET",
+   "befristetBis": "2028-12-31",
+   "stellenlokationen": [
+    {
+     "adresse": {
+      "ort": "Lüneburg",
+      "region": "NIEDERSACHSEN",
+      "land": "DEUTSCHLAND"
+     },
+     "breite": 53.2424586,
+     "laenge": 10.4128281
+    },
+    {
+     "adresse": {
+      "land": "DEUTSCHLAND"
+     }
+    }
+   ],
+   "homeofficemoeglich": true,
+   "homeofficetyp": "ANGABE_IN_PROZENT",
+   "homeofficeprozent": 100,
+   "veroeffentlichungszeitraum": {
+    "von": "2026-10-12"
+   },
+   "datumErsteVeroeffentlichung": "2026-10-11",
+   "aenderungsdatum": "2026-10-13T10:08:10.980",
+   "hauptberuf": "Anwendungsprogrammierer/in",
+   "alternativBeruf1": "Softwareentwickler/in",
+   "alternativBeruf2": "Fachinformatiker/in - Anwendungsentwicklung",
+   "firma": "AllerLeih e.V.",
+   "arbeitgeberKundennummerHash": "gX0NXVz9-DtLJS5qXhaJcAIT4GafZyxdUNux-7MsFSQ=",
+   "referenznummer": "10001-1003837900-S",
+   "alleBerufe": [
+    "Softwareentwickler/in",
+    "Softwareprogrammierer*",
+    "DevOps Engineer",
+    "Anwendungsprogrammierer/in",
+    "Fachinformatiker/in - Anwendungsentwicklung",
+    "Fullstack Entwickler/in",
+    "Webentwickler/in"
+   ]
+  },
+  {
+   "stellenangebotsart": "ARBEIT",
+   "stellenangebotsTitel": "Senior Software Engineer (m/w/d)",
+   "quereinstiegGeeignet": false,
+   "arbeitszeitSchichtNachtWochenende": false,
+   "arbeitszeitTeilzeitAbend": false,
+   "arbeitszeitTeilzeitNachmittag": false,
+   "arbeitszeitTeilzeitVormittag": false,
+   "arbeitszeitTeilzeitFlexibel": false,
+   "arbeitszeitVollzeit": true,
+   "eintrittszeitraum": {
+    "von": "2026-10-19"
+   },
+   "verguetungsangabe": "KEINE_ANGABEN",
+   "vertragsdauer": "UNBEFRISTET",
+   "istGeringfuegigeBeschaeftigung": false,
+   "stellenlokationen": [
+    {
+     "adresse": {
+      "plz": "55120",
+      "ort": "Mainz am Rhein",
+      "region": "RHEINLAND_PFALZ",
+      "land": "DEUTSCHLAND"
+     },
+     "breite": 49.9702978,
+     "laenge": 8.2370553
+    }
+   ],
+   "homeofficemoeglich": false,
+   "chiffrenummer": "2769118",
+   "veroeffentlichungszeitraum": {
+    "von": "2026-10-16"
+   },
+   "datumErsteVeroeffentlichung": "2026-10-16",
+   "aenderungsdatum": "2026-10-16T14:13:38.878",
+   "externeURL": "https://www.jobexport.de/job/5273691.html?exp=81&cid=62745e05-8db8-4d32-a2a7-17d1d6485383",
+   "hauptberuf": "Softwareentwickler/in",
+   "firma": "VP Verbund Pflegehilfe GmbH",
+   "referenznummer": "13635-62745e05_JB5273691-S",
+   "alleBerufe": [
+    "Softwareentwickler/in"
+   ]
+  },
+  {
+   "stellenangebotsart": "ARBEIT",
+   "stellenangebotsTitel": "Software Engineer Golang (m/w/d)",
+   "quereinstiegGeeignet": false,
+   "arbeitszeitVollzeit": true,
+   "eintrittszeitraum": {
+    "von": "2026-10-18"
+   },
+   "verguetungsangabe": "KEINE_ANGABEN",
+   "vertragsdauer": "BEFRISTET",
+   "befristungInMonaten": 24,
+   "istGeringfuegigeBeschaeftigung": false,
+   "stellenlokationen": [
+    {
+     "adresse": {
+      "ort": "Erlangen",
+      "region": "BAYERN",
+      "land": "DEUTSCHLAND"
+     },
+     "breite": 49.582388591,
+     "laenge": 10.984861843
+    }
+   ],
+   "chiffrenummer": "897727/1",
+   "veroeffentlichungszeitraum": {
+    "von": "2026-10-18"
+   },
+   "datumErsteVeroeffentlichung": "2026-10-18",
+   "aenderungsdatum": "2026-10-18T18:41:54.169",
+   "hauptberuf": "Ingenieur/in - Elektrotechnik",
+   "alternativBeruf1": "Softwareentwickler/in",
+   "firma": "Hays Professional Solutions GmbH Standort Nürnberg",
+   "arbeitgeberKundennummerHash": "JxFVW6dkmka4mkyKPSZbBowdzWpkFqB-i_cfHTifZfE=",
+   "referenznummer": "13319-897727/1_4317CS-S",
+   "alleBerufe": [
+    "Softwareentwickler/in",
+    "Ingenieur/in - Elektrotechnik"
+   ]
+  },
+  {
+   "stellenangebotsart": "ARBEIT",
+   "stellenangebotsTitel": "Software Test Engineer (w/m/d)",
+   "quereinstiegGeeignet": false,
+   "arbeitszeitVollzeit": true,
+   "eintrittszeitraum": {
+    "von": "2026-10-18"
+   },
+   "verguetungsangabe": "KEINE_ANGABEN",
+   "vertragsdauer": "UNBEFRISTET",
+   "istGeringfuegigeBeschaeftigung": false,
+   "stellenlokationen": [
+    {
+     "adresse": {
+      "ort": "München",
+      "region": "BAYERN",
+      "land": "DEUTSCHLAND"
+     },
+     "breite": 48.152104426001,
+     "laenge": 11.55020237
+    }
+   ],
+   "chiffrenummer": "TR-305174",
+   "veroeffentlichungszeitraum": {
+    "von": "2026-10-18"
+   },
+   "datumErsteVeroeffentlichung": "2026-10-18",
+   "aenderungsdatum": "2026-10-18T17:23:08.965",
+   "hauptberuf": "IT-Tester/in",
+   "alternativBeruf1": "Testingenieur/in",
+   "firma": "Brunel GmbH NL München",
+   "arbeitgeberKundennummerHash": "sbbVr6zI7ObFBtRj56RG0u2JJqNjB77fVTFzp77MusQ=",
+   "referenznummer": "12362-TR305174_443CS-S",
+   "alleBerufe": [
+    "IT-Tester/in",
+    "Testingenieur/in"
+   ]
+  },
+  {
+   "stellenangebotsart": "ARBEIT",
+   "stellenangebotsTitel": "Software Test Engineer (m/w/d)",
+   "quereinstiegGeeignet": false,
+   "arbeitszeitVollzeit": true,
+   "eintrittszeitraum": {
+    "von": "2026-10-13"
+   },
+   "verguetungsangabe": "JAHRESGEHALT",
+   "artDerVerguetung": "GEHALTSSPANNE",
+   "gehaltsspanneVon": 70000.0,
+   "gehaltsspanneBis": 85000.0,
+   "vertragsdauer": "KEINE_ANGABE",
+   "istGeringfuegigeBeschaeftigung": false,
+   "stellenlokationen": [
+    {
+     "adresse": {
+      "plz": "64293",
+      "ort": "Darmstadt",
+      "region": "HESSEN",
+      "land": "DEUTSCHLAND"
+     },
+     "breite": 49.882459535,
+     "laenge": 8.630528663
+    }
+   ],
+   "chiffrenummer": "VA34-17189-DA",
+   "veroeffentlichungszeitraum": {
+    "von": "2026-10-13"
+   },
+   "datumErsteVeroeffentlichung": "2026-10-13",
+   "aenderungsdatum": "2026-10-13T07:41:31.100",
+   "hauptberuf": "IT-Tester/in",
+   "firma": "FERCHAU GmbH Niederlassung Darmstadt",
+   "arbeitgeberKundennummerHash": "i_mxlN4n_NCqiLcov9Xu4kSMtEDm7cq5uFVsJxwS6fo=",
+   "referenznummer": "12265-523918_JB5270789-S",
+   "alleBerufe": [
+    "IT-Tester/in"
+   ]
+  },
+  {
+   "stellenangebotsart": "ARBEIT",
+   "stellenangebotsTitel": "Software Test Engineer (m/w/d)",
+   "quereinstiegGeeignet": false,
+   "arbeitszeitVollzeit": true,
+   "eintrittszeitraum": {
+    "von": "2026-10-13"
+   },
+   "verguetungsangabe": "JAHRESGEHALT",
+   "artDerVerguetung": "GEHALTSSPANNE",
+   "gehaltsspanneVon": 60000.0,
+   "gehaltsspanneBis": 75000.0,
+   "vertragsdauer": "KEINE_ANGABE",
+   "istGeringfuegigeBeschaeftigung": false,
+   "stellenlokationen": [
+    {
+     "adresse": {
+      "plz": "20097",
+      "ort": "Hamburg",
+      "region": "HAMBURG",
+      "land": "DEUTSCHLAND"
+     },
+     "breite": 53.547504435,
+     "laenge": 10.019652976
+    }
+   ],
+   "chiffrenummer": "VA27-23865-HH_IT",
+   "veroeffentlichungszeitraum": {
+    "von": "2026-10-13"
+   },
+   "datumErsteVeroeffentlichung": "2026-10-13",
+   "aenderungsdatum": "2026-10-13T07:41:30.385",
+   "hauptberuf": "IT-Tester/in",
+   "firma": "FERCHAU GmbH Niederlassung Hamburg-City",
+   "arbeitgeberKundennummerHash": "GcA4d1Eq5cKsh0Fa6HZ7bfqJYGIWsIIOXLZ9V_J6BQU=",
+   "referenznummer": "12265-523891_JB5270781-S",
+   "alleBerufe": [
+    "IT-Tester/in"
+   ]
+  },
+  {
+   "stellenangebotsart": "ARBEIT",
+   "stellenangebotsTitel": "Senior Software Engineer (m/w/d)",
+   "quereinstiegGeeignet": false,
+   "arbeitszeitSchichtNachtWochenende": false,
+   "arbeitszeitTeilzeitAbend": false,
+   "arbeitszeitTeilzeitNachmittag": false,
+   "arbeitszeitTeilzeitVormittag": false,
+   "arbeitszeitTeilzeitFlexibel": false,
+   "arbeitszeitVollzeit": true,
+   "eintrittszeitraum": {
+    "von": "2026-10-15"
+   },
+   "verguetungsangabe": "KEINE_ANGABEN",
+   "vertragsdauer": "UNBEFRISTET",
+   "istGeringfuegigeBeschaeftigung": false,
+   "stellenlokationen": [
+    {
+     "adresse": {
+      "plz": "53119",
+      "ort": "Bonn",
+      "region": "NORDRHEIN_WESTFALEN",
+      "land": "DEUTSCHLAND"
+     },
+     "breite": 50.7469676,
+     "laenge": 7.0640968
+    }
+   ],
+   "homeofficemoeglich": true,
+   "homeofficetyp": "NACH_VEREINBARUNG",
+   "chiffrenummer": "68700",
+   "veroeffentlichungszeitraum": {
+    "von": "2026-10-13"
+   },
+   "datumErsteVeroeffentlichung": "2026-10-13",
+   "aenderungsdatum": "2026-10-15T10:05:59.886",
+   "hauptberuf": "IT-Manager/in",
+   "firma": "BWI GmbH",
+   "arbeitgeberKundennummerHash": "YllzIWAR0MdjVsi5dNGOXHuiLy55xF0e_EGmKFbGKr4=",
+   "referenznummer": "13509-00002110d70003-S",
+   "alleBerufe": [
+    "IT-Manager/in"
+   ]
+  },
+  {
+   "stellenangebotsart": "ARBEIT",
+   "stellenangebotsTitel": "Senior Software Engineer (m/w/d) SPS & Robotik ",
+   "quereinstiegGeeignet": false,
+   "arbeitszeitVollzeit": true,
+   "eintrittszeitraum": {
+    "von": "2026-10-15"
+   },
+   "verguetungsangabe": "JAHRESGEHALT",
+   "artDerVerguetung": "GEHALTSSPANNE",
+   "gehaltsspanneVon": 65000.0,
+   "gehaltsspanneBis": 75000.0,
+   "vertragsdauer": "KEINE_ANGABE",
+   "istGeringfuegigeBeschaeftigung": false,
+   "stellenlokationen": [
+    {
+     "adresse": {
+      "plz": "90443",
+      "ort": "Nürnberg, Mittelfranken",
+      "region": "BAYERN",
+      "land": "DEUTSCHLAND"
+     },
+     "breite": 49.439478977,
+     "laenge": 11.068873122
+    }
+   ],
+   "veroeffentlichungszeitraum": {
+    "von": "2026-10-15"
+   },
+   "datumErsteVeroeffentlichung": "2026-10-15",
+   "aenderungsdatum": "2026-10-15T17:08:56.378",
+   "hauptberuf": "Softwareentwickler/in",
+   "alternativBeruf1": "Software-Architect",
+   "alternativBeruf2": "Fachinformatiker/in - Anwendungsentwicklung",
+   "firma": "TEMPTON Next Level Experts GmbH",
+   "arbeitgeberKundennummerHash": "mACriamrR9_l6A4mLI3gzyPaMJVG1qZDmyKrQ7uO5pI=",
+   "referenznummer": "12098-13897756-S",
+   "alleBerufe": [
+    "Softwareentwickler/in",
+    "Software-Architect",
+    "Fachinformatiker/in - Anwendungsentwicklung"
+   ]
+  },
+  {
+   "stellenangebotsart": "ARBEIT",
+   "stellenangebotsTitel": "Software Test Engineer (m/w/d)",
+   "quereinstiegGeeignet": false,
+   "arbeitszeitVollzeit": true,
+   "eintrittszeitraum": {
+    "von": "2026-10-16"
+   },
+   "verguetungsangabe": "KEINE_ANGABEN",
+   "vertragsdauer": "UNBEFRISTET",
+   "istGeringfuegigeBeschaeftigung": false,
+   "stellenlokationen": [
+    {
+     "adresse": {
+      "plz": "80634",
+      "ort": "München",
+      "region": "BAYERN",
+      "land": "DEUTSCHLAND"
+     },
+     "breite": 48.150467198,
+     "laenge": 11.529806252
+    }
+   ],
+   "chiffrenummer": "1074-3",
+   "veroeffentlichungszeitraum": {
+    "von": "2026-10-16"
+   },
+   "datumErsteVeroeffentlichung": "2026-10-16",
+   "aenderungsdatum": "2026-10-16T10:34:05.945",
+   "hauptberuf": "Informatiker/in",
+   "alternativBeruf1": "Informatiker/in (Weiterbildung)",
+   "firma": "Software Engineering GmbH",
+   "arbeitgeberKundennummerHash": "PTs43fLqj7hw-P_LDQB9j5tAxhn54-cotvuLDitdARI=",
+   "referenznummer": "19802-2026-10740003-S",
+   "alleBerufe": [
+    "Informatiker/in",
+    "Informatiker/in (Weiterbildung)"
+   ]
+  },
+  {
+   "stellenangebotsart": "ARBEIT",
+   "stellenangebotsTitel": "Senior Software Engineer .NET / C# (m/w/d)",
+   "quereinstiegGeeignet": false,
+   "arbeitszeitVollzeit": true,
+   "eintrittszeitraum": {
+    "von": "2026-10-13"
+   },
+   "verguetungsangabe": "JAHRESGEHALT",
+   "artDerVerguetung": "GEHALTSSPANNE",
+   "gehaltsspanneVon": 70000.0,
+   "gehaltsspanneBis": 85000.0,
+   "vertragsdauer": "KEINE_ANGABE",
+   "istGeringfuegigeBeschaeftigung": false,
+   "stellenlokationen": [
+    {
+     "adresse": {
+      "plz": "64293",
+      "ort": "Darmstadt",
+      "region": "HESSEN",
+      "land": "DEUTSCHLAND"
+     },
+     "breite": 49.882459535,
+     "laenge": 8.630528663
+    }
+   ],
+   "chiffrenummer": "VA32-33646-DA",
+   "veroeffentlichungszeitraum": {
+    "von": "2026-10-13"
+   },
+   "datumErsteVeroeffentlichung": "2026-10-13",
+   "aenderungsdatum": "2026-10-13T07:41:30.952",
+   "hauptberuf": "Softwareentwickler/in",
+   "firma": "FERCHAU GmbH Niederlassung Darmstadt",
+   "arbeitgeberKundennummerHash": "i_mxlN4n_NCqiLcov9Xu4kSMtEDm7cq5uFVsJxwS6fo=",
+   "referenznummer": "12265-523915_JB5270787-S",
+   "alleBerufe": [
+    "Softwareentwickler/in"
+   ]
+  },
+  {
+   "stellenangebotsart": "ARBEIT",
+   "stellenangebotsTitel": "Software Engineer C#/.NET (all gender)",
+   "quereinstiegGeeignet": false,
+   "arbeitszeitVollzeit": true,
+   "eintrittszeitraum": {
+    "von": "2026-11-23"
+   },
+   "verguetungsangabe": "KEINE_ANGABEN",
+   "vertragsdauer": "UNBEFRISTET",
+   "istGeringfuegigeBeschaeftigung": false,
+   "stellenlokationen": [
+    {
+     "adresse": {
+      "region": "BAYERN",
+      "land": "DEUTSCHLAND"
+     }
+    }
+   ],
+   "veroeffentlichungszeitraum": {
+    "von": "2026-10-15"
+   },
+   "datumErsteVeroeffentlichung": "2026-10-15",
+   "aenderungsdatum": "2026-10-15T17:34:14.683",
+   "hauptberuf": "Software-Architect",
+   "alternativBeruf1": "Softwareentwickler/in",
+   "firma": "ALTEN Consulting Services GmbH Stuttgart",
+   "arbeitgeberKundennummerHash": "PkqMkV-h6olc0d0yQ3HZSfnhlcdMkt_DH4VH6RFzYcQ=",
+   "referenznummer": "13185-507209-1800266-0-S",
+   "alleBerufe": [
+    "Softwareentwickler/in",
+    "Software-Architect"
+   ]
+  }
+ ],
+ "maxErgebnisse": 176,
+ "page": 1,
+ "size": 25
+}

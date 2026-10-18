@@ -19,6 +19,7 @@
     --src-linkedin: #4f8fd6;
     --src-mcf: #b07fe0;
     --src-jobstreet: #3fb98a;
+    --src-arbeitsagentur: #e05a7a;
     color-scheme: dark;
     --mono: 'SF Mono', 'Menlo', 'Monaco', 'Cascadia Code', 'Consolas', monospace;
     --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -43,6 +44,7 @@ body.light {
     --src-linkedin: #2a64a8;
     --src-mcf: #7a45b0;
     --src-jobstreet: #1d7f57;
+    --src-arbeitsagentur: #b3304f;
     color-scheme: light;
 }
 
@@ -231,6 +233,7 @@ body {
 .src-linkedin { color: var(--src-linkedin); }
 .src-mcf { color: var(--src-mcf); }
 .src-jobstreet { color: var(--src-jobstreet); }
+.src-arbeitsagentur { color: var(--src-arbeitsagentur); }
 .pill { padding: 1px 7px; border-radius: 10px; font-size: 10px; border: 1px solid currentColor; }
 .pill-saved { color: var(--accent); }
 .pill-applied { color: var(--good); }
@@ -335,6 +338,30 @@ body {
 .presets { display: flex; gap: 6px; margin-top: 8px; }
 .profile-text { height: 50vh; margin-top: 12px; resize: vertical; font: 12px var(--mono); line-height: 1.5; }
 .modal-actions { display: flex; align-items: center; gap: 8px; margin-top: 18px; }
+
+/* ── MCP: using JobScout from Claude ─────────────────────────── */
+.mcp-step { display: flex; flex-direction: column; gap: 6px; margin-top: 16px; }
+.mcp-step p { margin: 0; }
+.mcp-step-title { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; }
+.mcp-num {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 18px; height: 18px; border-radius: 50%;
+    font-size: 11px; color: #fff; background: var(--accent-bg);
+}
+.mcp-snippet-wrap { position: relative; }
+.mcp-snippet {
+    margin: 0; padding: 10px 76px 10px 12px;
+    border-radius: 8px; border: 1px solid var(--border); background: var(--bg0);
+    font: 11.5px var(--mono); line-height: 1.5; color: var(--text1);
+    white-space: pre-wrap; word-break: break-all; user-select: text;
+}
+.mcp-copy { position: absolute; top: 6px; right: 6px; }
+.mcp-path { font-size: 11px; word-break: break-all; }
+.mcp-note {
+    margin-top: 16px; padding: 9px 11px; border-radius: 8px;
+    background: var(--bg2); color: var(--text2); font-size: 11.5px; line-height: 1.6;
+}
+.mcp-note code, .mcp-step code { font: 11px var(--mono); word-break: break-all; }
 
 /* ── Watches ──────────────────────────────────────────────── */
 .watch-btn { margin-top: 8px; }

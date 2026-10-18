@@ -5,7 +5,8 @@
 //! `JobPosting` JSON-LD — the structured data job boards publish for search
 //! engines — which is a far steadier contract than CSS class names.
 //!
-//!   * search: `/en/vacancies/?term=…&location=…&page=N` (jobup: `/en/jobs/`),
+//!   * search: `/en/vacancies/?term=…&page=N` (jobup: `/en/jobs/`), all of
+//!     Switzerland,
 //!     about 20 postings in an `ItemList`, each a short `JobPosting`.
 //!   * detail: the posting's own URL, one full `JobPosting`.
 
@@ -25,22 +26,11 @@ pub fn search_url(source: Source, p: &SearchParams, page: u32) -> String {
     {
         let mut q = url.query_pairs_mut();
         q.append_pair("term", p.keywords.trim());
-        if let Some(loc) = location(&p.location) {
-            q.append_pair("location", loc);
-        }
         if page > 1 {
             q.append_pair("page", &page.to_string());
         }
     }
     url.to_string()
-}
-
-/// Both sites cover all of Switzerland by default; passing the country as a
-/// location would only narrow it to places literally called that.
-fn location(loc: &str) -> Option<&str> {
-    let l = loc.trim();
-    let whole = ["", "switzerland", "schweiz", "suisse", "svizzera", "ch"];
-    (!whole.contains(&l.to_lowercase().as_str())).then_some(l)
 }
 
 /// Every posting on one search page, unfiltered: the caller tells the end of
@@ -184,11 +174,10 @@ fn id_from_url(url: &str) -> Option<String> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::model::Posted;
 
     #[test]
-    fn country_is_not_a_location() {
-        let mut p = SearchParams {
+    fn search_covers_the_whole_country() {
+        let p = SearchParams {
             keywords: "rust".into(),
             ..SearchParams::default()
         };
@@ -196,11 +185,9 @@ mod tests {
             search_url(Source::JobsCh, &p, 1),
             "https://www.jobs.ch/en/vacancies/?term=rust"
         );
-        p.location = "Zürich".into();
-        p.posted = Posted::Any;
         assert_eq!(
             search_url(Source::Jobup, &p, 2),
-            "https://www.jobup.ch/en/jobs/?term=rust&location=Z%C3%BCrich&page=2"
+            "https://www.jobup.ch/en/jobs/?term=rust&page=2"
         );
     }
 
