@@ -2,7 +2,8 @@
 
 A desktop app (Rust + Dioxus) that collects job posts and ranks them against
 your profile, for one country at a time: Switzerland (LinkedIn, jobs.ch,
-jobup.ch) or Singapore (LinkedIn, MyCareersFuture, JobStreet).
+jobup.ch), Singapore (LinkedIn, MyCareersFuture, JobStreet) or Germany
+(LinkedIn, Arbeitsagentur, StepStone).
 
 - **Search** LinkedIn's public guest endpoints. No login is used, so no account is at risk. You can filter by keywords, location, date posted, workplace type and experience level, and choose how many pages to fetch.
 - **Keep** every job found in `~/Library/Application Support/JobScout/<country>/jobs.json`, deduplicated by job id. Each job has a status (New / Saved / Applied / Hidden).
@@ -40,7 +41,8 @@ The server and the window share the same files. The server reads, changes
 and writes a file in one go, and the window reloads any file another process
 changed (checked every 2 s). Watches still run only in the window. The
 built-in WebKit backend needs the window's main thread, so through MCP
-LinkedIn is read over plain HTTP, and JobStreet only works with Camoufox.
+LinkedIn is read over plain HTTP, and JobStreet, and StepStone's job pages,
+only work with Camoufox.
 
 ## Releasing
 
@@ -82,10 +84,12 @@ into `ch/`, and a file already in `ch/` is never overwritten.
 
 | Country | Source | Read from | Search filters |
 |---|---|---|---|
-| Both | LinkedIn | Public guest endpoints (`/jobs-guest/...`), no login | All filters |
+| All | LinkedIn | Public guest endpoints (`/jobs-guest/...`), no login | All filters |
 | 🇨🇭 | jobs.ch, jobup.ch | Public search and job pages, via their schema.org `JobPosting` JSON-LD. Not `/api/`, which their robots.txt disallows | Keywords, location, date posted (filtered in the app). Workplace and experience don't apply |
 | 🇸🇬 | MyCareersFuture | The public JSON API its site uses (`api.mycareersfuture.gov.sg/v2`), always over plain HTTP | Keywords, date posted (filtered in the app). All of Singapore. Workplace and experience don't apply |
 | 🇸🇬 | JobStreet | Public search (`/jobs?keywords=…`, the only query strings its robots.txt allows) and job pages, via the `SEEK_REDUX_DATA` state they embed. Always in a browser: the site sits behind a Cloudflare challenge that plain HTTP never passes. The built-in WebKit one, or Camoufox when that is the backend | Keywords, location (a region; "Singapore" means all), date posted. Workplace and experience don't apply |
+| 🇩🇪 | Arbeitsagentur | The Jobbörse's public JSON API (`rest.arbeitsagentur.de/jobboerse/jobsuche-service`, v6 search, v4 job details), with the public `X-API-Key` every client sends. Always over plain HTTP | Keywords, date posted. All of Germany. Workplace and experience don't apply |
+| 🇩🇪 | StepStone | Public search (`/jobs/{keywords}?q=…`, the only query strings its robots.txt allows under `/jobs/`) via the `__PRELOADED_STATE__` it embeds, and job pages via their schema.org `JobPosting` JSON-LD. Search over plain HTTP; job pages always in a browser, since Akamai resets plain connections to them | Keywords, date posted (last day or week on the site, a month in the app). All of Germany. Workplace and experience don't apply |
 
 Both JobCloud sites (jobs.ch and jobup.ch) share posting ids, so a job listed on
 both appears once. Across LinkedIn and JobCloud, a job with the same title and
@@ -106,7 +110,7 @@ pane can also be selected and copied with Cmd+C.
 | Backend | How | When |
 |---|---|---|
 | Direct HTTP (default) | `reqwest` against `/jobs-guest/jobs/api/...` | Normal use |
-| Built-in browser (WebKit) | An offscreen `WKWebView`, the engine the window already renders in (`services/webkit.rs`). Nothing to install. macOS only | JobStreet always uses it, unless Camoufox is picked. Can be picked for LinkedIn too |
+| Built-in browser (WebKit) | An offscreen `WKWebView`, the engine the window already renders in (`services/webkit.rs`). Nothing to install. macOS only | JobStreet, and StepStone's job pages, always use it, unless Camoufox is picked. Can be picked for LinkedIn too |
 | Camoufox | `helper/camoufox_fetch.py`, a long-lived Camoufox browser spoken to over JSON lines. Needs Python with `camoufox` installed | Optional, for power users, if the other backends get blocked |
 
 Camoufox setup: `pip install -U camoufox && python -m camoufox fetch`. Then

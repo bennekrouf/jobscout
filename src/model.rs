@@ -77,7 +77,7 @@ impl Country {
         match self {
             Country::Switzerland => &[Source::LinkedIn, Source::JobsCh, Source::Jobup],
             Country::Singapore => &[Source::LinkedIn, Source::Mcf, Source::JobStreet],
-            Country::Germany => &[Source::LinkedIn, Source::Arbeitsagentur],
+            Country::Germany => &[Source::LinkedIn, Source::Arbeitsagentur, Source::StepStone],
         }
     }
 }
@@ -100,6 +100,9 @@ pub enum Source {
     /// The Bundesagentur für Arbeit's Jobbörse, Germany's public employment
     /// service and its largest board.
     Arbeitsagentur,
+    /// StepStone, the largest commercial board in Germany. Behind Akamai:
+    /// job pages are read through a browser.
+    StepStone,
 }
 
 impl Source {
@@ -111,6 +114,7 @@ impl Source {
             Source::Mcf => "MyCareersFuture",
             Source::JobStreet => "JobStreet",
             Source::Arbeitsagentur => "Arbeitsagentur",
+            Source::StepStone => "StepStone",
         }
     }
 
@@ -122,6 +126,7 @@ impl Source {
             Source::Mcf => "src-mcf",
             Source::JobStreet => "src-jobstreet",
             Source::Arbeitsagentur => "src-arbeitsagentur",
+            Source::StepStone => "src-stepstone",
         }
     }
 }

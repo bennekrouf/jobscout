@@ -22,7 +22,9 @@ use chrono::Utc;
 use serde_json::{json, Map, Value};
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 
-use crate::model::{Backend, Country, Job, Posted, SearchParams, Settings, Source, Status, Watch, EXPERIENCE};
+use crate::model::{
+    Backend, Country, Job, Posted, SearchParams, Settings, Source, Status, Watch, EXPERIENCE,
+};
 use crate::services::fetch::FetchError;
 use crate::services::{licence, llm, sources, store};
 use crate::state::{freshness, Freshness};
@@ -364,7 +366,10 @@ async fn call(name: &str, args: &Value) -> Result<Value, String> {
         }
         "list_watches" => {
             let country = country(args)?;
-            let watches: Vec<Value> = store::load_watches(country).iter().map(watch_json).collect();
+            let watches: Vec<Value> = store::load_watches(country)
+                .iter()
+                .map(watch_json)
+                .collect();
             Ok(json!({ "country": country.label(), "watches": watches }))
         }
         "add_watch" => add_watch(args),
@@ -398,7 +403,11 @@ fn text(args: &Value, key: &str) -> Result<String, String> {
 }
 
 fn country(args: &Value) -> Result<Country, String> {
-    let Some(v) = args["country"].as_str().map(str::trim).filter(|s| !s.is_empty()) else {
+    let Some(v) = args["country"]
+        .as_str()
+        .map(str::trim)
+        .filter(|s| !s.is_empty())
+    else {
         return Ok(store::load_settings().country);
     };
     Country::ALL
@@ -436,7 +445,11 @@ fn source(v: &str, country: Country) -> Result<Source, String> {
         })
         .ok_or_else(|| {
             let names: Vec<&str> = country.sources().iter().map(|s| s.label()).collect();
-            format!("{v} is not a board in {}; it has {}", country.label(), names.join(", "))
+            format!(
+                "{v} is not a board in {}; it has {}",
+                country.label(),
+                names.join(", ")
+            )
         })
 }
 
@@ -507,13 +520,20 @@ fn settings() -> Settings {
     s
 }
 
-/// JobStreet is always read in a browser; without the window, only Camoufox
-/// is one.
-fn reachable(source: Source, settings: &Settings) -> Result<(), String> {
-    if source == Source::JobStreet && settings.backend != Backend::Camoufox {
-        return Err("JobStreet needs a browser: through Claude, only Camoufox (Settings → \
-                    Backend) works; the built-in one runs in the JobScout window"
-            .into());
+/// JobStreet is always read in a browser, and StepStone's job pages are
+/// (`detail`); without the window, only Camoufox is one.
+fn reachable(source: Source, detail: bool, settings: &Settings) -> Result<(), String> {
+    let browser_only = source == Source::JobStreet || (source == Source::StepStone && detail);
+    if browser_only && settings.backend != Backend::Camoufox {
+        return Err(format!(
+            "{} needs a browser: through Claude, only Camoufox (Settings → \
+             Backend) works; the built-in one runs in the JobScout window",
+            if detail {
+                format!("{} job pages", source.label())
+            } else {
+                source.label().to_string()
+            }
+        ));
     }
     Ok(())
 }
@@ -545,9 +565,13 @@ fn overview() -> Value {
         })
         .collect();
     let licence = match licence::current() {
-        licence::Status::Free => format!("free: {} watch across all countries", licence::FREE_WATCHES),
+        licence::Status::Free => {
+            format!("free: {} watch across all countries", licence::FREE_WATCHES)
+        }
         licence::Status::Pro(l) => format!("JobScout Pro, licensed to {}", l.email),
-        licence::Status::Renew(_) => "Pro licence that does not cover this version: free limits apply".into(),
+        licence::Status::Renew(_) => {
+            "Pro licence that does not cover this version: free limits apply".into()
+        }
         licence::Status::Unavailable => "build without licence checks: nothing is limited".into(),
     };
     json!({
@@ -588,10 +612,16 @@ fn row(j: &Job) -> Value {
 /// The jobs the list filters in `args` keep, in the order asked for.
 fn filtered<'a>(args: &Value, country: Country, jobs: &'a [Job]) -> Result<Vec<&'a Job>, String> {
     let wanted = args["status"].as_str().map(status).transpose()?;
-    let board = args["source"].as_str().map(|v| source(v, country)).transpose()?;
+    let board = args["source"]
+        .as_str()
+        .map(|v| source(v, country))
+        .transpose()?;
     let min_score = args["min_score"].as_u64();
     let unscored = args["unscored"].as_bool().unwrap_or(false);
-    let needle = args["text"].as_str().map(|t| t.trim().to_lowercase()).filter(|t| !t.is_empty());
+    let needle = args["text"]
+        .as_str()
+        .map(|t| t.trim().to_lowercase())
+        .filter(|t| !t.is_empty());
 
     let mut out: Vec<&Job> = jobs
         .iter()
@@ -623,9 +653,16 @@ fn list_jobs(args: &Value) -> Result<Value, String> {
     let country = country(args)?;
     let jobs = store::load_jobs(country);
     let all = filtered(args, country, &jobs)?;
-    let limit = args["limit"].as_u64().map_or(LIST_DEFAULT, |n| (n as usize).clamp(1, LIST_MAX));
+    let limit = args["limit"]
+        .as_u64()
+        .map_or(LIST_DEFAULT, |n| (n as usize).clamp(1, LIST_MAX));
     let offset = args["offset"].as_u64().unwrap_or(0) as usize;
-    let page: Vec<Value> = all.iter().skip(offset).take(limit).map(|j| row(j)).collect();
+    let page: Vec<Value> = all
+        .iter()
+        .skip(offset)
+        .take(limit)
+        .map(|j| row(j))
+        .collect();
     Ok(json!({
         "country": country.label(),
         "matching": all.len(),
@@ -662,12 +699,19 @@ async fn get_job(args: &Value) -> Result<Value, String> {
         if d.description.chars().count() > DESCRIPTION_CAP {
             o.insert("description_truncated".into(), json!(true));
         }
-        let criteria: Map<String, Value> = d.criteria.iter().map(|(k, v)| (k.clone(), json!(v))).collect();
+        let criteria: Map<String, Value> = d
+            .criteria
+            .iter()
+            .map(|(k, v)| (k.clone(), json!(v)))
+            .collect();
         o.insert("criteria".into(), Value::Object(criteria));
         if let Some(a) = &d.applicants {
             o.insert("applicants".into(), json!(a));
         }
-        o.insert("description_fetched".into(), json!(d.fetched_at.to_rfc3339()));
+        o.insert(
+            "description_fetched".into(),
+            json!(d.fetched_at.to_rfc3339()),
+        );
     }
     if let Some(s) = &job.score {
         o.insert("strengths".into(), json!(s.strengths));
@@ -704,7 +748,7 @@ fn update(country: Country, id: &str, f: impl FnOnce(&mut Job)) -> Result<(), St
 
 async fn fetch_detail(country: Country, id: &str, settings: &Settings) -> Result<(), String> {
     let job = find(country, id)?;
-    reachable(job.source, settings)?;
+    reachable(job.source, true, settings)?;
     let body = match sources::fetch_detail(&job, settings).await {
         Ok(body) => body,
         // The page itself answered with an error: remember it, as the window
@@ -738,7 +782,7 @@ async fn search(args: &Value) -> Result<Value, String> {
 
     for &board in &p.sources {
         let name = board.label();
-        if let Err(why) = reachable(board, &settings) {
+        if let Err(why) = reachable(board, false, &settings) {
             notes.push(format!("{name} skipped: {why}"));
             continue;
         }
@@ -787,7 +831,8 @@ async fn search(args: &Value) -> Result<Value, String> {
         .filter_map(|id| jobs.iter().find(|j| j.id == *id))
         .map(row)
         .collect();
-    let mut v = json!({ "country": country.label(), "query": query, "new_jobs": new.len(), "jobs": new });
+    let mut v =
+        json!({ "country": country.label(), "query": query, "new_jobs": new.len(), "jobs": new });
     if !notes.is_empty() {
         v["notes"] = json!(notes);
     }
@@ -811,7 +856,10 @@ async fn score_jobs(args: &Value) -> Result<Value, String> {
     let country = country(args)?;
     let ids = ids(args)?;
     if ids.len() > SCORE_MAX {
-        return Err(format!("at most {SCORE_MAX} jobs per call; {} were asked for", ids.len()));
+        return Err(format!(
+            "at most {SCORE_MAX} jobs per call; {} were asked for",
+            ids.len()
+        ));
     }
     let profile = store::load_profile(country);
     if profile.trim().is_empty() {
@@ -845,7 +893,10 @@ async fn score_jobs(args: &Value) -> Result<Value, String> {
                 // A missing or blocked page is this job's problem; anything
                 // else (the model, its key, a rate limit) would repeat for
                 // every job, so the rest are not tried. The window's rule.
-                if !e.starts_with("HTTP") && !e.contains("no description") && !e.starts_with("no job") {
+                if !e.starts_with("HTTP")
+                    && !e.contains("no description")
+                    && !e.starts_with("no job")
+                {
                     stopped = Some(e.clone());
                 }
                 results.push(json!({ "id": id, "error": e }));
@@ -855,7 +906,12 @@ async fn score_jobs(args: &Value) -> Result<Value, String> {
     Ok(json!({ "country": country.label(), "results": results }))
 }
 
-async fn score_one(country: Country, id: &str, profile: &str, settings: &Settings) -> Result<Job, String> {
+async fn score_one(
+    country: Country,
+    id: &str,
+    profile: &str,
+    settings: &Settings,
+) -> Result<Job, String> {
     let job = find(country, id)?;
     match freshness(&job, settings, Utc::now()) {
         Freshness::Fresh => {}
@@ -929,7 +985,10 @@ fn add_watch(args: &Value) -> Result<Value, String> {
     let country = country(args)?;
     let search = search_params(args, country)?;
     // Counted across every country, as the window counts them.
-    let saved: usize = Country::ALL.iter().map(|&c| store::load_watches(c).len()).sum();
+    let saved: usize = Country::ALL
+        .iter()
+        .map(|&c| store::load_watches(c).len())
+        .sum();
     if !licence::may_add_watch(&licence::current(), saved) {
         return Err(format!(
             "The free version of JobScout keeps {} watch, and {saved} is saved. JobScout Pro \
@@ -977,7 +1036,9 @@ fn export_csv(args: &Value) -> Result<Value, String> {
     let jobs = store::load_jobs(country);
     let rows = filtered(args, country, &jobs)?;
     std::fs::write(&path, store::to_csv(&rows)).map_err(|e| format!("{}: {e}", path.display()))?;
-    Ok(json!({ "country": country.label(), "jobs": rows.len(), "path": path.display().to_string() }))
+    Ok(
+        json!({ "country": country.label(), "jobs": rows.len(), "path": path.display().to_string() }),
+    )
 }
 
 #[cfg(test)]
@@ -1019,7 +1080,11 @@ mod tests {
         assert_eq!(names.len(), tools.len());
         for t in tools {
             assert_eq!(t["inputSchema"]["type"], "object", "{}", t["name"]);
-            for required in t["inputSchema"]["required"].as_array().into_iter().flatten() {
+            for required in t["inputSchema"]["required"]
+                .as_array()
+                .into_iter()
+                .flatten()
+            {
                 let key = required.as_str().unwrap();
                 assert!(
                     t["inputSchema"]["properties"].get(key).is_some(),
@@ -1038,12 +1103,27 @@ mod tests {
 
     #[test]
     fn countries_and_boards_are_read_by_code_or_name() {
-        assert_eq!(country(&json!({ "country": "SG" })).unwrap(), Country::Singapore);
-        assert_eq!(country(&json!({ "country": "switzerland" })).unwrap(), Country::Switzerland);
+        assert_eq!(
+            country(&json!({ "country": "SG" })).unwrap(),
+            Country::Singapore
+        );
+        assert_eq!(
+            country(&json!({ "country": "switzerland" })).unwrap(),
+            Country::Switzerland
+        );
         assert!(country(&json!({ "country": "fr" })).is_err());
-        assert_eq!(source("jobs.ch", Country::Switzerland).unwrap(), Source::JobsCh);
-        assert_eq!(source("JOBUP", Country::Switzerland).unwrap(), Source::Jobup);
-        assert!(source("jobs.ch", Country::Singapore).is_err(), "a board of another country");
+        assert_eq!(
+            source("jobs.ch", Country::Switzerland).unwrap(),
+            Source::JobsCh
+        );
+        assert_eq!(
+            source("JOBUP", Country::Switzerland).unwrap(),
+            Source::Jobup
+        );
+        assert!(
+            source("jobs.ch", Country::Singapore).is_err(),
+            "a board of another country"
+        );
     }
 
     #[test]
@@ -1065,7 +1145,11 @@ mod tests {
         assert_eq!(p.experience, vec![4]);
 
         assert!(search_params(&json!({}), Country::Switzerland).is_err());
-        assert!(search_params(&json!({ "keywords": "x", "sources": [] }), Country::Switzerland).is_err());
+        assert!(search_params(
+            &json!({ "keywords": "x", "sources": [] }),
+            Country::Switzerland
+        )
+        .is_err());
     }
 
     #[test]
@@ -1094,10 +1178,20 @@ mod tests {
 
     #[test]
     fn webkit_is_not_used_without_the_window() {
-        let s = Settings { backend: Backend::WebKit, ..Settings::default() };
-        assert!(reachable(Source::JobStreet, &s).is_err());
-        let s = Settings { backend: Backend::Camoufox, ..Settings::default() };
-        assert!(reachable(Source::JobStreet, &s).is_ok());
-        assert!(reachable(Source::LinkedIn, &Settings::default()).is_ok());
+        let s = Settings {
+            backend: Backend::WebKit,
+            ..Settings::default()
+        };
+        assert!(reachable(Source::JobStreet, false, &s).is_err());
+        // StepStone searches over plain HTTP; only its job pages need one.
+        assert!(reachable(Source::StepStone, false, &s).is_ok());
+        assert!(reachable(Source::StepStone, true, &s).is_err());
+        let s = Settings {
+            backend: Backend::Camoufox,
+            ..Settings::default()
+        };
+        assert!(reachable(Source::JobStreet, false, &s).is_ok());
+        assert!(reachable(Source::StepStone, true, &s).is_ok());
+        assert!(reachable(Source::LinkedIn, true, &Settings::default()).is_ok());
     }
 }
