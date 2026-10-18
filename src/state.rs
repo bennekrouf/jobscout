@@ -165,7 +165,10 @@ impl AppState {
             what.push("profile");
         }
         if !what.is_empty() {
-            self.log(format!("Loaded {} changed outside this window.", what.join(", ")));
+            self.log(format!(
+                "Loaded {} changed outside this window.",
+                what.join(", ")
+            ));
         }
     }
 

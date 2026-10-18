@@ -9,6 +9,7 @@ pub mod llm;
 pub mod mcf;
 pub mod notify;
 pub mod sources;
+pub mod stepstone;
 pub mod store;
 pub mod text;
 pub mod update_check;

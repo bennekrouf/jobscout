@@ -5,12 +5,13 @@ use std::time::Duration;
 use chrono::Utc;
 
 use super::fetch::{self, FetchError};
-use super::{arbeitsagentur, jobcloud, jobstreet, linkedin, mcf};
+use super::{arbeitsagentur, jobcloud, jobstreet, linkedin, mcf, stepstone};
 use crate::model::{Backend, Country, Job, JobDetail, Posted, SearchParams, Settings, Source};
 
-/// JobStreet answers plain HTTP with a Cloudflare challenge, so it is read
-/// in a browser even when the other sources use direct HTTP: Camoufox if
-/// that is the backend, the built-in WebKit one otherwise.
+/// JobStreet answers plain HTTP with a Cloudflare challenge, and StepStone
+/// resets the connection on its job pages, so those are read in a browser
+/// even when the other sources use direct HTTP: Camoufox if that is the
+/// backend, the built-in WebKit one otherwise.
 fn in_browser(settings: &Settings) -> Settings {
     let backend = match settings.backend {
         Backend::Camoufox => Backend::Camoufox,
@@ -53,6 +54,9 @@ pub async fn fetch_search(
             let url = arbeitsagentur::search_url(p, page);
             fetch::get_json_cached(&url, &arbeitsagentur::HEADERS, ttl, settings).await
         }
+        Source::StepStone => {
+            fetch::get_cached(&stepstone::search_url(p, page), ttl, settings).await
+        }
     }
 }
 
@@ -63,6 +67,7 @@ pub fn parse_search(source: Source, body: &str, query: &str) -> Vec<Job> {
         Source::Mcf => mcf::parse_search(body, query),
         Source::JobStreet => jobstreet::parse_search(body, query),
         Source::Arbeitsagentur => arbeitsagentur::parse_search(body, query),
+        Source::StepStone => stepstone::parse_search(body, query),
     }
 }
 
@@ -76,6 +81,7 @@ pub async fn fetch_detail(job: &Job, settings: &Settings) -> Result<String, Fetc
             let url = arbeitsagentur::detail_url(&job.id);
             fetch::get_json(&url, &arbeitsagentur::HEADERS, settings).await
         }
+        Source::StepStone => fetch::get(&job.url, &in_browser(settings)).await,
     }
 }
 
@@ -86,6 +92,7 @@ pub fn parse_detail(source: Source, body: &str) -> Option<JobDetail> {
         Source::Mcf => mcf::parse_detail(body),
         Source::JobStreet => jobstreet::parse_detail(body),
         Source::Arbeitsagentur => arbeitsagentur::parse_detail(body),
+        Source::StepStone => stepstone::parse_detail(body),
     }
 }
 

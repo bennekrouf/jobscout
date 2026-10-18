@@ -15,12 +15,18 @@ published at <https://mayorana.ch/en/apps/jobscout/releases>.
   profile, manage your watches and export a list to CSV, in any country. What
   Claude changes shows up in the open window within a couple of seconds.
   Scoring uses the model and key set in Settings. Through Claude, JobStreet
-  needs the Camoufox backend: the built-in browser only runs in the window.
-- Germany. Pick the German flag to search LinkedIn and the Arbeitsagentur's
-  Jobbörse, the federal employment agency's board and the largest in the
-  country, with salaries and full descriptions where the employer gives them.
-  Like Switzerland and Singapore, Germany keeps its own jobs, watches, profile
-  and last search; nothing found there shows up in the other countries.
+  and StepStone's job descriptions need the Camoufox backend: the built-in
+  browser only runs in the window.
+- Germany. Pick the German flag to search LinkedIn, the Arbeitsagentur's
+  Jobbörse (the federal employment agency's board, the largest in the
+  country) and StepStone, Germany's biggest commercial job board. Salaries
+  show where the employer gives them; on StepStone, a salary marked
+  "StepStone estimate" is the site's own guess. StepStone descriptions open
+  in the built-in browser, like JobStreet's, so on Windows and Linux they
+  need the Camoufox backend. A job posted on more than one board is listed
+  once. Like Switzerland and Singapore, Germany keeps its own jobs, watches,
+  profile and last search; nothing found there shows up in the other
+  countries.
 
 ### Changed
 
