@@ -10,12 +10,10 @@
 //! the next call until it is done. Fine for one client; the place to change
 //! if that stops being true is `serve_stdio`.
 //!
-//! `search` and `fetch_detail` mirror `search_source` and
-//! `fetch_detail_inner` in `state`, which work on the window's signals
-//! instead of the files. A change to how a page is read or a job is added
-//! has to be made in both.
+//! Searches and job pages go through `sources::search_source` and
+//! `sources::fetch_job_detail`, as the window's do; only where the jobs are
+//! kept and how progress is told differ.
 
-use std::collections::HashSet;
 use std::time::Duration;
 
 use chrono::Utc;
@@ -25,7 +23,7 @@ use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 use crate::model::{
     Backend, Country, Job, Posted, SearchParams, Settings, Source, Status, Watch, EXPERIENCE,
 };
-use crate::services::fetch::FetchError;
+use crate::services::sources::SearchEvent;
 use crate::services::{licence, llm, sources, store};
 use crate::state::{freshness, Freshness};
 
@@ -762,26 +760,10 @@ fn update(country: Country, id: &str, f: impl FnOnce(&mut Job)) -> Result<(), St
 async fn fetch_detail(country: Country, id: &str, settings: &Settings) -> Result<(), String> {
     let job = find(country, id)?;
     reachable(job.source, true, settings)?;
-    let body = match sources::fetch_detail(&job, settings).await {
-        Ok(body) => body,
-        // The page itself answered with an error: remember it, as the window
-        // does. Network trouble and rate limits are not this job's fault.
-        Err(e @ FetchError::Status(_)) => {
-            update(country, id, |j| j.detail_failed_at = Some(Utc::now()))?;
-            return Err(e.to_string());
-        }
-        Err(e) => return Err(e.to_string()),
-    };
-    match sources::parse_detail(job.source, &body) {
-        Some(detail) => update(country, id, |j| {
-            j.detail = Some(detail);
-            j.detail_failed_at = None;
-        }),
-        None => {
-            update(country, id, |j| j.detail_failed_at = Some(Utc::now()))?;
-            Err("no description on the page (removed, or a block page)".into())
-        }
-    }
+    sources::fetch_job_detail(&job, settings, |detail| {
+        update(country, id, |j| sources::record_detail(j, detail))
+    })
+    .await
 }
 
 async fn search(args: &Value) -> Result<Value, String> {
@@ -799,43 +781,38 @@ async fn search(args: &Value) -> Result<Value, String> {
             notes.push(format!("{name} skipped: {why}"));
             continue;
         }
-        let mut seen = HashSet::new();
-        let mut offset = 0;
-        for page in 1..=p.pages.max(1) {
-            match sources::fetch_search(board, country, &p, page, offset, ttl, &settings).await {
-                Ok((body, _cached)) => {
-                    let found = sources::parse_search(board, &body, &query);
-                    offset += found.len() as u32;
-                    let before = seen.len();
-                    seen.extend(found.iter().map(|j| j.id.clone()));
-                    // An empty page ends the results; so does one that only
-                    // repeats postings this search has already seen.
-                    if found.is_empty() || seen.len() == before {
-                        break;
-                    }
-                    let found = sources::within_posted(board, found, p.posted);
-                    let mut jobs = store::load_jobs(country);
-                    let new = sources::merge_new(&mut jobs, found);
-                    if !new.is_empty() {
-                        store::save_jobs(country, &jobs);
-                    }
-                    added.extend(new);
-                }
-                Err(FetchError::RateLimited(code)) => {
-                    notes.push(format!(
-                        "{name} is rate-limiting (HTTP {code}): the rest of {name} was skipped. \
-                         Wait a few minutes before searching it again."
-                    ));
-                    break;
-                }
-                // Past the first page, LinkedIn answers the end of results with an error status.
-                Err(FetchError::Status(_)) if page > 1 => break,
-                Err(e) => {
-                    notes.push(format!("{name} search failed: {e}"));
-                    break;
-                }
+        let merge = |found| {
+            let mut jobs = store::load_jobs(country);
+            let new = sources::merge_new(&mut jobs, found);
+            if !new.is_empty() {
+                store::save_jobs(country, &jobs);
             }
-        }
+            new
+        };
+        // Only what went wrong is worth telling; pages that worked show up
+        // as the jobs returned.
+        let report = |event| match event {
+            SearchEvent::RateLimited(code) => notes.push(format!(
+                "{name} is rate-limiting (HTTP {code}): the rest of {name} was skipped. \
+                 Wait a few minutes before searching it again."
+            )),
+            SearchEvent::Failed(e) => notes.push(format!("{name} search failed: {e}")),
+            _ => {}
+        };
+        added.extend(
+            sources::search_source(
+                board,
+                country,
+                &p,
+                ttl,
+                &settings,
+                &query,
+                || false,
+                merge,
+                report,
+            )
+            .await,
+        );
     }
 
     let jobs = store::load_jobs(country);
@@ -1058,6 +1035,7 @@ fn export_csv(args: &Value) -> Result<Value, String> {
 mod tests {
     use super::*;
     use crate::model::Score;
+    use std::collections::HashSet;
 
     fn job(id: &str, title: &str, status: Status, score: Option<u8>) -> Job {
         Job {
