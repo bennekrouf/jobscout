@@ -167,10 +167,10 @@ body {
 .brand-mark { color: var(--accent); font-size: 18px; }
 
 /* One country's context at a time: the flags switch it. */
-.countries { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin: 4px 0 10px; }
+.countries { display: grid; grid-template-columns: repeat(auto-fill, minmax(36px, 1fr)); gap: 6px; margin: 4px 0 10px; }
 .country {
     display: flex; align-items: center; justify-content: center; gap: 6px;
-    padding: 7px 6px;
+    padding: 6px 4px;
     font: 12px var(--sans);
     color: var(--text2);
     background: var(--bg2);
@@ -179,11 +179,10 @@ body {
     cursor: pointer;
     min-width: 0;
 }
-.country span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .country:hover:not(:disabled) { color: var(--text1); border-color: var(--text3); }
 .country.on { color: var(--text1); border-color: var(--accent); background: var(--bg3); }
 .country:disabled { opacity: 0.45; cursor: not-allowed; }
-.country .flag { font-size: 16px; line-height: 1; }
+.country .flag { font-size: 18px; line-height: 1; }
 .search-form .btn-primary { margin-top: 18px; }
 .sidebar-foot { margin-top: auto; padding-top: 16px; display: flex; flex-direction: column; gap: 8px; }
 

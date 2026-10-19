@@ -3,6 +3,24 @@
 What changed in each version of JobScout, for the people using it. Also
 published at <https://mayorana.ch/en/apps/jobscout/releases>.
 
+## [Unreleased]
+
+### Added
+
+- Search by contract type. Tick Permanent (CDI), Freelance or both in the
+  sidebar and the search keeps to those contracts on the boards that can
+  filter by them: LinkedIn, France Travail, Arbeitsagentur and Reed. The
+  sidebar names the ones available in the country you have loaded; the other
+  boards still bring every contract. With both ticked, Arbeitsagentur and
+  Reed cannot leave out fixed-term jobs, so they may show some. Watches keep
+  the contract types of the search they were made from.
+
+### Changed
+
+- The country buttons at the top of the sidebar show only their flags, so
+  they fit in a row or two and leave more room for the search. Hover a flag
+  to see which country it is.
+
 ## [0.1.7] - 2026-10-19
 
 ### Fixed

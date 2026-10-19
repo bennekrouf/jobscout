@@ -26,7 +26,7 @@ use serde_json::Value;
 use super::fetch::{self, FetchError};
 use super::llm;
 use super::text::plain_to_text;
-use crate::model::{Job, JobDetail, SearchParams, Settings, Source, Status};
+use crate::model::{Contract, Job, JobDetail, SearchParams, Settings, Source, Status};
 
 const TOKEN_URL: &str =
     "https://entreprise.francetravail.fr/connexion/oauth2/access_token?realm=%2Fpartenaire";
@@ -54,6 +54,18 @@ pub fn search_url(p: &SearchParams, page: u32, now: DateTime<Utc>) -> Option<Str
             let iso = |t: DateTime<Utc>| t.format("%Y-%m-%dT%H:%M:%SZ").to_string();
             q.append_pair("minCreationDate", &iso(now - chrono::Duration::days(days)));
             q.append_pair("maxCreationDate", &iso(now));
+        }
+        // LIB is "profession libérale", how freelance missions are listed.
+        if !p.contract.is_empty() {
+            let types: Vec<&str> = p
+                .contract
+                .iter()
+                .map(|c| match c {
+                    Contract::Permanent => "CDI",
+                    Contract::Freelance => "LIB",
+                })
+                .collect();
+            q.append_pair("typeContrat", &types.join(","));
         }
         q.append_pair("range", &format!("{first}-{last}"));
     }
@@ -358,6 +370,10 @@ mod tests {
             .unwrap()
             .ends_with("range=3000-3049"));
         assert_eq!(search_url(&p, 62, now), None);
+        p.contract = vec![Contract::Permanent, Contract::Freelance];
+        assert!(search_url(&p, 1, now)
+            .unwrap()
+            .ends_with("&typeContrat=CDI%2CLIB&range=0-49"));
         assert_eq!(
             detail_url("201ABCD"),
             "https://api.francetravail.io/partenaire/offresdemploi/v2/offres/201ABCD"

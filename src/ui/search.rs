@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
 
-use crate::model::{Country, Posted, Watch, EXPERIENCE};
+use crate::model::{Contract, Country, Posted, Watch, EXPERIENCE};
 use crate::services::store;
 use crate::state::{run_search, AppState, Modal};
 
@@ -24,6 +24,14 @@ pub fn SearchPanel() -> Element {
     };
 
     let current = p.read().clone();
+    // The boards here that can filter by contract; the others ignore it.
+    let contract_sources = country
+        .sources()
+        .iter()
+        .filter(|s| s.filters_contract())
+        .map(|s| s.label())
+        .collect::<Vec<_>>()
+        .join(", ");
 
     rsx! {
         aside { class: "sidebar",
@@ -41,8 +49,8 @@ pub fn SearchPanel() -> Element {
                         disabled: busy && c != country,
                         title: if busy && c != country { "Wait for the current task to finish, or stop it".to_string() } else { format!("Load the {} context", c.label()) },
                         onclick: move |_| st.switch_country(c),
+                        "aria-label": c.label(),
                         span { class: "flag", "{c.flag()}" }
-                        span { "{c.short_label()}" }
                     }
                 }
             }
@@ -111,6 +119,27 @@ pub fn SearchPanel() -> Element {
                                 w.experience.retain(|c| *c != code);
                                 if v { w.experience.push(code); w.experience.sort(); }
                             },
+                        }
+                    }
+                }
+
+                if !contract_sources.is_empty() {
+                    label { class: "field-label", "Contract · {contract_sources}" }
+                    div { class: "checks",
+                        for c in Contract::ALL {
+                            Check {
+                                key: "{c.label()}",
+                                label: c.label(),
+                                checked: current.contract.contains(&c),
+                                on_change: move |v: bool| {
+                                    let mut w = p.write();
+                                    w.contract.retain(|x| *x != c);
+                                    if v {
+                                        w.contract.push(c);
+                                        w.contract.sort_by_key(|x| Contract::ALL.iter().position(|y| y == x));
+                                    }
+                                },
+                            }
                         }
                     }
                 }
