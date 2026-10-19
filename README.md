@@ -4,8 +4,9 @@ A desktop app (Rust + Dioxus) that collects job posts and ranks them against
 your profile, for one country at a time: Switzerland (LinkedIn, jobs.ch,
 jobup.ch), Singapore (LinkedIn, MyCareersFuture, JobStreet), Germany
 (LinkedIn, Arbeitsagentur, StepStone), France (LinkedIn, France Travail), the
-United Kingdom (LinkedIn, Totaljobs, Reed) or the United Arab Emirates
-(LinkedIn, Bayt).
+United Kingdom (LinkedIn, Totaljobs, Reed), the United Arab Emirates
+(LinkedIn, Bayt), Ireland (LinkedIn, IrishJobs), Belgium (LinkedIn,
+stepstone.be) or Austria (LinkedIn, stepstone.at).
 
 - **Search** LinkedIn's public guest endpoints. No login is used, so no account is at risk. You can filter by keywords, location, date posted, workplace type and experience level, and choose how many pages to fetch.
 - **Keep** every job found in `~/Library/Application Support/JobScout/<country>/jobs.json`, deduplicated by job id. Each job has a status (New / Saved / Applied / Hidden).
@@ -43,8 +44,9 @@ The server and the window share the same files. The server reads, changes
 and writes a file in one go, and the window reloads any file another process
 changed (checked every 2 s). Watches still run only in the window. The
 built-in WebKit backend needs the window's main thread, so through MCP
-LinkedIn is read over plain HTTP, and JobStreet, Bayt, and StepStone's and
-Totaljobs' job pages, only work with Camoufox.
+LinkedIn is read over plain HTTP, and JobStreet, Bayt, IrishJobs,
+stepstone.at, and the job pages of stepstone.de, stepstone.be and Totaljobs,
+only work with Camoufox.
 
 ## Releasing
 
@@ -109,6 +111,9 @@ into `ch/`, and a file already in `ch/` is never overwritten.
 | 🇬🇧 | Totaljobs | The StepStone platform, read like StepStone: public search via `__PRELOADED_STATE__`, job pages via JSON-LD in a browser. Its robots.txt allows `/jobs/{keywords}?q=…` with nothing after `q` (`/jobs/*?q=*&` is disallowed), so only the first page, 25 postings, and no filter on the site | Keywords, date posted (filtered in the app). All of the UK. Workplace and experience don't apply |
 | 🇬🇧 | Reed | The official jobseeker API (`reed.co.uk/api/1.0`), with your own key as the Basic auth user name. Not the site, whose robots.txt disallows `/jobs/`. Always over plain HTTP, 100 postings a page | Keywords, date posted (filtered in the app). All of the UK. Workplace and experience don't apply |
 | 🇦🇪 | Bayt | Public search (`/en/uae/jobs/{keywords}-jobs/?page=N`; its robots.txt disallows only the country-less `/en/jobs/…-jobs/`) read from the job cards, and job pages via their schema.org `JobPosting` JSON-LD. Always in a browser: the site sits behind a Cloudflare challenge. GulfTalent was left out: its keyword search exists only in the page's JavaScript | Keywords, date posted (filtered in the app). All of the UAE. Workplace and experience don't apply |
+| 🇮🇪 | IrishJobs | The StepStone platform, read like StepStone: search via `__PRELOADED_STATE__` (`/jobs/{keywords}?q=…&postedWithin=N&page=N`; its robots.txt allows `?q…&page=`), job pages via JSON-LD. Always in a browser: plain HTTP gets a 403, robots.txt included | Keywords, date posted (last day or week on the site, always also in the app). All of Ireland. Workplace and experience don't apply |
+| 🇧🇪 | stepstone.be | The StepStone platform, read like StepStone. Its robots.txt allows `/jobs/{keywords}?q=…` with nothing after `q`, so only the first page, 25 postings, and no filter on the site. Search over plain HTTP, job pages in a browser | Keywords, date posted (filtered in the app). All of Belgium. Workplace and experience don't apply |
+| 🇦🇹 | stepstone.at | As stepstone.be, but always in a browser: plain HTTP gets a 403, robots.txt included | Keywords, date posted (filtered in the app). All of Austria. Workplace and experience don't apply |
 
 Both JobCloud sites (jobs.ch and jobup.ch) share posting ids, so a job listed on
 both appears once. Across LinkedIn and JobCloud, a job with the same title and
@@ -129,7 +134,7 @@ pane can also be selected and copied with Cmd+C.
 | Backend | How | When |
 |---|---|---|
 | Direct HTTP (default) | `reqwest` against `/jobs-guest/jobs/api/...` | Normal use |
-| Built-in browser (WebKit) | An offscreen `WKWebView`, the engine the window already renders in (`services/webkit.rs`). Nothing to install. macOS only | JobStreet and Bayt, and StepStone's and Totaljobs' job pages, always use it, unless Camoufox is picked. Can be picked for LinkedIn too |
+| Built-in browser (WebKit) | An offscreen `WKWebView`, the engine the window already renders in (`services/webkit.rs`). Nothing to install. macOS only | JobStreet, Bayt, IrishJobs and stepstone.at, and the job pages of stepstone.de, stepstone.be and Totaljobs, always use it, unless Camoufox is picked. Can be picked for LinkedIn too |
 | Camoufox | `helper/camoufox_fetch.py`, a long-lived Camoufox browser spoken to over JSON lines. Needs Python with `camoufox` installed | Optional, for power users, if the other backends get blocked |
 
 Camoufox setup: `pip install -U camoufox && python -m camoufox fetch`. Then

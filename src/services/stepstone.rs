@@ -1,17 +1,22 @@
 //! The StepStone Group's boards: StepStone (stepstone.de), Germany's largest
-//! commercial board, and Totaljobs (totaljobs.com), the UK's. One platform,
-//! so one reader.
+//! commercial board, Totaljobs (totaljobs.com), the UK's, IrishJobs
+//! (irishjobs.ie), Ireland's, and stepstone.be and stepstone.at for Belgium
+//! and Austria. One platform, so one reader.
 //!
-//! Both sit behind Akamai. Search pages come through plain HTTP; job pages
-//! do not (the connection is reset), so those are read in a browser, like
-//! JobStreet's (see `sources`).
+//! All sit behind Akamai. StepStone's and Totaljobs' search pages come
+//! through plain HTTP; their job pages do not (the connection is reset), so
+//! those are read in a browser, like JobStreet's (see `sources`); so are
+//! stepstone.be's. IrishJobs and stepstone.at refuse plain HTTP everywhere, so
+//! they are read in a browser throughout.
 //!
 //!   * search: `/jobs/{keywords as a slug}?q=…`, the whole country, 25
-//!     postings a page. Both robots.txt files disallow query strings on
-//!     `/jobs/` except those starting with `?q=`, so `q` always comes first.
-//!     StepStone's then allows `&ag=age_N&page=N`; Totaljobs' disallows
-//!     anything after `q` (`/jobs/*?q=*&`), so a Totaljobs search is its first
-//!     page only, with dates filtered on our side.
+//!     postings a page. `q` always comes first: StepStone's and Totaljobs'
+//!     robots.txt disallow query strings on `/jobs/` except those starting
+//!     with `?q=`. StepStone's then allows `&ag=age_N&page=N`, and IrishJobs'
+//!     `&postedWithin=N&page=N` (`Allow: /*?q*&page=`). Totaljobs',
+//!     stepstone.be's and stepstone.at's disallow anything after `q`
+//!     (`/jobs/*?q=*&`), so a search there is its first page only. Dates are filtered on our side too: the sites' own filters
+//!     go by a later date than the one posted.
 //!     The page ships its results as one JSON object,
 //!     `window.__PRELOADED_STATE__["app-unifiedResultlist"] = {…};`, read
 //!     rather than the markup. Past the last page it lists nothing.
@@ -27,6 +32,9 @@ use crate::model::{Job, JobDetail, Posted, SearchParams, Source, Status};
 fn site(source: Source) -> &'static str {
     match source {
         Source::Totaljobs => "https://www.totaljobs.com",
+        Source::IrishJobs => "https://www.irishjobs.ie",
+        Source::StepStoneBelgium => "https://www.stepstone.be",
+        Source::StepStoneAustria => "https://www.stepstone.at",
         _ => "https://www.stepstone.de",
     }
 }
@@ -34,14 +42,17 @@ fn site(source: Source) -> &'static str {
 fn country_name(source: Source) -> &'static str {
     match source {
         Source::Totaljobs => "United Kingdom",
+        Source::IrishJobs => "Ireland",
+        Source::StepStoneBelgium => "Belgium",
+        Source::StepStoneAustria => "Austria",
         _ => "Germany",
     }
 }
 
 /// `page` is 1-based, like the site's. `None` for a page robots.txt does not
-/// allow: past the first, on Totaljobs.
+/// allow: past the first, on all but stepstone.de and IrishJobs.
 pub fn search_url(source: Source, p: &SearchParams, page: u32) -> Option<String> {
-    let paged = source != Source::Totaljobs;
+    let paged = matches!(source, Source::StepStone | Source::IrishJobs);
     if page > 1 && !paged {
         return None;
     }
@@ -51,8 +62,8 @@ pub fn search_url(source: Source, p: &SearchParams, page: u32) -> Option<String>
     {
         let mut q = url.query_pairs_mut();
         q.append_pair("q", keywords);
-        if let Some(age) = age(p.posted).filter(|_| paged) {
-            q.append_pair("ag", age);
+        if let Some((name, value)) = age(source, p.posted).filter(|_| paged) {
+            q.append_pair(name, value);
         }
         if page > 1 {
             q.append_pair("page", &page.to_string());
@@ -75,12 +86,15 @@ fn slug(keywords: &str) -> String {
     }
 }
 
-/// StepStone only filters on the last day and the last week; a month is left
-/// to the filter on our side.
-fn age(posted: Posted) -> Option<&'static str> {
+/// The site's own date filter, as a query pair. Both only go up to a week
+/// or two; a month is left to the filter on our side.
+fn age(source: Source, posted: Posted) -> Option<(&'static str, &'static str)> {
+    let irish = source == Source::IrishJobs;
     match posted {
-        Posted::Day => Some("age_1"),
-        Posted::Week => Some("age_7"),
+        Posted::Day if irish => Some(("postedWithin", "1")),
+        Posted::Week if irish => Some(("postedWithin", "7")),
+        Posted::Day => Some(("ag", "age_1")),
+        Posted::Week => Some(("ag", "age_7")),
         Posted::Month | Posted::Any => None,
     }
 }
@@ -121,9 +135,12 @@ fn to_job(source: Source, i: &Value, query: &str, now: DateTime<Utc>) -> Option<
         Value::Number(n) => n.to_string(),
         v => str_of(v)?,
     };
-    // The link carries a tracking query; the posting is the path.
-    let url = str_of(&i["url"])?;
-    let url = url.split('?').next().unwrap_or(&url).to_string();
+    // The link carries a tracking query; the posting is the path. IrishJobs
+    // links from the site's root.
+    let link = str_of(&i["url"])?;
+    let mut url = reqwest::Url::parse(site(source)).ok()?.join(&link).ok()?;
+    url.set_query(None);
+    let url = url.to_string();
     Some(Job {
         id,
         source,
@@ -133,7 +150,9 @@ fn to_job(source: Source, i: &Value, query: &str, now: DateTime<Utc>) -> Option<
         url,
         posted: str_of(&i["datePosted"]).map(|d| d.chars().take(10).collect()),
         // The site's figures when it has them, else the employer's own words.
-        salary: salary(source, &i["unifiedSalary"]).or_else(|| str_of(&i["salary"])),
+        salary: salary(source, &i["unifiedSalary"]).or_else(|| {
+            str_of(&i["salary"]).filter(|s| !s.to_lowercase().contains("not disclosed"))
+        }),
         found_at: now,
         query: query.to_string(),
         status: Status::New,
@@ -287,6 +306,93 @@ mod tests {
         assert!(jobs.iter().all(|j| j.source == Source::Totaljobs));
     }
 
+    #[test]
+    fn irishjobs_pages_and_filters_after_q() {
+        let p = SearchParams {
+            keywords: "Software Engineer".into(),
+            ..SearchParams::default()
+        };
+        assert_eq!(
+            search_url(Source::IrishJobs, &p, 2).as_deref(),
+            Some(
+                "https://www.irishjobs.ie/jobs/software-engineer\
+                 ?q=Software+Engineer&postedWithin=7&page=2"
+            )
+        );
+    }
+
+    #[test]
+    fn parses_a_saved_irishjobs_page() {
+        let jobs = parse_search(
+            Source::IrishJobs,
+            include_str!("../../tests/fixtures/irishjobs_search.html"),
+            "q",
+        );
+        assert_eq!(jobs.len(), 25);
+        let j = &jobs[0];
+        assert_eq!(j.id, "108082690");
+        assert_eq!(j.company, "Cognizant");
+        assert_eq!(j.location, "Dublin, County Dublin");
+        assert_eq!(j.posted.as_deref(), Some("2026-10-05"));
+        assert_eq!(
+            j.url,
+            "https://www.irishjobs.ie/job/software-engineer/cognizant-job108082690"
+        );
+        assert_eq!(j.salary, None, "\"€ Not Disclosed\" is no salary");
+        assert_eq!(
+            jobs[9].salary.as_deref(),
+            Some("€70,000 - €90,000 per annum")
+        );
+        assert!(jobs.iter().all(|j| j.source == Source::IrishJobs));
+    }
+
+    #[test]
+    fn belgium_and_austria_are_one_page_with_q_alone() {
+        let p = SearchParams {
+            keywords: "Software Engineer".into(),
+            ..SearchParams::default()
+        };
+        assert_eq!(
+            search_url(Source::StepStoneBelgium, &p, 1).as_deref(),
+            Some("https://www.stepstone.be/jobs/software-engineer?q=Software+Engineer")
+        );
+        assert_eq!(
+            search_url(Source::StepStoneAustria, &p, 1).as_deref(),
+            Some("https://www.stepstone.at/jobs/software-engineer?q=Software+Engineer")
+        );
+        assert_eq!(search_url(Source::StepStoneBelgium, &p, 2), None);
+        assert_eq!(search_url(Source::StepStoneAustria, &p, 2), None);
+    }
+
+    #[test]
+    fn parses_saved_belgian_and_austrian_pages() {
+        let be = parse_search(
+            Source::StepStoneBelgium,
+            include_str!("../../tests/fixtures/stepstone_be_search.html"),
+            "q",
+        );
+        assert_eq!(be.len(), 25);
+        assert_eq!(be[0].id, "2247447");
+        assert_eq!(be[0].company, "Enginity");
+        assert_eq!(be[0].location, "Houthalen-Helchteren");
+        assert_eq!(
+            be[0].url,
+            "https://www.stepstone.be/jobs--Embedded-Software-Engineer-Houthalen-Helchteren-Enginity--2247447-inline.html"
+        );
+        let at = parse_search(
+            Source::StepStoneAustria,
+            include_str!("../../tests/fixtures/stepstone_at_search.html"),
+            "q",
+        );
+        assert_eq!(at.len(), 25);
+        assert_eq!(at[0].id, "1009320");
+        assert_eq!(at[0].company, "Berger Logistik GmbH");
+        assert_eq!(at[0].posted.as_deref(), Some("2026-10-16"));
+        assert!(at.iter().all(|j| j.source == Source::StepStoneAustria
+            && j.url
+                .starts_with("https://www.stepstone.at/stellenangebote--")));
+    }
+
     /// Search against the live site, over plain HTTP: `cargo test live_ --
     /// --ignored`. Job pages need a browser, which a test does not have.
     #[tokio::test]
@@ -343,5 +449,28 @@ mod tests {
         assert!(jobs
             .iter()
             .all(|j| j.url.starts_with("https://www.totaljobs.com/job/")));
+    }
+
+    /// stepstone.be's one allowed page, live over plain HTTP:
+    /// `cargo test live_stepstone_be -- --ignored`.
+    #[tokio::test]
+    #[ignore]
+    async fn live_stepstone_be_search() {
+        use crate::services::fetch;
+        let settings = crate::model::Settings {
+            delay_ms: 1500,
+            ..Default::default()
+        };
+        let p = SearchParams {
+            keywords: "software engineer".into(),
+            ..SearchParams::default()
+        };
+        let url = search_url(Source::StepStoneBelgium, &p, 1).unwrap();
+        let jobs = parse_search(
+            Source::StepStoneBelgium,
+            &fetch::get(&url, &settings).await.unwrap(),
+            "q",
+        );
+        assert_eq!(jobs.len(), 25);
     }
 }

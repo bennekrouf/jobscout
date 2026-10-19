@@ -10,7 +10,8 @@ use super::{
 };
 use crate::model::{Backend, Country, Job, JobDetail, Posted, SearchParams, Settings, Source};
 
-/// JobStreet and Bayt answer plain HTTP with a Cloudflare challenge, and StepStone
+/// JobStreet and Bayt answer plain HTTP with a Cloudflare challenge,
+/// IrishJobs and stepstone.at with a 403, and StepStone (stepstone.de and .be)
 /// and Totaljobs reset the connection on their job pages, so those are read in a browser
 /// even when the other sources use direct HTTP: Camoufox if that is the
 /// backend, the built-in WebKit one otherwise.
@@ -58,10 +59,23 @@ pub async fn fetch_search(
         }
         // Totaljobs has no page robots.txt allows past the first: an empty
         // page ends its results.
-        Source::StepStone | Source::Totaljobs => match stepstone::search_url(source, p, page) {
-            Some(url) => fetch::get_cached(&url, ttl, settings).await,
-            None => Ok((String::new(), false)),
-        },
+        Source::StepStone
+        | Source::Totaljobs
+        | Source::IrishJobs
+        | Source::StepStoneBelgium
+        | Source::StepStoneAustria => {
+            // IrishJobs and stepstone.at refuse plain HTTP, search pages
+            // included.
+            let settings = if matches!(source, Source::IrishJobs | Source::StepStoneAustria) {
+                &in_browser(settings)
+            } else {
+                settings
+            };
+            match stepstone::search_url(source, p, page) {
+                Some(url) => fetch::get_cached(&url, ttl, settings).await,
+                None => Ok((String::new(), false)),
+            }
+        }
         Source::Reed => reed::fetch_search(p, page, ttl, settings).await,
         Source::Bayt => {
             fetch::get_cached(&bayt::search_url(p, page), ttl, &in_browser(settings)).await
@@ -77,7 +91,11 @@ pub fn parse_search(source: Source, body: &str, query: &str) -> Vec<Job> {
         Source::Mcf => mcf::parse_search(body, query),
         Source::JobStreet => jobstreet::parse_search(body, query),
         Source::Arbeitsagentur => arbeitsagentur::parse_search(body, query),
-        Source::StepStone | Source::Totaljobs => stepstone::parse_search(source, body, query),
+        Source::StepStone
+        | Source::Totaljobs
+        | Source::IrishJobs
+        | Source::StepStoneBelgium
+        | Source::StepStoneAustria => stepstone::parse_search(source, body, query),
         Source::Reed => reed::parse_search(body, query),
         Source::Bayt => bayt::parse_search(body, query),
         Source::FranceTravail => francetravail::parse_search(body, query),
@@ -94,7 +112,11 @@ pub async fn fetch_detail(job: &Job, settings: &Settings) -> Result<String, Fetc
             let url = arbeitsagentur::detail_url(&job.id);
             fetch::get_json(&url, &arbeitsagentur::HEADERS, settings).await
         }
-        Source::StepStone | Source::Totaljobs => fetch::get(&job.url, &in_browser(settings)).await,
+        Source::StepStone
+        | Source::Totaljobs
+        | Source::IrishJobs
+        | Source::StepStoneBelgium
+        | Source::StepStoneAustria => fetch::get(&job.url, &in_browser(settings)).await,
         Source::Reed => reed::fetch_detail(&job.id, settings).await,
         Source::Bayt => fetch::get(&job.url, &in_browser(settings)).await,
         Source::FranceTravail => francetravail::fetch_detail(&job.id, settings).await,
@@ -108,7 +130,11 @@ pub fn parse_detail(source: Source, body: &str) -> Option<JobDetail> {
         Source::Mcf => mcf::parse_detail(body),
         Source::JobStreet => jobstreet::parse_detail(body),
         Source::Arbeitsagentur => arbeitsagentur::parse_detail(body),
-        Source::StepStone | Source::Totaljobs => stepstone::parse_detail(body),
+        Source::StepStone
+        | Source::Totaljobs
+        | Source::IrishJobs
+        | Source::StepStoneBelgium
+        | Source::StepStoneAustria => stepstone::parse_detail(body),
         Source::Reed => reed::parse_detail(body),
         Source::Bayt => bayt::parse_detail(body),
         Source::FranceTravail => francetravail::parse_detail(body),
