@@ -1,0 +1,70 @@
+{
+ "resultats": [
+  {
+   "id": "201QXKL",
+   "intitule": "Développeur Rust H/F",
+   "description": "Au sein de notre équipe produit, vous rejoignez le pôle plateforme.\n\n\nVos missions :\n- Concevoir et maintenir nos services en Rust\n- Participer aux revues de code\n\nProfil recherché : 3 ans d'expérience.",
+   "dateCreation": "2026-10-15T09:12:44.000Z",
+   "dateActualisation": "2026-10-16T08:00:01.000Z",
+   "lieuTravail": {
+    "libelle": "69 - Lyon 3e Arrondissement",
+    "latitude": 45.759,
+    "longitude": 4.848,
+    "codePostal": "69003",
+    "commune": "69383"
+   },
+   "romeCode": "M1805",
+   "romeLibelle": "Études et développement informatique",
+   "appellationlibelle": "Développeur / Développeuse informatique",
+   "entreprise": {
+    "nom": "ACME SYSTEMES",
+    "entrepriseAdaptee": false
+   },
+   "typeContrat": "CDI",
+   "typeContratLibelle": "Contrat à durée indéterminée",
+   "natureContrat": "Contrat travail",
+   "experienceExige": "E",
+   "experienceLibelle": "3 An(s)",
+   "competences": [
+    { "code": "100001", "libelle": "Rust", "exigence": "E" },
+    { "code": "100002", "libelle": "Linux", "exigence": "S" }
+   ],
+   "salaire": {
+    "libelle": "Annuel de 45000.00 Euros à 55000.00 Euros sur 12 mois"
+   },
+   "dureeTravailLibelle": "35H Travail en journée",
+   "dureeTravailLibelleConverti": "Temps plein",
+   "alternance": false,
+   "nombrePostes": 1,
+   "accessibleTH": false,
+   "qualificationCode": "9",
+   "qualificationLibelle": "Cadre",
+   "secteurActiviteLibelle": "Programmation informatique",
+   "origineOffre": {
+    "origine": "1",
+    "urlOrigine": "https://candidat.francetravail.fr/offres/recherche/detail/201QXKL"
+   }
+  },
+  {
+   "id": "201QYZT",
+   "intitule": "Ingénieur logiciel embarqué (H/F)",
+   "description": "Poste basé en télétravail partiel.",
+   "dateCreation": "2026-10-14T16:40:00.000Z",
+   "lieuTravail": {},
+   "entreprise": {},
+   "typeContrat": "CDD",
+   "typeContratLibelle": "CDD - 12 Mois",
+   "salaire": {
+    "commentaire": "Selon profil"
+   },
+   "origineOffre": {
+    "origine": "2",
+    "urlOrigine": "https://www.hellowork.com/fr-fr/emplois/00000000.html",
+    "partenaires": [
+     { "nom": "HELLOWORK", "url": "https://www.hellowork.com/fr-fr/emplois/00000000.html" }
+    ]
+   }
+  }
+ ],
+ "filtresPossibles": []
+}

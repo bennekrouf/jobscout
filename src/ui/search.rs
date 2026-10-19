@@ -42,7 +42,7 @@ pub fn SearchPanel() -> Element {
                         title: if busy && c != country { "Wait for the current task to finish, or stop it".to_string() } else { format!("Load the {} context", c.label()) },
                         onclick: move |_| st.switch_country(c),
                         span { class: "flag", "{c.flag()}" }
-                        span { "{c.label()}" }
+                        span { "{c.short_label()}" }
                     }
                 }
             }

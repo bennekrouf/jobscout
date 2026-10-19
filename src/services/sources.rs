@@ -5,11 +5,13 @@ use std::time::Duration;
 use chrono::Utc;
 
 use super::fetch::{self, FetchError};
-use super::{arbeitsagentur, jobcloud, jobstreet, linkedin, mcf, stepstone};
+use super::{
+    arbeitsagentur, bayt, francetravail, jobcloud, jobstreet, linkedin, mcf, reed, stepstone,
+};
 use crate::model::{Backend, Country, Job, JobDetail, Posted, SearchParams, Settings, Source};
 
-/// JobStreet answers plain HTTP with a Cloudflare challenge, and StepStone
-/// resets the connection on its job pages, so those are read in a browser
+/// JobStreet and Bayt answer plain HTTP with a Cloudflare challenge, and StepStone
+/// and Totaljobs reset the connection on their job pages, so those are read in a browser
 /// even when the other sources use direct HTTP: Camoufox if that is the
 /// backend, the built-in WebKit one otherwise.
 fn in_browser(settings: &Settings) -> Settings {
@@ -54,9 +56,17 @@ pub async fn fetch_search(
             let url = arbeitsagentur::search_url(p, page);
             fetch::get_json_cached(&url, &arbeitsagentur::HEADERS, ttl, settings).await
         }
-        Source::StepStone => {
-            fetch::get_cached(&stepstone::search_url(p, page), ttl, settings).await
+        // Totaljobs has no page robots.txt allows past the first: an empty
+        // page ends its results.
+        Source::StepStone | Source::Totaljobs => match stepstone::search_url(source, p, page) {
+            Some(url) => fetch::get_cached(&url, ttl, settings).await,
+            None => Ok((String::new(), false)),
+        },
+        Source::Reed => reed::fetch_search(p, page, ttl, settings).await,
+        Source::Bayt => {
+            fetch::get_cached(&bayt::search_url(p, page), ttl, &in_browser(settings)).await
         }
+        Source::FranceTravail => francetravail::fetch_search(p, page, ttl, settings).await,
     }
 }
 
@@ -67,7 +77,10 @@ pub fn parse_search(source: Source, body: &str, query: &str) -> Vec<Job> {
         Source::Mcf => mcf::parse_search(body, query),
         Source::JobStreet => jobstreet::parse_search(body, query),
         Source::Arbeitsagentur => arbeitsagentur::parse_search(body, query),
-        Source::StepStone => stepstone::parse_search(body, query),
+        Source::StepStone | Source::Totaljobs => stepstone::parse_search(source, body, query),
+        Source::Reed => reed::parse_search(body, query),
+        Source::Bayt => bayt::parse_search(body, query),
+        Source::FranceTravail => francetravail::parse_search(body, query),
     }
 }
 
@@ -81,7 +94,10 @@ pub async fn fetch_detail(job: &Job, settings: &Settings) -> Result<String, Fetc
             let url = arbeitsagentur::detail_url(&job.id);
             fetch::get_json(&url, &arbeitsagentur::HEADERS, settings).await
         }
-        Source::StepStone => fetch::get(&job.url, &in_browser(settings)).await,
+        Source::StepStone | Source::Totaljobs => fetch::get(&job.url, &in_browser(settings)).await,
+        Source::Reed => reed::fetch_detail(&job.id, settings).await,
+        Source::Bayt => fetch::get(&job.url, &in_browser(settings)).await,
+        Source::FranceTravail => francetravail::fetch_detail(&job.id, settings).await,
     }
 }
 
@@ -92,15 +108,19 @@ pub fn parse_detail(source: Source, body: &str) -> Option<JobDetail> {
         Source::Mcf => mcf::parse_detail(body),
         Source::JobStreet => jobstreet::parse_detail(body),
         Source::Arbeitsagentur => arbeitsagentur::parse_detail(body),
-        Source::StepStone => stepstone::parse_detail(body),
+        Source::StepStone | Source::Totaljobs => stepstone::parse_detail(body),
+        Source::Reed => reed::parse_detail(body),
+        Source::Bayt => bayt::parse_detail(body),
+        Source::FranceTravail => francetravail::parse_detail(body),
     }
 }
 
-/// LinkedIn filters by date itself. The other sources' postings are filtered
-/// here (the Arbeitsagentur also filters, by the same date, so nothing it
-/// returns is dropped). Undated postings are kept.
+/// LinkedIn and France Travail filter by date themselves. The other sources'
+/// postings are filtered here (the Arbeitsagentur also filters, by the same
+/// date, so nothing it returns is dropped). Undated postings are kept.
 pub fn within_posted(source: Source, jobs: Vec<Job>, posted: Posted) -> Vec<Job> {
-    let Some(days) = posted.days().filter(|_| source != Source::LinkedIn) else {
+    let filtered_there = matches!(source, Source::LinkedIn | Source::FranceTravail);
+    let Some(days) = posted.days().filter(|_| !filtered_there) else {
         return jobs;
     };
     let oldest = (Utc::now() - chrono::Duration::days(days))

@@ -20,6 +20,8 @@ pub enum FetchError {
     Status(u16),
     Network(String),
     Browser(String),
+    /// Something to set up before the source can be read (API credentials).
+    Setup(String),
 }
 
 impl std::fmt::Display for FetchError {
@@ -29,6 +31,7 @@ impl std::fmt::Display for FetchError {
             FetchError::Status(c) => write!(f, "HTTP {c}"),
             FetchError::Network(e) => write!(f, "network error: {e}"),
             FetchError::Browser(e) => write!(f, "browser: {e}"),
+            FetchError::Setup(e) => write!(f, "{e}"),
         }
     }
 }
@@ -91,6 +94,22 @@ pub async fn get_json_cached(
     let body = get_json(url, headers, settings).await?;
     cache_store(&key, &body, ttl);
     Ok((body, false))
+}
+
+/// POSTs `form` URL-encoded, never cached: an OAuth token request.
+pub async fn post_form(
+    url: &str,
+    form: &[(&str, &str)],
+    settings: &Settings,
+) -> Result<String, FetchError> {
+    pace(settings.delay_ms).await;
+    send(
+        client()
+            .post(url)
+            .header(reqwest::header::ACCEPT, "application/json")
+            .form(form),
+    )
+    .await
 }
 
 /// POSTs `body` as JSON; cached like `get_cached`, keyed by URL and body.

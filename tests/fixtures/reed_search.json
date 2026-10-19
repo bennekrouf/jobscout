@@ -1,0 +1,38 @@
+{
+ "results": [
+  {
+   "jobId": 51234567,
+   "employerId": 600001,
+   "employerName": "Example Systems Ltd",
+   "employerProfileId": null,
+   "employerProfileName": null,
+   "jobTitle": "Rust Developer",
+   "locationName": "Manchester",
+   "minimumSalary": 55000.0,
+   "maximumSalary": 70000.0,
+   "currency": "GBP",
+   "expirationDate": "27/11/2026",
+   "date": "16/10/2026",
+   "jobDescription": " We are looking for a Rust developer to join our platform team... ",
+   "applications": 12,
+   "jobUrl": "https://www.reed.co.uk/jobs/rust-developer/51234567"
+  },
+  {
+   "jobId": 51234999,
+   "employerId": 600002,
+   "employerName": "Agency Recruitment",
+   "jobTitle": "Embedded Software Engineer",
+   "locationName": "Bristol",
+   "minimumSalary": null,
+   "maximumSalary": null,
+   "currency": null,
+   "expirationDate": "30/11/2026",
+   "date": "15/10/2026",
+   "jobDescription": " Competitive salary. ",
+   "applications": 3,
+   "jobUrl": "https://www.reed.co.uk/jobs/embedded-software-engineer/51234999"
+  }
+ ],
+ "ambiguousLocations": [],
+ "totalResults": 2
+}

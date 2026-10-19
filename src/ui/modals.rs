@@ -162,6 +162,25 @@ pub fn SettingsModal() -> Element {
                 input { class: "input", value: "{cur.llm_key_env}", oninput: move |e| s.write().llm_key_env = e.value() }
                 p { class: "muted small", "The key itself is read from your environment and never saved." }
 
+                h3 { "France Travail API" }
+                p { class: "muted small",
+                    "France's search needs an application registered at francetravail.io, \
+                     subscribed to the \"Offres d'emploi v2\" API. Free; without it, \
+                     France searches LinkedIn only."
+                }
+                label { class: "field-label", "Client id" }
+                input { class: "input", value: "{cur.france_travail_client_id}", oninput: move |e| s.write().france_travail_client_id = e.value() }
+                label { class: "field-label", "Client secret environment variable" }
+                input { class: "input", value: "{cur.france_travail_secret_env}", oninput: move |e| s.write().france_travail_secret_env = e.value() }
+
+                h3 { "Reed API" }
+                p { class: "muted small",
+                    "The United Kingdom's Reed search needs a free API key from \
+                     reed.co.uk/developers. Without it, Reed is skipped."
+                }
+                label { class: "field-label", "API key environment variable" }
+                input { class: "input", value: "{cur.reed_key_env}", oninput: move |e| s.write().reed_key_env = e.value() }
+
                 div { class: "modal-actions",
                     span { class: "muted small", "Data: {store::data_dir().display()}" }
                     span { class: "spacer" }

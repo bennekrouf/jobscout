@@ -413,7 +413,11 @@ fn country(args: &Value) -> Result<Country, String> {
     Country::ALL
         .iter()
         .copied()
-        .find(|c| c.code().eq_ignore_ascii_case(v) || c.label().eq_ignore_ascii_case(v))
+        .find(|c| {
+            c.code().eq_ignore_ascii_case(v)
+                || c.label().eq_ignore_ascii_case(v)
+                || c.short_label().eq_ignore_ascii_case(v)
+        })
         .ok_or_else(|| {
             let known: Vec<String> = Country::ALL
                 .iter()
@@ -520,19 +524,20 @@ fn settings() -> Settings {
     s
 }
 
-/// JobStreet is always read in a browser, and StepStone's job pages are
-/// (`detail`); without the window, only Camoufox is one.
+/// JobStreet and Bayt are always read in a browser, and StepStone's and Totaljobs' job
+/// pages are (`detail`); without the window, only Camoufox is one.
 fn reachable(source: Source, detail: bool, settings: &Settings) -> Result<(), String> {
-    let browser_only = source == Source::JobStreet || (source == Source::StepStone && detail);
+    let browser_only = matches!(source, Source::JobStreet | Source::Bayt)
+        || (matches!(source, Source::StepStone | Source::Totaljobs) && detail);
     if browser_only && settings.backend != Backend::Camoufox {
+        let what = if detail {
+            format!("{} job pages need", source.label())
+        } else {
+            format!("{} needs", source.label())
+        };
         return Err(format!(
-            "{} needs a browser: through Claude, only Camoufox (Settings → \
-             Backend) works; the built-in one runs in the JobScout window",
-            if detail {
-                format!("{} job pages", source.label())
-            } else {
-                source.label().to_string()
-            }
+            "{what} a browser: through Claude, only Camoufox (Settings → \
+             Backend) works; the built-in one runs in the JobScout window"
         ));
     }
     Ok(())
@@ -1111,7 +1116,12 @@ mod tests {
             country(&json!({ "country": "switzerland" })).unwrap(),
             Country::Switzerland
         );
-        assert!(country(&json!({ "country": "fr" })).is_err());
+        assert_eq!(
+            country(&json!({ "country": "fr" })).unwrap(),
+            Country::France
+        );
+        assert_eq!(country(&json!({ "country": "uae" })).unwrap(), Country::Uae);
+        assert!(country(&json!({ "country": "it" })).is_err());
         assert_eq!(
             source("jobs.ch", Country::Switzerland).unwrap(),
             Source::JobsCh
@@ -1186,6 +1196,9 @@ mod tests {
         // StepStone searches over plain HTTP; only its job pages need one.
         assert!(reachable(Source::StepStone, false, &s).is_ok());
         assert!(reachable(Source::StepStone, true, &s).is_err());
+        assert!(reachable(Source::Totaljobs, false, &s).is_ok());
+        assert!(reachable(Source::Totaljobs, true, &s).is_err());
+        assert!(reachable(Source::Bayt, false, &s).is_err());
         let s = Settings {
             backend: Backend::Camoufox,
             ..Settings::default()

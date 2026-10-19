@@ -106,7 +106,7 @@ fn client() -> &'static reqwest::Client {
 /// The key from the named environment variable. An app opened from Finder does
 /// not inherit the terminal's environment, so a missing variable is looked up
 /// once in a login shell and kept for the rest of the session.
-fn api_key(var: &str) -> Result<Option<String>, String> {
+pub(crate) fn api_key(var: &str) -> Result<Option<String>, String> {
     let var = var.trim();
     if var.is_empty() {
         return Ok(None);

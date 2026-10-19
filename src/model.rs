@@ -43,10 +43,20 @@ pub enum Country {
     Switzerland,
     Singapore,
     Germany,
+    France,
+    UnitedKingdom,
+    Uae,
 }
 
 impl Country {
-    pub const ALL: [Country; 3] = [Country::Switzerland, Country::Singapore, Country::Germany];
+    pub const ALL: [Country; 6] = [
+        Country::Switzerland,
+        Country::Singapore,
+        Country::Germany,
+        Country::France,
+        Country::UnitedKingdom,
+        Country::Uae,
+    ];
 
     /// Folder name under the data directory.
     pub fn code(self) -> &'static str {
@@ -54,6 +64,9 @@ impl Country {
             Country::Switzerland => "ch",
             Country::Singapore => "sg",
             Country::Germany => "de",
+            Country::France => "fr",
+            Country::UnitedKingdom => "uk",
+            Country::Uae => "ae",
         }
     }
 
@@ -62,6 +75,17 @@ impl Country {
             Country::Switzerland => "Switzerland",
             Country::Singapore => "Singapore",
             Country::Germany => "Germany",
+            Country::France => "France",
+            Country::UnitedKingdom => "United Kingdom",
+            Country::Uae => "United Arab Emirates",
+        }
+    }
+
+    /// The name on the flag button, where a long one would be cut off.
+    pub fn short_label(self) -> &'static str {
+        match self {
+            Country::Uae => "UAE",
+            c => c.label(),
         }
     }
 
@@ -70,6 +94,9 @@ impl Country {
             Country::Switzerland => "🇨🇭",
             Country::Singapore => "🇸🇬",
             Country::Germany => "🇩🇪",
+            Country::France => "🇫🇷",
+            Country::UnitedKingdom => "🇬🇧",
+            Country::Uae => "🇦🇪",
         }
     }
 
@@ -78,6 +105,9 @@ impl Country {
             Country::Switzerland => &[Source::LinkedIn, Source::JobsCh, Source::Jobup],
             Country::Singapore => &[Source::LinkedIn, Source::Mcf, Source::JobStreet],
             Country::Germany => &[Source::LinkedIn, Source::Arbeitsagentur, Source::StepStone],
+            Country::France => &[Source::LinkedIn, Source::FranceTravail],
+            Country::UnitedKingdom => &[Source::LinkedIn, Source::Totaljobs, Source::Reed],
+            Country::Uae => &[Source::LinkedIn, Source::Bayt],
         }
     }
 }
@@ -103,6 +133,17 @@ pub enum Source {
     /// StepStone, the largest commercial board in Germany. Behind Akamai:
     /// job pages are read through a browser.
     StepStone,
+    /// France Travail, France's public employment service, through its
+    /// official API: needs credentials in Settings.
+    FranceTravail,
+    /// Totaljobs, the UK's largest commercial board: the StepStone platform,
+    /// so read like StepStone. robots.txt allows only its first search page.
+    Totaljobs,
+    /// Reed, through its official API: needs a key in Settings.
+    Reed,
+    /// Bayt, the largest board in the Middle East, for the UAE. Behind
+    /// Cloudflare: always read through a browser.
+    Bayt,
 }
 
 impl Source {
@@ -115,6 +156,10 @@ impl Source {
             Source::JobStreet => "JobStreet",
             Source::Arbeitsagentur => "Arbeitsagentur",
             Source::StepStone => "StepStone",
+            Source::FranceTravail => "France Travail",
+            Source::Totaljobs => "Totaljobs",
+            Source::Reed => "Reed",
+            Source::Bayt => "Bayt",
         }
     }
 
@@ -127,6 +172,10 @@ impl Source {
             Source::JobStreet => "src-jobstreet",
             Source::Arbeitsagentur => "src-arbeitsagentur",
             Source::StepStone => "src-stepstone",
+            Source::FranceTravail => "src-francetravail",
+            Source::Totaljobs => "src-totaljobs",
+            Source::Reed => "src-reed",
+            Source::Bayt => "src-bayt",
         }
     }
 }
@@ -377,6 +426,13 @@ pub struct Settings {
     /// Name of the environment variable holding the API key — the key itself
     /// is never written to disk. Empty for a local model.
     pub llm_key_env: String,
+    /// France Travail's API needs an application registered at
+    /// francetravail.io: its client id, and the name of the environment
+    /// variable holding its secret (never written to disk, like the LLM key).
+    pub france_travail_client_id: String,
+    pub france_travail_secret_env: String,
+    /// Name of the environment variable holding a Reed API key.
+    pub reed_key_env: String,
     /// The country whose context is loaded. The search itself is kept per
     /// country, next to its jobs.
     pub country: Country,
@@ -401,6 +457,9 @@ impl Default for Settings {
             llm_base_url: "https://api.deepseek.com".into(),
             llm_model: "deepseek-chat".into(),
             llm_key_env: "DEEPSEEK_API_KEY".into(),
+            france_travail_client_id: String::new(),
+            france_travail_secret_env: "FRANCE_TRAVAIL_CLIENT_SECRET".into(),
+            reed_key_env: "REED_API_KEY".into(),
             country: Country::default(),
             detail_ttl_hours: 12,
             search_cache_minutes: 10,
