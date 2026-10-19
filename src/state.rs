@@ -56,7 +56,7 @@ pub fn age(at: DateTime<Utc>) -> String {
         m => format!("{} d ago", m / (60 * 24)),
     }
 }
-use crate::services::fetch::FetchError;
+use crate::services::sources::SearchEvent;
 use crate::services::{llm, notify, sources, store};
 
 #[derive(Clone, Copy, PartialEq)]
@@ -69,6 +69,13 @@ pub enum Modal {
     Mcp,
 }
 
+/// The jobs one search found, new or already listed.
+#[derive(Clone, PartialEq)]
+pub struct Results {
+    pub keywords: String,
+    pub ids: std::collections::HashSet<String>,
+}
+
 #[derive(Clone, Copy)]
 pub struct AppState {
     /// The country whose context is loaded: `jobs`, `profile`, `watches` and
@@ -77,6 +84,9 @@ pub struct AppState {
     /// The last search run in this country; the sidebar starts from it.
     pub search: Signal<SearchParams>,
     pub jobs: Signal<Vec<Job>>,
+    /// What the last search from the sidebar found, which the list shows
+    /// instead of every job until it is cleared.
+    pub results: Signal<Option<Results>>,
     pub selected: Signal<Option<String>>,
     pub settings: Signal<Settings>,
     pub profile: Signal<String>,
@@ -103,6 +113,7 @@ impl AppState {
             country: Signal::new(country),
             search: Signal::new(store::load_search(country)),
             jobs: Signal::new(store::load_jobs(country)),
+            results: Signal::new(None),
             selected: Signal::new(None),
             settings: Signal::new(settings),
             profile: Signal::new(store::load_profile(country)),
@@ -132,6 +143,7 @@ impl AppState {
         self.jobs.set(store::load_jobs(to));
         self.profile.set(store::load_profile(to));
         self.watches.set(store::load_watches(to));
+        self.results.set(None);
         self.selected.set(None);
         self.detail_queue.set(vec![]);
         self.settings.write().country = to;
@@ -217,6 +229,27 @@ impl AppState {
         ids
     }
 
+    /// Adds what a page of the search found to `results`, new or already
+    /// listed. A posting already listed from another source shows as that
+    /// copy, which is the one `merge` kept.
+    fn show_found(mut self, found: &[Job]) {
+        let jobs = self.jobs.peek();
+        let mut results = self.results.write();
+        let Some(r) = results.as_mut() else {
+            return;
+        };
+        for f in found {
+            let key = sources::same_posting_key(f);
+            let kept = jobs.iter().find(|j| j.id == f.id).or_else(|| {
+                jobs.iter()
+                    .find(|j| j.source != f.source && sources::same_posting_key(j) == key)
+            });
+            if let Some(j) = kept {
+                r.ids.insert(j.id.clone());
+            }
+        }
+    }
+
     fn begin(mut self, what: impl Into<String>) -> bool {
         if self.busy.peek().is_some() {
             return false;
@@ -249,7 +282,7 @@ impl AppState {
     }
 }
 
-pub async fn run_search(st: AppState, p: SearchParams) {
+pub async fn run_search(mut st: AppState, p: SearchParams) {
     if p.keywords.trim().is_empty() {
         st.log("Enter keywords to search.");
         return;
@@ -257,19 +290,24 @@ pub async fn run_search(st: AppState, p: SearchParams) {
     if !st.begin(format!("Searching “{}”", p.keywords.trim())) {
         return;
     }
+    st.results.set(Some(Results {
+        keywords: p.keywords.trim().to_string(),
+        ids: Default::default(),
+    }));
     let settings = st.settings.peek().clone();
     search_pages(st, &p, &settings, true).await;
     st.end();
 }
 
 /// Runs one search on every selected source and returns the ids of the jobs
-/// it added. `use_cache` is off for watches: a scheduled run is there to see
-/// what is new, so it never reuses a page from an earlier search.
+/// it added. `manual` is off for watches: a scheduled run is there to see
+/// what is new, so it never reuses a page from an earlier search, and it
+/// leaves what the list shows alone.
 async fn search_pages(
     st: AppState,
     p: &SearchParams,
     settings: &Settings,
-    use_cache: bool,
+    manual: bool,
 ) -> Vec<String> {
     // The jobs go into the loaded country, so only its sources may run, and
     // it is where they search.
@@ -289,109 +327,81 @@ async fn search_pages(
         if st.stopped() {
             break;
         }
-        added.extend(search_source(st, source, country, p, settings, use_cache, &query).await);
+        added.extend(search_source(st, source, country, p, settings, manual, &query).await);
     }
     st.log(format!("Search “{query}” done: {} new jobs.", added.len()));
     added
 }
 
-/// One source's pages. A source that fails or rate-limits ends its own part
-/// of the search only; the other sources still run.
+/// One source's pages, logged as they go. A source that fails or rate-limits
+/// ends its own part of the search only; the other sources still run.
 async fn search_source(
     st: AppState,
     source: Source,
     country: Country,
     p: &SearchParams,
     settings: &Settings,
-    use_cache: bool,
+    manual: bool,
     query: &str,
 ) -> Vec<String> {
     let name = source.label();
-    let minutes = if use_cache {
+    let minutes = if manual {
         settings.search_cache_minutes
     } else {
         0
     };
     let ttl = std::time::Duration::from_secs(minutes * 60);
-    let mut added = vec![];
-    let mut seen = std::collections::HashSet::new();
-    let mut offset = 0;
-
-    for page in 1..=p.pages.max(1) {
-        if st.stopped() {
-            st.log("Search stopped.");
-            break;
-        }
-        match sources::fetch_search(source, country, p, page, offset, ttl, settings).await {
-            Ok((html, cached)) => {
-                let found = sources::parse_search(source, &html, query);
-                offset += found.len() as u32;
-                let before = seen.len();
-                seen.extend(found.iter().map(|j| j.id.clone()));
-                // An empty page ends the results; so does one that only
-                // repeats postings this search has already seen.
-                if found.is_empty() || seen.len() == before {
-                    st.log(format!("{name} page {page}: no more results."));
-                    break;
-                }
-                let n = found.len();
-                let new = st.merge(sources::within_posted(source, found, p.posted));
+    let report = |event| {
+        st.log(match event {
+            SearchEvent::Page {
+                page,
+                found,
+                new,
+                cached,
+            } => {
                 let from = if cached { " (cached)" } else { "" };
-                st.log(format!(
-                    "{name} page {page}{from}: {n} jobs, {} new.",
-                    new.len()
-                ));
-                added.extend(new);
+                format!("{name} page {page}{from}: {found} jobs, {new} new.")
             }
-            Err(FetchError::RateLimited(code)) => {
-                st.log(format!(
-                    "{name} is rate-limiting (HTTP {code}). Skipped the rest of {name} — wait a few minutes or raise the delay in Settings."
-                ));
-                break;
+            SearchEvent::End { page } => format!("{name} page {page}: no more results."),
+            SearchEvent::EndStatus { page, code } => {
+                format!("{name} page {page}: HTTP {code}, treated as the end of results.")
             }
-            // Past the first page, LinkedIn answers the end of results with an error status.
-            Err(FetchError::Status(code)) if page > 1 => {
-                st.log(format!(
-                    "{name} page {page}: HTTP {code}, treated as the end of results."
-                ));
-                break;
+            SearchEvent::RateLimited(code) => format!(
+                "{name} is rate-limiting (HTTP {code}). Skipped the rest of {name} — wait a few minutes or raise the delay in Settings."
+            ),
+            SearchEvent::Failed(e) => format!("{name} search failed: {e}"),
+            SearchEvent::Stopped => "Search stopped.".into(),
+        })
+    };
+    sources::search_source(
+        source,
+        country,
+        p,
+        ttl,
+        settings,
+        query,
+        || st.stopped(),
+        |found| {
+            let shown = manual.then(|| found.clone());
+            let new = st.merge(found);
+            if let Some(found) = shown {
+                st.show_found(&found);
             }
-            Err(e) => {
-                st.log(format!("{name} search failed: {e}"));
-                break;
-            }
-        }
-    }
-    added
+            new
+        },
+        report,
+    )
+    .await
 }
 
 async fn fetch_detail_inner(st: AppState, id: &str) -> Result<(), String> {
     let settings = st.settings.peek().clone();
     let job = st.job(id).ok_or("job no longer listed")?;
-    let html = match sources::fetch_detail(&job, &settings).await {
-        Ok(html) => html,
-        // The page itself answered with an error: remember it, so opening the
-        // job again does not ask again. Network trouble and rate limits are
-        // not this job's fault and are not remembered.
-        Err(e @ FetchError::Status(_)) => {
-            st.update(id, |j| j.detail_failed_at = Some(Utc::now()));
-            return Err(e.to_string());
-        }
-        Err(e) => return Err(e.to_string()),
-    };
-    match sources::parse_detail(job.source, &html) {
-        Some(detail) => {
-            st.update(id, |j| {
-                j.detail = Some(detail);
-                j.detail_failed_at = None;
-            });
-            Ok(())
-        }
-        None => {
-            st.update(id, |j| j.detail_failed_at = Some(Utc::now()));
-            Err("no description on the page (removed, or a block page)".into())
-        }
-    }
+    sources::fetch_job_detail(&job, &settings, |detail| {
+        st.update(id, |j| sources::record_detail(j, detail));
+        Ok(())
+    })
+    .await
 }
 
 /// Fetches the description only when the cache says so — what opening a job

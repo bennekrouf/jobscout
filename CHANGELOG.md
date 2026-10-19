@@ -3,6 +3,16 @@
 What changed in each version of JobScout, for the people using it. Also
 published at <https://mayorana.ch/en/apps/jobscout/releases>.
 
+## [Unreleased]
+
+### Fixed
+
+- A new search no longer shows the jobs from your previous searches mixed in
+  with its own. Once you search, the list shows only what that search found,
+  including jobs you already had, and the status tabs and filter still work
+  inside it. Click "Show all jobs" above the list to see every job again.
+  Watches running in the background leave the list as it is.
+
 ## [0.1.6] - 2026-10-19
 
 ### Added

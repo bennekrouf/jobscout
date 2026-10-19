@@ -28,9 +28,11 @@ pub fn JobList() -> Element {
     let mut page = use_signal(|| 0usize);
 
     let jobs = st.jobs.read();
+    let results = st.results.read().clone();
     let needle = text.read().to_lowercase();
     let mut visible: Vec<&Job> = jobs
         .iter()
+        .filter(|j| results.as_ref().is_none_or(|r| r.ids.contains(&j.id)))
         .filter(|j| match *status.read() {
             None => j.status != Status::Hidden,
             Some(s) => j.status == s,
@@ -107,6 +109,16 @@ pub fn JobList() -> Element {
                         option { value: "found", "Newest found" }
                         option { value: "score", "Best score" }
                         option { value: "posted", "Newest posted" }
+                    }
+                }
+                if let Some(r) = &results {
+                    div { class: "list-tools",
+                        span { class: "muted", "Found by “{r.keywords}”" }
+                        button {
+                            class: "btn btn-small btn-ghost",
+                            onclick: move |_| { st.results.set(None); page.set(0); },
+                            "Show all jobs"
+                        }
                     }
                 }
                 div { class: "list-tools",

@@ -194,3 +194,134 @@ pub fn merge_new(jobs: &mut Vec<Job>, found: Vec<Job>) -> Vec<String> {
     jobs.splice(0..0, fresh);
     ids
 }
+
+/// What one source's search did, for the caller to report as it likes.
+pub enum SearchEvent {
+    /// A page was read: its postings, how many of them were new, and whether
+    /// it came from the page cache.
+    Page {
+        page: u32,
+        found: usize,
+        new: usize,
+        cached: bool,
+    },
+    /// An empty page, or one that only repeats postings already seen.
+    End {
+        page: u32,
+    },
+    /// An error status past the first page, taken as the end of results.
+    EndStatus {
+        page: u32,
+        code: u16,
+    },
+    RateLimited(u16),
+    Failed(FetchError),
+    Stopped,
+}
+
+/// One source's pages of a search: fetches each, hands the postings within
+/// `p.posted` to `merge` (which adds the new ones wherever the caller keeps
+/// jobs and returns their ids), and returns the ids of all it added. A source
+/// that fails or rate-limits ends its own part only. `stopped` is asked
+/// before every page.
+///
+/// The window and the MCP server both search through this; they differ only
+/// in where jobs are kept and how progress is told.
+#[allow(clippy::too_many_arguments)]
+pub async fn search_source(
+    source: Source,
+    country: Country,
+    p: &SearchParams,
+    ttl: Duration,
+    settings: &Settings,
+    query: &str,
+    mut stopped: impl FnMut() -> bool,
+    mut merge: impl FnMut(Vec<Job>) -> Vec<String>,
+    mut report: impl FnMut(SearchEvent),
+) -> Vec<String> {
+    let mut added = vec![];
+    let mut seen = std::collections::HashSet::new();
+    let mut offset = 0;
+
+    for page in 1..=p.pages.max(1) {
+        if stopped() {
+            report(SearchEvent::Stopped);
+            break;
+        }
+        match fetch_search(source, country, p, page, offset, ttl, settings).await {
+            Ok((body, cached)) => {
+                let found = parse_search(source, &body, query);
+                offset += found.len() as u32;
+                let before = seen.len();
+                seen.extend(found.iter().map(|j| j.id.clone()));
+                // An empty page ends the results; so does one that only
+                // repeats postings this search has already seen.
+                if found.is_empty() || seen.len() == before {
+                    report(SearchEvent::End { page });
+                    break;
+                }
+                let n = found.len();
+                let new = merge(within_posted(source, found, p.posted));
+                report(SearchEvent::Page {
+                    page,
+                    found: n,
+                    new: new.len(),
+                    cached,
+                });
+                added.extend(new);
+            }
+            Err(FetchError::RateLimited(code)) => {
+                report(SearchEvent::RateLimited(code));
+                break;
+            }
+            // Past the first page, LinkedIn answers the end of results with an error status.
+            Err(FetchError::Status(code)) if page > 1 => {
+                report(SearchEvent::EndStatus { page, code });
+                break;
+            }
+            Err(e) => {
+                report(SearchEvent::Failed(e));
+                break;
+            }
+        }
+    }
+    added
+}
+
+/// Fetches and reads a job's page and hands `record` what to keep: the
+/// description, or `None` when the page itself failed (an error status, or
+/// no description on it), so it is not asked for again at once. Network
+/// trouble and rate limits are not the job's fault and are not recorded.
+/// `record` applies it with `record_detail` wherever the caller keeps jobs.
+pub async fn fetch_job_detail(
+    job: &Job,
+    settings: &Settings,
+    record: impl FnOnce(Option<JobDetail>) -> Result<(), String>,
+) -> Result<(), String> {
+    let body = match fetch_detail(job, settings).await {
+        Ok(body) => body,
+        Err(e @ FetchError::Status(_)) => {
+            record(None)?;
+            return Err(e.to_string());
+        }
+        Err(e) => return Err(e.to_string()),
+    };
+    match parse_detail(job.source, &body) {
+        Some(detail) => record(Some(detail)),
+        None => {
+            record(None)?;
+            Err("no description on the page (removed, or a block page)".into())
+        }
+    }
+}
+
+/// Keeps what `fetch_job_detail` read: the description, or when it failed.
+pub fn record_detail(job: &mut Job, detail: Option<JobDetail>) {
+    match detail {
+        Some(d) => {
+            job.detail = Some(d);
+            job.detail_failed_at = None;
+        }
+        None => job.detail_failed_at = Some(Utc::now()),
+    }
+}
