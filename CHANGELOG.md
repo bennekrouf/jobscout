@@ -3,6 +3,13 @@
 What changed in each version of JobScout, for the people using it. Also
 published at <https://mayorana.ch/en/apps/jobscout/releases>.
 
+## [Unreleased]
+
+### Added
+
+- Added support for IrishJobs and StepStone in Belgium and Austria. You can now
+  search and view jobs from these sources directly within JobScout.
+
 ## [0.1.5] - 2026-10-19
 
 ### Added
