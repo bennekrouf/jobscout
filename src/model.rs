@@ -46,16 +46,22 @@ pub enum Country {
     France,
     UnitedKingdom,
     Uae,
+    Ireland,
+    Belgium,
+    Austria,
 }
 
 impl Country {
-    pub const ALL: [Country; 6] = [
+    pub const ALL: [Country; 9] = [
         Country::Switzerland,
         Country::Singapore,
         Country::Germany,
         Country::France,
         Country::UnitedKingdom,
         Country::Uae,
+        Country::Ireland,
+        Country::Belgium,
+        Country::Austria,
     ];
 
     /// Folder name under the data directory.
@@ -67,6 +73,9 @@ impl Country {
             Country::France => "fr",
             Country::UnitedKingdom => "uk",
             Country::Uae => "ae",
+            Country::Ireland => "ie",
+            Country::Belgium => "be",
+            Country::Austria => "at",
         }
     }
 
@@ -78,6 +87,9 @@ impl Country {
             Country::France => "France",
             Country::UnitedKingdom => "United Kingdom",
             Country::Uae => "United Arab Emirates",
+            Country::Ireland => "Ireland",
+            Country::Belgium => "Belgium",
+            Country::Austria => "Austria",
         }
     }
 
@@ -97,6 +109,9 @@ impl Country {
             Country::France => "🇫🇷",
             Country::UnitedKingdom => "🇬🇧",
             Country::Uae => "🇦🇪",
+            Country::Ireland => "🇮🇪",
+            Country::Belgium => "🇧🇪",
+            Country::Austria => "🇦🇹",
         }
     }
 
@@ -108,6 +123,9 @@ impl Country {
             Country::France => &[Source::LinkedIn, Source::FranceTravail],
             Country::UnitedKingdom => &[Source::LinkedIn, Source::Totaljobs, Source::Reed],
             Country::Uae => &[Source::LinkedIn, Source::Bayt],
+            Country::Ireland => &[Source::LinkedIn, Source::IrishJobs],
+            Country::Belgium => &[Source::LinkedIn, Source::StepStoneBelgium],
+            Country::Austria => &[Source::LinkedIn, Source::StepStoneAustria],
         }
     }
 }
@@ -144,6 +162,13 @@ pub enum Source {
     /// Bayt, the largest board in the Middle East, for the UAE. Behind
     /// Cloudflare: always read through a browser.
     Bayt,
+    /// IrishJobs, Ireland's largest board: the StepStone platform, so read like
+    /// StepStone, but always through a browser.
+    IrishJobs,
+    /// stepstone.be and stepstone.at: the StepStone platform again. robots.txt
+    /// allows only their first search page; Austria's refuses plain HTTP.
+    StepStoneBelgium,
+    StepStoneAustria,
 }
 
 impl Source {
@@ -160,6 +185,9 @@ impl Source {
             Source::Totaljobs => "Totaljobs",
             Source::Reed => "Reed",
             Source::Bayt => "Bayt",
+            Source::IrishJobs => "IrishJobs",
+            Source::StepStoneBelgium => "stepstone.be",
+            Source::StepStoneAustria => "stepstone.at",
         }
     }
 
@@ -176,6 +204,8 @@ impl Source {
             Source::Totaljobs => "src-totaljobs",
             Source::Reed => "src-reed",
             Source::Bayt => "src-bayt",
+            Source::IrishJobs => "src-irishjobs",
+            Source::StepStoneBelgium | Source::StepStoneAustria => "src-stepstone",
         }
     }
 }

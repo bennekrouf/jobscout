@@ -524,11 +524,19 @@ fn settings() -> Settings {
     s
 }
 
-/// JobStreet and Bayt are always read in a browser, and StepStone's and Totaljobs' job
+/// JobStreet, Bayt, IrishJobs and stepstone.at are always read in a browser,
+/// and stepstone.de's, stepstone.be's and Totaljobs' job
 /// pages are (`detail`); without the window, only Camoufox is one.
 fn reachable(source: Source, detail: bool, settings: &Settings) -> Result<(), String> {
-    let browser_only = matches!(source, Source::JobStreet | Source::Bayt)
-        || (matches!(source, Source::StepStone | Source::Totaljobs) && detail);
+    let always = matches!(
+        source,
+        Source::JobStreet | Source::Bayt | Source::IrishJobs | Source::StepStoneAustria
+    );
+    let pages = matches!(
+        source,
+        Source::StepStone | Source::Totaljobs | Source::StepStoneBelgium
+    );
+    let browser_only = always || (pages && detail);
     if browser_only && settings.backend != Backend::Camoufox {
         let what = if detail {
             format!("{} job pages need", source.label())
@@ -1199,6 +1207,10 @@ mod tests {
         assert!(reachable(Source::Totaljobs, false, &s).is_ok());
         assert!(reachable(Source::Totaljobs, true, &s).is_err());
         assert!(reachable(Source::Bayt, false, &s).is_err());
+        assert!(reachable(Source::IrishJobs, false, &s).is_err());
+        assert!(reachable(Source::StepStoneAustria, false, &s).is_err());
+        assert!(reachable(Source::StepStoneBelgium, false, &s).is_ok());
+        assert!(reachable(Source::StepStoneBelgium, true, &s).is_err());
         let s = Settings {
             backend: Backend::Camoufox,
             ..Settings::default()

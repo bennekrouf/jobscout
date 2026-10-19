@@ -32,6 +32,18 @@ published at <https://mayorana.ch/en/apps/jobscout/releases>.
   in the built-in browser, searches included, so on Windows and Linux it
   needs the Camoufox backend. The UAE keeps its own jobs, watches, profile,
   last search and activity log, like every country.
+- Ireland. Pick the Irish flag to search LinkedIn and IrishJobs, the
+  country's largest job board, across all of Ireland, with salaries where the
+  employer gives them. IrishJobs opens in the built-in browser, searches
+  included, so on Windows and Linux it needs the Camoufox backend. Ireland
+  keeps its own jobs, watches, profile, last search and activity log, like
+  every country.
+- Belgium and Austria. Pick the Belgian or Austrian flag to search LinkedIn
+  and StepStone's local site, stepstone.be or stepstone.at. Each search
+  brings the 25 best matches from StepStone, the most the site lets apps
+  read. Descriptions open in the built-in browser, and in Austria searches
+  do too, so on Windows and Linux they need the Camoufox backend. Each
+  country keeps its own jobs, watches, profile, last search and activity log.
 
 ## [0.1.4] - 2026-10-18
 
