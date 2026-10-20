@@ -272,6 +272,7 @@ fn WatchRow(watch: Watch, busy: bool) -> Element {
             filters.push(name.into());
         }
     }
+    filters.extend(p.contract.iter().map(|c| c.label().to_string()));
     let filters = filters.join(" · ");
 
     rsx! {

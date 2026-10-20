@@ -19,7 +19,7 @@ use serde_json::Value;
 use super::fetch::{self, FetchError};
 use super::llm;
 use super::text::markup_to_text;
-use crate::model::{Job, JobDetail, SearchParams, Settings, Source, Status};
+use crate::model::{Contract, Job, JobDetail, SearchParams, Settings, Source, Status};
 
 const API: &str = "https://www.reed.co.uk/api/1.0";
 /// The most the API returns in one answer.
@@ -35,6 +35,15 @@ pub fn search_url(p: &SearchParams, page: u32) -> String {
             "resultsToSkip",
             &((page.max(1) - 1) * PAGE_SIZE).to_string(),
         );
+    // Reed's contract roles are the freelance ones. Its flags each narrow
+    // the search, so with both picked none is sent.
+    if let [c] = p.contract[..] {
+        let flag = match c {
+            Contract::Permanent => "permanent",
+            Contract::Freelance => "contract",
+        };
+        url.query_pairs_mut().append_pair(flag, "true");
+    }
     url.to_string()
 }
 
@@ -224,6 +233,20 @@ mod tests {
             detail_url("51234567"),
             "https://www.reed.co.uk/api/1.0/jobs/51234567"
         );
+    }
+
+    #[test]
+    fn one_contract_sets_its_flag() {
+        let mut p = SearchParams {
+            keywords: "rust".into(),
+            contract: vec![Contract::Freelance],
+            ..SearchParams::default()
+        };
+        assert!(search_url(&p, 1).ends_with("&contract=true"));
+        p.contract = vec![Contract::Permanent];
+        assert!(search_url(&p, 1).ends_with("&permanent=true"));
+        p.contract = vec![Contract::Permanent, Contract::Freelance];
+        assert!(search_url(&p, 1).ends_with("&resultsToSkip=0"));
     }
 
     /// Answers in the API's documented shape.

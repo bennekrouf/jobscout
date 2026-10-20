@@ -172,6 +172,14 @@ pub enum Source {
 }
 
 impl Source {
+    /// Whether its search can be limited to `SearchParams::contract`.
+    pub fn filters_contract(self) -> bool {
+        matches!(
+            self,
+            Source::LinkedIn | Source::Arbeitsagentur | Source::Reed | Source::FranceTravail
+        )
+    }
+
     pub fn label(self) -> &'static str {
         match self {
             Source::LinkedIn => "LinkedIn",
@@ -351,6 +359,27 @@ pub const EXPERIENCE: [(u8, &str); 6] = [
     (6, "Executive"),
 ];
 
+/// Contract types a search can ask for. Only the boards where
+/// `Source::filters_contract` holds can filter on them; the others search as
+/// if none were picked.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub enum Contract {
+    /// CDI, unbefristet: open-ended employment.
+    Permanent,
+    Freelance,
+}
+
+impl Contract {
+    pub const ALL: [Contract; 2] = [Contract::Permanent, Contract::Freelance];
+
+    pub fn label(self) -> &'static str {
+        match self {
+            Contract::Permanent => "Permanent (CDI)",
+            Contract::Freelance => "Freelance",
+        }
+    }
+}
+
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(default)]
 pub struct SearchParams {
@@ -360,6 +389,8 @@ pub struct SearchParams {
     pub remote: bool,
     pub hybrid: bool,
     pub experience: Vec<u8>,
+    /// Empty = any contract.
+    pub contract: Vec<Contract>,
     /// Pages per source: 10 jobs a page on LinkedIn, about 20 elsewhere.
     pub pages: u32,
     pub sources: Vec<Source>,
@@ -381,6 +412,7 @@ impl SearchParams {
             remote: false,
             hybrid: false,
             experience: vec![],
+            contract: vec![],
             pages: 3,
             sources: country.sources().to_vec(),
         }

@@ -21,7 +21,8 @@ use serde_json::{json, Map, Value};
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 
 use crate::model::{
-    Backend, Country, Job, Posted, SearchParams, Settings, Source, Status, Watch, EXPERIENCE,
+    Backend, Contract, Country, Job, Posted, SearchParams, Settings, Source, Status, Watch,
+    EXPERIENCE,
 };
 use crate::services::sources::SearchEvent;
 use crate::services::{licence, llm, sources, store};
@@ -171,6 +172,10 @@ fn tools() -> Value {
         "experience": {
             "type": "array", "items": { "type": "integer", "minimum": 1, "maximum": 6 },
             "description": "LinkedIn only: 1 Internship, 2 Entry, 3 Associate, 4 Mid-Senior, 5 Director, 6 Executive.",
+        },
+        "contract": {
+            "type": "array", "items": { "type": "string", "enum": ["permanent", "freelance"] },
+            "description": "Only these contract types: permanent (CDI) and/or freelance. LinkedIn, France Travail, Arbeitsagentur and Reed only; the other boards ignore it. Default: any.",
         },
     });
     let filters = json!({
@@ -507,6 +512,22 @@ fn search_params(args: &Value, country: Country) -> Result<SearchParams, String>
             .filter(|n| EXPERIENCE.iter().any(|(code, _)| u64::from(*code) == *n))
             .map(|n| n as u8)
             .collect();
+    }
+    if let Some(list) = args["contract"].as_array() {
+        for v in list {
+            let c = match v.as_str().unwrap_or("") {
+                "permanent" => Contract::Permanent,
+                "freelance" => Contract::Freelance,
+                other => {
+                    return Err(format!(
+                        "unknown contract {other:?}: permanent or freelance"
+                    ))
+                }
+            };
+            if !p.contract.contains(&c) {
+                p.contract.push(c);
+            }
+        }
     }
     Ok(p)
 }

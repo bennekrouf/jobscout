@@ -20,7 +20,7 @@ use chrono::{DateTime, Utc};
 use serde_json::Value;
 
 use super::text::plain_to_text;
-use crate::model::{Job, JobDetail, SearchParams, Source, Status};
+use crate::model::{Contract, Job, JobDetail, SearchParams, Source, Status};
 
 const API: &str = "https://rest.arbeitsagentur.de/jobboerse/jobsuche-service";
 pub const HEADERS: [(&str, &str); 1] = [("X-API-Key", "jobboerse-jobsuche")];
@@ -32,7 +32,19 @@ pub fn search_url(p: &SearchParams, page: u32) -> String {
     {
         let mut q = url.query_pairs_mut();
         q.append_pair("was", p.keywords.trim());
-        q.append_pair("angebotsart", "1");
+        // angebotsart 1 is employment, 2 self-employment; befristung 2 is
+        // open-ended. Self-employment is never open-ended, so with both
+        // picked fixed-term employment comes too.
+        let permanent = p.contract.contains(&Contract::Permanent);
+        let freelance = p.contract.contains(&Contract::Freelance);
+        match (permanent, freelance) {
+            (true, true) => q.append_pair("angebotsart", "1;2"),
+            (true, false) => q
+                .append_pair("angebotsart", "1")
+                .append_pair("befristung", "2"),
+            (false, true) => q.append_pair("angebotsart", "2"),
+            (false, false) => q.append_pair("angebotsart", "1"),
+        };
         if let Some(days) = p.posted.days() {
             q.append_pair("veroeffentlichtseit", &days.to_string());
         }
@@ -234,6 +246,22 @@ mod tests {
             "https://rest.arbeitsagentur.de/jobboerse/jobsuche-service/pc/v4/jobdetails/\
              MTQyMjUtNWNjYzY1NmM1NDMwYjc2NC1T"
         );
+    }
+
+    #[test]
+    fn contract_picks_the_offer_kind() {
+        let mut p = SearchParams {
+            keywords: "rust".into(),
+            posted: Posted::Any,
+            ..SearchParams::default()
+        };
+        let query = |p: &SearchParams| search_url(p, 1).split_once('?').unwrap().1.to_string();
+        p.contract = vec![Contract::Permanent];
+        assert!(query(&p).starts_with("was=rust&angebotsart=1&befristung=2&"));
+        p.contract = vec![Contract::Freelance];
+        assert!(query(&p).starts_with("was=rust&angebotsart=2&"));
+        p.contract = vec![Contract::Permanent, Contract::Freelance];
+        assert!(query(&p).starts_with("was=rust&angebotsart=1%3B2&"));
     }
 
     /// Answers saved from the live API.

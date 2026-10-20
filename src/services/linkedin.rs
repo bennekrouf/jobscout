@@ -13,7 +13,7 @@ use scraper::{ElementRef, Html, Selector};
 
 use super::text::{html_to_text, squash};
 
-use crate::model::{Country, Job, JobDetail, SearchParams, Source, Status};
+use crate::model::{Contract, Country, Job, JobDetail, SearchParams, Source, Status};
 
 const BASE: &str = "https://www.linkedin.com/jobs-guest/jobs/api";
 
@@ -38,6 +38,19 @@ pub fn search_url(p: &SearchParams, country: Country, start: u32) -> String {
         if !p.experience.is_empty() {
             let levels: Vec<String> = p.experience.iter().map(u8::to_string).collect();
             q.append_pair("f_E", &levels.join(","));
+        }
+        // Job types: F full-time, which is how LinkedIn lists a CDI, and
+        // C contract, which is where freelance missions go.
+        if !p.contract.is_empty() {
+            let types: Vec<&str> = p
+                .contract
+                .iter()
+                .map(|c| match c {
+                    Contract::Permanent => "F",
+                    Contract::Freelance => "C",
+                })
+                .collect();
+            q.append_pair("f_JT", &types.join(","));
         }
         q.append_pair("start", &start.to_string());
     }
@@ -174,9 +187,11 @@ mod tests {
             remote: true,
             hybrid: true,
             experience: vec![3, 4],
+            contract: vec![Contract::Permanent, Contract::Freelance],
             ..SearchParams::default()
         };
         let url = search_url(&p, Country::Singapore, 20);
+        assert!(url.contains("f_JT=F%2CC"));
         assert!(url.contains("keywords=rust+developer"));
         assert!(url.contains("location=Singapore"));
         assert!(url.contains("f_WT=2%2C3"));
