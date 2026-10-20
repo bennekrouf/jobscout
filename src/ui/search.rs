@@ -208,6 +208,7 @@ pub fn SearchPanel() -> Element {
                     onclick: move |_| st.modal.set(Modal::Settings),
                     "Settings"
                 }
+                super::feedback::FeedbackLine {}
             }
         }
     }

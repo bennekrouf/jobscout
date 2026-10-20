@@ -3,6 +3,14 @@
 What changed in each version of JobScout, for the people using it. Also
 published at <https://mayorana.ch/en/apps/jobscout/releases>.
 
+## [Unreleased]
+
+### Added
+
+- Feedback and mayorana.ch links at the bottom of the sidebar. Feedback opens
+  the contact form with JobScout and your version already filled in, so an
+  idea or a problem reaches us in two clicks.
+
 ## [0.1.8] - 2026-10-20
 
 ### Added

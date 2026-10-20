@@ -185,6 +185,9 @@ body {
 .country .flag { font-size: 18px; line-height: 1; }
 .search-form .btn-primary { margin-top: 18px; }
 .sidebar-foot { margin-top: auto; padding-top: 16px; display: flex; flex-direction: column; gap: 8px; }
+.feedback-line { text-align: center; font-size: 12px; color: var(--text3); padding-top: 4px; }
+.feedback-line a { color: var(--text3); text-decoration: none; }
+.feedback-line a:hover { color: var(--text2); text-decoration: underline; }
 
 /* ── List ─────────────────────────────────────────────────── */
 .list { display: flex; flex-direction: column; min-width: 0; }

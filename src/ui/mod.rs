@@ -1,4 +1,5 @@
 mod detail;
+mod feedback;
 mod jobs;
 mod mcp;
 mod modals;
