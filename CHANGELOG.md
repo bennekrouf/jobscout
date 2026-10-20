@@ -11,6 +11,19 @@ published at <https://mayorana.ch/en/apps/jobscout/releases>.
   the contact form with JobScout and your version already filled in, so an
   idea or a problem reaches us in two clicks.
 
+### Changed
+
+- Profile, Watches, Pro, MCP and Settings moved from the bottom of the
+  sidebar to a bar across the top of the window, so the sidebar keeps to the
+  search.
+
+### Fixed
+
+- On Windows, the taskbar and the window's title bar show the JobScout icon
+  instead of a generic one.
+- On Windows, the country buttons show flags instead of two-letter codes
+  such as CH and SG. The flags now look the same on every system.
+
 ## [0.1.8] - 2026-10-20
 
 ### Added

@@ -101,20 +101,6 @@ impl Country {
         }
     }
 
-    pub fn flag(self) -> &'static str {
-        match self {
-            Country::Switzerland => "🇨🇭",
-            Country::Singapore => "🇸🇬",
-            Country::Germany => "🇩🇪",
-            Country::France => "🇫🇷",
-            Country::UnitedKingdom => "🇬🇧",
-            Country::Uae => "🇦🇪",
-            Country::Ireland => "🇮🇪",
-            Country::Belgium => "🇧🇪",
-            Country::Austria => "🇦🇹",
-        }
-    }
-
     pub fn sources(self) -> &'static [Source] {
         match self {
             Country::Switzerland => &[Source::LinkedIn, Source::JobsCh, Source::Jobup],

@@ -54,17 +54,17 @@ pub fn ProButton() -> Element {
         Status::Unavailable => return rsx! {},
         Status::Pro(l) => (
             "✦ PRO",
-            "btn btn-wide pro-btn active",
+            "btn pro-btn active",
             format!("JobScout Pro, licensed to {}", l.email),
         ),
         Status::Renew(_) => (
             "✦ RENEW PRO",
-            "btn btn-wide pro-btn renew",
+            "btn pro-btn renew",
             "Your Pro licence doesn't cover this version".to_owned(),
         ),
         Status::Free => (
             "Get Pro…",
-            "btn btn-wide pro-btn",
+            "btn pro-btn",
             format!("The free version keeps {FREE_WATCHES} watch; Pro keeps any number"),
         ),
     };

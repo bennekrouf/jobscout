@@ -3,6 +3,7 @@ use dioxus::prelude::*;
 use crate::model::{Contract, Country, Posted, Watch, EXPERIENCE};
 use crate::services::store;
 use crate::state::{run_search, AppState, Modal};
+use crate::ui::flag::Flag;
 
 /// Keyed by country in `ui::App`: switching country mounts a fresh form,
 /// started from that country's last search.
@@ -13,8 +14,6 @@ pub fn SearchPanel() -> Element {
     let country = *st.country.read();
     let mut p = use_signal(|| st.search.peek().clone());
     let busy = st.busy.read().is_some();
-    let profile_len = st.profile.read().trim().chars().count();
-    let n_watches = st.watches.read().len();
 
     let mut submit = move || {
         let params = p.read().clone();
@@ -35,10 +34,6 @@ pub fn SearchPanel() -> Element {
 
     rsx! {
         aside { class: "sidebar",
-            div { class: "brand",
-                span { class: "brand-mark", "◎" }
-                span { "JobScout" }
-            }
 
             div { class: "countries",
                 for c in Country::ALL {
@@ -50,7 +45,7 @@ pub fn SearchPanel() -> Element {
                         title: if busy && c != country { "Wait for the current task to finish, or stop it".to_string() } else { format!("Load the {} context", c.label()) },
                         onclick: move |_| st.switch_country(c),
                         "aria-label": c.label(),
-                        span { class: "flag", "{c.flag()}" }
+                        Flag { country: c }
                     }
                 }
             }
@@ -186,28 +181,6 @@ pub fn SearchPanel() -> Element {
             }
 
             div { class: "sidebar-foot",
-                button {
-                    class: "btn btn-wide",
-                    onclick: move |_| st.modal.set(Modal::Profile),
-                    if profile_len == 0 { "Set your profile…" } else { "Profile ({profile_len} chars)" }
-                }
-                button {
-                    class: "btn btn-wide",
-                    onclick: move |_| st.modal.set(Modal::Watches),
-                    if n_watches == 0 { "Watches" } else { "Watches ({n_watches})" }
-                }
-                super::pro::ProButton {}
-                button {
-                    class: "btn btn-wide btn-ghost",
-                    title: "Use JobScout from Claude Desktop or Claude Code",
-                    onclick: move |_| st.modal.set(Modal::Mcp),
-                    "MCP"
-                }
-                button {
-                    class: "btn btn-wide btn-ghost",
-                    onclick: move |_| st.modal.set(Modal::Settings),
-                    "Settings"
-                }
                 super::feedback::FeedbackLine {}
             }
         }

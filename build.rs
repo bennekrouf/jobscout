@@ -8,11 +8,15 @@ fn main() {
     // Embeds the icon in the .exe (Start menu, shortcuts, Explorer). The
     // release workflow makes assets/icon.ico from assets/icon.png just before
     // building; without it the build still succeeds, icon-less.
+    //
+    // Under id 32512 (IDI_APPLICATION): Dioxus sets the window icon — what the
+    // taskbar and title bar show — from that resource, and falls back to its
+    // own logo when the .exe has none there.
     #[cfg(target_os = "windows")]
     {
         if std::path::Path::new("assets/icon.ico").exists() {
             let mut res = winresource::WindowsResource::new();
-            res.set_icon("assets/icon.ico");
+            res.set_icon_with_id("assets/icon.ico", "32512");
             res.set("FileDescription", "JobScout");
             res.set("ProductName", "JobScout");
             res.set("CompanyName", "Mayorana");
