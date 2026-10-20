@@ -5,6 +5,12 @@ published at <https://mayorana.ch/en/apps/jobscout/releases>.
 
 ## [Unreleased]
 
+### Added
+
+- Feedback and mayorana.ch links at the bottom of the sidebar. Feedback opens
+  the contact form with JobScout and your version already filled in, so an
+  idea or a problem reaches us in two clicks.
+
 ### Changed
 
 - Profile, Watches, Pro, MCP and Settings moved from the bottom of the

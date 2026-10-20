@@ -1,4 +1,5 @@
 mod detail;
+mod feedback;
 mod flag;
 mod header;
 mod jobs;

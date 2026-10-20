@@ -179,6 +179,10 @@ pub fn SearchPanel() -> Element {
                     "Watch this search…"
                 }
             }
+
+            div { class: "sidebar-foot",
+                super::feedback::FeedbackLine {}
+            }
         }
     }
 }
