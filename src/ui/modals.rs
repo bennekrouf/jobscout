@@ -3,6 +3,7 @@ use dioxus::prelude::*;
 use crate::model::{Backend, Settings, Watch};
 use crate::services::{notify, store};
 use crate::state::{age, run_watch, AppState, Modal};
+use crate::ui::flag::Flag;
 
 #[component]
 pub fn ProfileModal() -> Element {
@@ -12,7 +13,7 @@ pub fn ProfileModal() -> Element {
     rsx! {
         div { class: "modal-bg",
             div { class: "modal wide",
-                h2 { "Your profile · {st.country.read().flag()} {st.country.read().label()}" }
+                h2 { "Your profile · " Flag { country: *st.country.read() } " {st.country.read().label()}" }
                 p { class: "muted",
                     "Paste your CV and what you are looking for: target roles, seniority, \
                      locations, remote or not, salary floor, languages, deal-breakers. \
