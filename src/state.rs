@@ -149,8 +149,7 @@ impl AppState {
         self.settings.write().country = to;
         store::save_settings(&self.settings.peek());
         self.log(format!(
-            "{} {}: {} jobs, {} watches.",
-            to.flag(),
+            "{}: {} jobs, {} watches.",
             to.label(),
             self.jobs.peek().len(),
             self.watches.peek().len()

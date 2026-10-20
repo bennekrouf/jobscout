@@ -1,4 +1,6 @@
 mod detail;
+mod flag;
+mod header;
 mod jobs;
 mod mcp;
 mod modals;
@@ -100,6 +102,7 @@ pub fn App() -> Element {
                 }
             }
         }
+        header::Header {}
         // Each column has a minimum, and the job pane gets what is left: on a
         // narrow window the list gives way before the job pane disappears.
         div {
