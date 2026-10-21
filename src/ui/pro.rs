@@ -4,7 +4,7 @@
 use dioxus::prelude::*;
 
 use crate::model::Country;
-use crate::services::licence::{self, Status, FREE_WATCHES};
+use crate::services::licence::{self, FreeError, Status, FREE_WATCHES};
 use crate::services::store;
 use crate::state::AppState;
 
@@ -55,6 +55,14 @@ pub fn ProButton() -> Element {
             "btn pro-btn active",
             format!("JobScout Pro, {} plan for {}", a.plan.name, a.email),
         ),
+        Status::NotPro(a) if a.is_free() => (
+            "Get Pro…",
+            "btn pro-btn",
+            format!(
+                "Free: {} AI credits left this month. The free version keeps {FREE_WATCHES} watch; Pro keeps any number",
+                a.credits.left
+            ),
+        ),
         Status::NotPro(_) | Status::Offline(_) | Status::Unknown(_) => (
             "✦ RENEW PRO",
             "btn pro-btn renew",
@@ -77,11 +85,17 @@ pub fn ProWindow() -> Element {
     let mut key = use_signal(String::new);
     let mut error = use_signal(|| Option::<String>::None);
     let mut busy = use_signal(|| false);
+    let mut free_email = use_signal(String::new);
+    let mut free_note = use_signal(|| Option::<String>::None);
+    let mut free_hidden = use_signal(|| false);
     if !(pro.open)() {
         return rsx! {};
     }
     let status = pro.status.read().clone();
     let licensed = status.licence().is_some();
+    let on_free_plan = status.free_credits().is_some();
+    let asks_number = !licensed || on_free_plan || matches!(status, Status::Unknown(_));
+    let offers_free = matches!(status, Status::Free | Status::Unknown(_)) && !free_hidden();
     let mut close = move || {
         pro.open.set(false);
         error.set(None);
@@ -105,6 +119,23 @@ pub fn ProWindow() -> Element {
         busy.set(true);
         spawn(async move {
             pro.status.set(licence::refresh(true).await);
+            busy.set(false);
+        });
+    };
+    let mut ask_free = move || {
+        let email = free_email.read().clone();
+        busy.set(true);
+        spawn(async move {
+            match licence::request_free_credits(&email).await {
+                Ok(message) => {
+                    free_note.set(Some(format!(
+                        "{message} Paste the licence number above when it arrives."
+                    )));
+                    error.set(None);
+                }
+                Err(FreeError::Unavailable) => free_hidden.set(true),
+                Err(FreeError::Refused(e)) => error.set(Some(e)),
+            }
             busy.set(false);
         });
     };
@@ -146,6 +177,19 @@ pub fn ProWindow() -> Element {
                             "{a.credits.left} AI credits left this month. {a.renewal()}."
                         }
                     },
+                    Status::NotPro(a) if a.is_free() => rsx! {
+                        p {
+                            "Free — "
+                            strong { "{a.credits.left} AI credits" }
+                            " left this month, for "
+                            strong { "{a.email}" }
+                            ". {a.renewal()}."
+                        }
+                        p {
+                            "The free version keeps one watch. Pro keeps any number of watches, in every country. "
+                            "It comes with a monthly plan on mayorana.ch."
+                        }
+                    },
                     Status::NotPro(a) if !a.active => rsx! {
                         p {
                             "The subscription for "
@@ -175,10 +219,10 @@ pub fn ProWindow() -> Element {
                     button {
                         class: "btn btn-primary pro-buy",
                         onclick: move |_| open_url(licence::BUY_URL),
-                        if licensed { "Renew JobScout Pro" } else { "Buy JobScout Pro" }
+                        if licensed && !on_free_plan { "Renew JobScout Pro" } else { "Buy JobScout Pro" }
                     }
                 }
-                if !licensed || matches!(status, Status::Unknown(_)) {
+                if asks_number {
                     p { class: "muted small", "Already subscribed? Paste the licence number from your email:" }
                     input {
                         class: "licence-key",
@@ -190,11 +234,34 @@ pub fn ProWindow() -> Element {
                         "The number is checked with api0 now and once a day. Pro keeps working for a week without a connection."
                     }
                 }
+                if offers_free {
+                    div { class: "free-credits",
+                        p { class: "muted small", "No plan? Get free AI credits every month, without Pro. The licence number comes by email." }
+                        div { class: "free-row",
+                            input {
+                                class: "licence-key",
+                                r#type: "email",
+                                placeholder: "you@example.com",
+                                value: "{free_email}",
+                                oninput: move |e| free_email.set(e.value()),
+                            }
+                            button {
+                                class: "btn",
+                                disabled: free_email.read().trim().is_empty() || busy(),
+                                onclick: move |_| ask_free(),
+                                "Get free AI credits"
+                            }
+                        }
+                        if let Some(n) = free_note.read().as_ref() {
+                            p { class: "pro-ok small", "{n}" }
+                        }
+                    }
+                }
                 if let Some(e) = error.read().as_ref() {
                     p { class: "pro-error small", "{e}" }
                 }
                 div { class: "modal-actions",
-                    if !licensed || matches!(status, Status::Unknown(_)) {
+                    if asks_number {
                         button {
                             class: "btn",
                             disabled: key.read().trim().is_empty() || busy(),
@@ -203,7 +270,7 @@ pub fn ProWindow() -> Element {
                         }
                     }
                     if let Some(number) = status.licence().map(str::to_owned) {
-                        if !matches!(status, Status::Unknown(_)) {
+                        if !matches!(status, Status::Unknown(_)) && !on_free_plan {
                             button {
                                 class: "btn",
                                 disabled: busy(),
@@ -211,6 +278,8 @@ pub fn ProWindow() -> Element {
                                 onclick: move |_| manage(number.clone()),
                                 "Manage subscription"
                             }
+                        }
+                        if !matches!(status, Status::Unknown(_)) {
                             button {
                                 class: "btn btn-ghost",
                                 disabled: busy(),

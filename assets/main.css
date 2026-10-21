@@ -442,6 +442,9 @@ h2 .flag { width: 21px; height: 14px; }
 .pro-buy { align-self: flex-start; margin: 12px 0 8px; }
 .pro-ok { color: var(--good); }
 .pro-error { color: var(--bad); }
+.free-credits { margin-top: 10px; }
+.free-row { display: flex; gap: 6px; align-items: center; }
+.free-row .licence-key { flex: 1; min-width: 0; }
 .licence-key { width: 100%; margin: 6px 0; padding: 8px; border-radius: 7px; resize: vertical; background: var(--bg0); color: var(--text1); border: 1px solid var(--border); font: 12px var(--mono); }
 
 /* ── Update banner ───────────────────────────────────────────── */
