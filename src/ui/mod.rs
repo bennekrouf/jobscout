@@ -34,6 +34,15 @@ pub fn App() -> Element {
         open: Signal::new(false),
         status: Signal::new(crate::services::licence::current()),
     });
+    // The licence is checked with api0 at start, then once a day.
+    let mut pro_status = use_context::<pro::Pro>().status;
+    use_future(move || async move {
+        pro_status.set(crate::services::licence::refresh(true).await);
+        loop {
+            tokio::time::sleep(std::time::Duration::from_secs(3600)).await;
+            pro_status.set(crate::services::licence::refresh(false).await);
+        }
+    });
     let modal = *st.modal.read();
     let mut drag = use_signal(|| Option::<Drag>::None);
 

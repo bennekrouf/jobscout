@@ -170,11 +170,6 @@ jobs:
       # DMG and a single updater entry cover both.
       - name: Build universal binary
         if: env.HAVE_MAC_SECRETS == 'true'
-        env:
-          # Public half of the key mayorana.ch signs Pro licences with (repository
-          # variable, not a secret). Without it the build can't check licences,
-          # and runs without the free version's limit.
-          JOBSCOUT_LICENSE_PUBLIC_KEY: ${{ vars.JOBSCOUT_LICENSE_PUBLIC_KEY }}
         run: |
           set -euo pipefail
           cargo build --release --locked --target aarch64-apple-darwin
@@ -309,11 +304,6 @@ jobs:
           }
 
       - name: Build
-        env:
-          # Public half of the key mayorana.ch signs Pro licences with (repository
-          # variable, not a secret). Without it the build can't check licences,
-          # and runs without the free version's limit.
-          JOBSCOUT_LICENSE_PUBLIC_KEY: ${{ vars.JOBSCOUT_LICENSE_PUBLIC_KEY }}
         run: cargo build --release --locked
 
       # The app must start on a PC without the Visual C++ Redistributable, so the
@@ -452,11 +442,6 @@ jobs:
             pkg-config
 
       - name: Build
-        env:
-          # Public half of the key mayorana.ch signs Pro licences with (repository
-          # variable, not a secret). Without it the build can't check licences,
-          # and runs without the free version's limit.
-          JOBSCOUT_LICENSE_PUBLIC_KEY: ${{ vars.JOBSCOUT_LICENSE_PUBLIC_KEY }}
         run: cargo build --release --locked --target x86_64-unknown-linux-gnu
 
       - name: Package tar.gz
