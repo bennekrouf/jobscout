@@ -596,16 +596,7 @@ fn overview() -> Value {
             })
         })
         .collect();
-    let licence = match licence::current() {
-        licence::Status::Free => {
-            format!("free: {} watch across all countries", licence::FREE_WATCHES)
-        }
-        licence::Status::Pro(l) => format!("JobScout Pro, licensed to {}", l.email),
-        licence::Status::Renew(_) => {
-            "Pro licence that does not cover this version: free limits apply".into()
-        }
-        licence::Status::Unavailable => "build without licence checks: nothing is limited".into(),
-    };
+    let licence = licence::current().describe();
     json!({
         "open_in_window": settings.country.code(),
         "countries": countries,

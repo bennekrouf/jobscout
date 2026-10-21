@@ -45,22 +45,20 @@ pub fn open_url(url: &str) {
 }
 
 /// "Get Pro…" while free, "✦ PRO" once licensed; opens the window either way.
-/// Nothing at all in a build that can't check licences.
 #[component]
 pub fn ProButton() -> Element {
     let mut pro = use_context::<Pro>();
     let status = pro.status.read().clone();
     let (label, class, title) = match &status {
-        Status::Unavailable => return rsx! {},
-        Status::Pro(l) => (
+        Status::Pro(a) => (
             "✦ PRO",
             "btn pro-btn active",
-            format!("JobScout Pro, licensed to {}", l.email),
+            format!("JobScout Pro, {} plan for {}", a.plan.name, a.email),
         ),
-        Status::Renew(_) => (
+        Status::NotPro(_) | Status::Offline(_) | Status::Unknown(_) => (
             "✦ RENEW PRO",
             "btn pro-btn renew",
-            "Your Pro licence doesn't cover this version".to_owned(),
+            "Your licence doesn't make this JobScout Pro right now".to_owned(),
         ),
         Status::Free => (
             "Get Pro…",
@@ -78,24 +76,50 @@ pub fn ProWindow() -> Element {
     let mut pro = use_context::<Pro>();
     let mut key = use_signal(String::new);
     let mut error = use_signal(|| Option::<String>::None);
+    let mut busy = use_signal(|| false);
     if !(pro.open)() {
         return rsx! {};
     }
     let status = pro.status.read().clone();
+    let licensed = status.licence().is_some();
     let mut close = move || {
         pro.open.set(false);
         error.set(None);
     };
     let mut activate = move || {
         let pasted = key.read().clone();
-        match licence::activate(&pasted) {
-            Ok(s) => {
-                pro.status.set(s);
-                key.set(String::new());
-                error.set(None);
+        busy.set(true);
+        spawn(async move {
+            match licence::activate(&pasted).await {
+                Ok(s) => {
+                    pro.status.set(s);
+                    key.set(String::new());
+                    error.set(None);
+                }
+                Err(e) => error.set(Some(e)),
             }
-            Err(e) => error.set(Some(e)),
-        }
+            busy.set(false);
+        });
+    };
+    let mut check_again = move || {
+        busy.set(true);
+        spawn(async move {
+            pro.status.set(licence::refresh(true).await);
+            busy.set(false);
+        });
+    };
+    let mut manage = move |number: String| {
+        busy.set(true);
+        spawn(async move {
+            match licence::portal_url(&number).await {
+                Ok(url) => {
+                    open_url(&url);
+                    error.set(None);
+                }
+                Err(e) => error.set(Some(e)),
+            }
+            busy.set(false);
+        });
     };
 
     rsx! {
@@ -107,58 +131,93 @@ pub fn ProWindow() -> Element {
                         p {
                             "The free version keeps one watch: one search that runs on its own and notifies you about good matches. "
                             "Searching, scoring and export are never limited. "
-                            "Pro keeps any number of watches, in every country."
+                            "Pro keeps any number of watches, in every country. It comes with a monthly plan on mayorana.ch."
                         }
                     },
-                    Status::Pro(l) => rsx! {
+                    Status::Pro(a) => rsx! {
                         p { class: "pro-ok",
-                            "Pro is active on this computer, licensed to "
-                            strong { "{l.email}" }
-                            ". Updates included until {l.updates_until}."
+                            "Pro is active on this computer: "
+                            strong { "{a.plan.name}" }
+                            " plan for "
+                            strong { "{a.email}" }
+                            "."
+                        }
+                        p { class: "small",
+                            "{a.credits.left} AI credits left this month. {a.renewal()}."
                         }
                     },
-                    Status::Renew(l) => rsx! {
+                    Status::NotPro(a) if !a.active => rsx! {
                         p {
-                            "Your licence ("
-                            strong { "{l.email}" }
-                            ") covers versions released until {l.updates_until}. This version is newer, so it runs as the free version: renew Pro to use it here, or keep using a version from before that date."
+                            "The subscription for "
+                            strong { "{a.email}" }
+                            " isn't active, so JobScout runs as the free version. Renew it to have Pro again."
                         }
                     },
-                    Status::Unavailable => rsx! {
-                        p { "This build of JobScout can't check licences, so nothing is limited. Builds from mayorana.ch can." }
+                    Status::NotPro(a) => rsx! {
+                        p {
+                            "The "
+                            strong { "{a.plan.name}" }
+                            " plan doesn't include JobScout, so it runs as the free version. A plan with JobScout makes it Pro."
+                        }
+                    },
+                    Status::Offline(a) => rsx! {
+                        p {
+                            "JobScout hasn't been able to check the licence for "
+                            strong { "{a.email}" }
+                            " for a week, so it runs as the free version until it can. Check the connection, then check again."
+                        }
+                    },
+                    Status::Unknown(_) => rsx! {
+                        p { "The licence number on this computer isn't known. Check it against the email, or paste it again." }
                     },
                 }
-                if matches!(status, Status::Free | Status::Renew(_)) {
+                if !matches!(status, Status::Pro(_)) {
                     button {
                         class: "btn btn-primary pro-buy",
                         onclick: move |_| open_url(licence::BUY_URL),
-                        if matches!(status, Status::Renew(_)) { "Renew JobScout Pro" } else { "Buy JobScout Pro" }
+                        if licensed { "Renew JobScout Pro" } else { "Buy JobScout Pro" }
                     }
-                    p { class: "muted small", "Already bought it? Paste the licence key from your email:" }
-                    textarea {
+                }
+                if !licensed || matches!(status, Status::Unknown(_)) {
+                    p { class: "muted small", "Already subscribed? Paste the licence number from your email:" }
+                    input {
                         class: "licence-key",
-                        rows: 4,
-                        placeholder: "Licence key",
+                        placeholder: "ABCDE-FGHJK-LMNPQ-RSTUV",
                         value: "{key}",
                         oninput: move |e| key.set(e.value()),
                     }
-                    if let Some(e) = error.read().as_ref() {
-                        p { class: "pro-error small", "{e}" }
-                    }
                     p { class: "muted small",
-                        "The key is checked on this computer: no account, nothing sent anywhere."
+                        "The number is checked with api0 now and once a day. Pro keeps working for a week without a connection."
                     }
                 }
+                if let Some(e) = error.read().as_ref() {
+                    p { class: "pro-error small", "{e}" }
+                }
                 div { class: "modal-actions",
-                    if matches!(status, Status::Free | Status::Renew(_)) {
+                    if !licensed || matches!(status, Status::Unknown(_)) {
                         button {
                             class: "btn",
-                            disabled: key.read().trim().is_empty(),
+                            disabled: key.read().trim().is_empty() || busy(),
                             onclick: move |_| activate(),
                             "Activate"
                         }
                     }
-                    if matches!(status, Status::Pro(_) | Status::Renew(_)) {
+                    if let Some(number) = status.licence().map(str::to_owned) {
+                        if !matches!(status, Status::Unknown(_)) {
+                            button {
+                                class: "btn",
+                                disabled: busy(),
+                                title: "Change or cancel the plan on mayorana.ch",
+                                onclick: move |_| manage(number.clone()),
+                                "Manage subscription"
+                            }
+                            button {
+                                class: "btn btn-ghost",
+                                disabled: busy(),
+                                onclick: move |_| check_again(),
+                                "Check again"
+                            }
+                        }
                         button {
                             class: "btn btn-ghost",
                             title: "To move the licence to another computer",

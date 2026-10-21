@@ -3,6 +3,19 @@
 What changed in each version of JobScout, for the people using it. Also
 published at <https://mayorana.ch/en/apps/jobscout/releases>.
 
+## [Unreleased]
+
+### Changed
+
+- JobScout Pro now comes with a monthly plan on mayorana.ch instead of a
+  one-time licence key. Paste the licence number from the plan's email (like
+  ABCDE-FGHJK-LMNPQ-RSTUV) in the Pro window. JobScout checks it when it
+  starts and once a day, and Pro keeps working for a week without a
+  connection.
+- The Pro window shows your plan, the AI credits left this month and when the
+  plan renews. Manage subscription opens the page where you change or cancel
+  it.
+
 ## [0.1.9] - 2026-10-20
 
 ### Added
