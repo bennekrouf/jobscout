@@ -1,5 +1,5 @@
 //! Country flags, drawn: Windows has no flag emoji and shows the two
-//! letters instead (🇨🇭 → "CH").
+//! letters instead (🇨🇭 → "CH"). Also the flags of api0's AI regions.
 
 use dioxus::prelude::*;
 
@@ -76,6 +76,45 @@ pub fn Flag(country: Country) -> Element {
         Country::Austria => rsx! {
             rect { width: "30", height: "20", fill: "#C8102E" }
             rect { y: "6.67", width: "30", height: "6.67", fill: "#fff" }
+        },
+    };
+    rsx! {
+        svg { class: "flag", view_box: "0 0 30 20", "aria-hidden": "true", {flag} }
+    }
+}
+
+/// The flag of one of api0's AI regions, by its id.
+#[component]
+pub fn RegionFlag(id: &'static str) -> Element {
+    let flag = match id {
+        "europe" => rsx! {
+            rect { width: "30", height: "20", fill: "#003399" }
+            // Twelve stars on a circle, as dots: a star this small is a dot.
+            for i in 0..12 {
+                circle {
+                    cx: "{15.0 + 6.0 * (f64::from(i) * std::f64::consts::PI / 6.0).sin()}",
+                    cy: "{10.0 - 6.0 * (f64::from(i) * std::f64::consts::PI / 6.0).cos()}",
+                    r: "0.9",
+                    fill: "#FFCC00",
+                }
+            }
+        },
+        "china" => rsx! {
+            rect { width: "30", height: "20", fill: "#EE1C25" }
+            polygon { points: STAR, fill: "#FFFF00", transform: "translate(5 5) scale(3)" }
+            for (x, y) in [(10.0, 2.0), (12.0, 4.0), (12.0, 7.0), (10.0, 9.0)] {
+                polygon { points: STAR, fill: "#FFFF00", transform: "translate({x} {y}) scale(1)" }
+            }
+        },
+        "usa" => rsx! {
+            rect { width: "30", height: "20", fill: "#fff" }
+            for i in 0..7 {
+                rect { y: "{f64::from(i) * 40.0 / 13.0}", width: "30", height: "{20.0 / 13.0}", fill: "#B22234" }
+            }
+            rect { width: "12", height: "{140.0 / 13.0}", fill: "#3C3B6E" }
+        },
+        _ => rsx! {
+            rect { width: "30", height: "20", fill: "#888" }
         },
     };
     rsx! {

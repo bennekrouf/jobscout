@@ -37,10 +37,7 @@ pub struct Email {
 
 /// One line of text, within `max` characters.
 fn line(s: &str, max: usize) -> String {
-    let flat: String = s
-        .split_whitespace()
-        .collect::<Vec<_>>()
-        .join(" ");
+    let flat: String = s.split_whitespace().collect::<Vec<_>>().join(" ");
     if flat.chars().count() <= max {
         flat
     } else {
@@ -65,7 +62,9 @@ pub fn watch_email(watch: &str, country: Country, jobs: &[Job], scored: bool) ->
         country.label()
     );
     if n > MAX_JOBS {
-        intro.push_str(&format!(" The first {MAX_JOBS} are below; all of them are in JobScout."));
+        intro.push_str(&format!(
+            " The first {MAX_JOBS} are below; all of them are in JobScout."
+        ));
     }
     let items = jobs
         .iter()
@@ -165,18 +164,34 @@ mod tests {
 
     #[test]
     fn a_watch_email_lists_matches_with_score_and_link() {
-        let jobs = [job("Rust developer", "https://www.jobs.ch/en/vacancies/detail/1/", Some(86))];
+        let jobs = [job(
+            "Rust developer",
+            "https://www.jobs.ch/en/vacancies/detail/1/",
+            Some(86),
+        )];
         let e = watch_email("rust developer", Country::Switzerland, &jobs, true);
         assert_eq!(e.title, "1 good match for “rust developer”");
-        assert_eq!(e.intro, "Your watch “rust developer” in Switzerland found 1 good match.");
-        assert_eq!(e.items[0].detail, "Acme · Zurich · 86/100 — Strong Rust fit");
+        assert_eq!(
+            e.intro,
+            "Your watch “rust developer” in Switzerland found 1 good match."
+        );
+        assert_eq!(
+            e.items[0].detail,
+            "Acme · Zurich · 86/100 — Strong Rust fit"
+        );
         assert_eq!(e.items[0].url, "https://www.jobs.ch/en/vacancies/detail/1/");
     }
 
     #[test]
     fn unscored_runs_list_new_jobs_and_long_ones_are_cut() {
         let jobs: Vec<Job> = (0..MAX_JOBS + 5)
-            .map(|i| job(&format!("Job {i}\n  title"), "http://insecure.example", None))
+            .map(|i| {
+                job(
+                    &format!("Job {i}\n  title"),
+                    "http://insecure.example",
+                    None,
+                )
+            })
             .collect();
         let e = watch_email("data", Country::Germany, &jobs, false);
         assert_eq!(e.items.len(), MAX_JOBS);

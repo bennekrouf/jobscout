@@ -38,5 +38,9 @@ fn main() {
 
 /// The native title bar, as in every mayorana app: name, version and licence.
 pub fn window_title(status: &services::licence::Status) -> String {
-    format!("JobScout {}{}", env!("CARGO_PKG_VERSION"), status.title_badge())
+    format!(
+        "JobScout {}{}",
+        env!("CARGO_PKG_VERSION"),
+        status.title_badge()
+    )
 }

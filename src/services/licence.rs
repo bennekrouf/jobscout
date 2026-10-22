@@ -194,7 +194,9 @@ impl Status {
         match self {
             Status::Pro(_) => " \u{b7} \u{2726} Pro",
             Status::Offline(_) => " \u{b7} Pro inactive",
-            Status::NotPro(a) if !a.active && a.products.iter().any(|p| p == PRODUCT || p == "*") => {
+            Status::NotPro(a)
+                if !a.active && a.products.iter().any(|p| p == PRODUCT || p == "*") =>
+            {
                 " \u{b7} Pro inactive"
             }
             _ => "",
@@ -875,7 +877,10 @@ mod tests {
                 used: 1
             })
         );
-        assert_eq!(Usage::default().take("2026-10", 10).map(|u| u.used), Some(1));
+        assert_eq!(
+            Usage::default().take("2026-10", 10).map(|u| u.used),
+            Some(1)
+        );
     }
 
     #[test]

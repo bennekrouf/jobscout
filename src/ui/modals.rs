@@ -1,9 +1,9 @@
 use dioxus::prelude::*;
 
-use crate::model::{Backend, Settings, Watch};
+use crate::model::{Backend, Watch};
 use crate::services::{llm, notify, store};
 use crate::state::{age, run_watch, AppState, Modal};
-use crate::ui::flag::Flag;
+use crate::ui::flag::{Flag, RegionFlag};
 
 #[component]
 pub fn ProfileModal() -> Element {
@@ -68,6 +68,38 @@ pub fn SettingsModal() -> Element {
     let mut st = use_context::<AppState>();
     let mut s = use_signal(|| st.settings.peek().clone());
     let cur = s.read().clone();
+    // What each api0 region costs, asked once when the window opens.
+    let mut offers = use_signal(|| Option::<Result<Vec<llm::RegionOffer>, String>>::None);
+    use_future(move || async move {
+        offers.set(Some(llm::api0_regions().await));
+    });
+    let has_licence = llm::api0_key().is_some();
+    let region_notes: Vec<(&'static llm::Region, String)> = llm::REGIONS
+        .iter()
+        .map(|r| {
+            let note = match offers.read().as_ref() {
+                _ if !has_licence => "needs a licence".to_string(),
+                None => "\u{2026}".to_string(),
+                Some(Err(_)) => "unavailable".to_string(),
+                Some(Ok(list)) => match list.iter().find(|o| o.id == r.id) {
+                    Some(o) => {
+                        let n = o.credits_per_score();
+                        format!(
+                            "\u{2248} {n} {} a score",
+                            if n == 1 { "credit" } else { "credits" }
+                        )
+                    }
+                    None => "not offered".to_string(),
+                },
+            };
+            (r, note)
+        })
+        .collect();
+    let region = cur.region();
+    let offers_error = match offers.read().as_ref() {
+        Some(Err(e)) if has_licence => Some(e.clone()),
+        _ => None,
+    };
 
     rsx! {
         div { class: "modal-bg",
@@ -133,49 +165,70 @@ pub fn SettingsModal() -> Element {
                     }
                 }
 
-                h3 { "Scoring model (OpenAI-compatible)" }
-                div { class: "presets",
-                    button {
-                        class: "btn btn-small",
-                        onclick: move |_| {
-                            let mut w = s.write();
-                            w.llm_base_url = Settings::default().llm_base_url;
-                            w.llm_model = Settings::default().llm_model;
-                            w.llm_key_env = Settings::default().llm_key_env;
-                        },
-                        "api0"
+                h3 { "Scoring model" }
+                div { class: "region-row",
+                    for (r, note) in region_notes {
+                        button {
+                            key: "{r.id}",
+                            class: if region == Some(r) { "region on" } else { "region" },
+                            title: "api0, in {r.label}",
+                            onclick: move |_| s.write().use_region(r.id),
+                            RegionFlag { id: r.id }
+                            span { class: "region-label", "{r.label}" }
+                            span { class: "region-note", "{note}" }
+                        }
                     }
                     button {
-                        class: "btn btn-small",
+                        class: if cur.is_ollama() { "region on" } else { "region" },
+                        title: "A model running on this computer",
+                        onclick: move |_| s.write().use_ollama(),
+                        span { class: "region-icon", "\u{1F4BB}" }
+                        span { class: "region-label", "Ollama" }
+                        span { class: "region-note", "on this computer, free" }
+                    }
+                }
+                div { class: "presets",
+                    button {
+                        class: if cur.llm_base_url.contains("api.deepseek.com") { "btn btn-small on" } else { "btn btn-small" },
                         onclick: move |_| {
                             let mut w = s.write();
                             w.llm_base_url = "https://api.deepseek.com".into();
                             w.llm_model = "deepseek-chat".into();
                             w.llm_key_env = "DEEPSEEK_API_KEY".into();
                         },
-                        "DeepSeek"
-                    }
-                    button {
-                        class: "btn btn-small",
-                        onclick: move |_| {
-                            let mut w = s.write();
-                            w.llm_base_url = "http://localhost:11434/v1".into();
-                            w.llm_key_env = String::new();
-                        },
-                        "Local ollama"
+                        "DeepSeek, your own key"
                     }
                 }
-                label { class: "field-label", "Base URL" }
-                input { class: "input", value: "{cur.llm_base_url}", oninput: move |e| s.write().llm_base_url = e.value() }
-                label { class: "field-label", "Model" }
-                input { class: "input", value: "{cur.llm_model}", oninput: move |e| s.write().llm_model = e.value() }
-                label { class: "field-label", "API key environment variable (empty for none)" }
-                input { class: "input", value: "{cur.llm_key_env}", oninput: move |e| s.write().llm_key_env = e.value() }
-                p { class: "muted small", "The key itself is read from your environment and never saved." }
-                if llm::is_api0(&cur.llm_base_url) {
-                    p { class: "muted small",
-                        "api0 needs no key: it uses the licence from the Pro window, and each \
-                         score takes from its AI credits."
+                if let Some(r) = region {
+                    if has_licence {
+                        p { class: "muted small",
+                            "api0 runs the model in {r.label} and takes AI credits from the licence \
+                             in the Pro window, with no key to set up. Which model runs there is \
+                             api0's choice. A score is one model call of about \
+                             {llm::TYPICAL_SCORE_TOKENS} tokens; a long profile costs more."
+                        }
+                    } else {
+                        p { class: "muted small",
+                            "api0 needs a licence: get free AI credits or paste your licence number \
+                             in the Pro window."
+                        }
+                    }
+                    if let Some(e) = offers_error {
+                        p { class: "muted small", "{e}" }
+                    }
+                } else {
+                    label { class: "field-label", "Base URL (OpenAI-compatible)" }
+                    input { class: "input", value: "{cur.llm_base_url}", oninput: move |e| s.write().llm_base_url = e.value() }
+                    label { class: "field-label", "Model" }
+                    input { class: "input", value: "{cur.llm_model}", oninput: move |e| s.write().llm_model = e.value() }
+                    label { class: "field-label", "API key environment variable (empty for none)" }
+                    input { class: "input", value: "{cur.llm_key_env}", oninput: move |e| s.write().llm_key_env = e.value() }
+                    p { class: "muted small", "The key itself is read from your environment and never saved." }
+                    if llm::is_api0(&cur.llm_base_url) {
+                        p { class: "muted small",
+                            "api0 needs no key: it uses the licence from the Pro window, and each \
+                             score takes from its AI credits."
+                        }
                     }
                 }
 
@@ -270,8 +323,14 @@ pub fn WatchesModal() -> Element {
 fn WatchRow(watch: Watch, busy: bool) -> Element {
     let mut st = use_context::<AppState>();
     let id = watch.id.clone();
-    let (id_every, id_min, id_on, id_run, id_del, id_mail) =
-        (id.clone(), id.clone(), id.clone(), id.clone(), id.clone(), id.clone());
+    let (id_every, id_min, id_on, id_run, id_del, id_mail) = (
+        id.clone(),
+        id.clone(),
+        id.clone(),
+        id.clone(),
+        id.clone(),
+        id.clone(),
+    );
     // The licence is what api0 sends the email with, and to whose email.
     let pro = use_context::<super::pro::Pro>();
     let has_licence = pro.status.read().licence().is_some();

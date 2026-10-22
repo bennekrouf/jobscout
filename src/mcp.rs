@@ -605,7 +605,7 @@ fn overview() -> Value {
     json!({
         "open_in_window": settings.country.code(),
         "countries": countries,
-        "scoring_model": format!("{} at {}", settings.llm_model, settings.llm_base_url),
+        "scoring_model": settings.scoring_model(),
         "licence": status.describe(),
         "searches_this_month": { "used": licence::searches_used(), "limit": limit },
     })
@@ -788,9 +788,8 @@ async fn search(args: &Value) -> Result<Value, String> {
     let country = country(args)?;
     let p = search_params(args, country)?;
     let status = licence::current();
-    licence::take_search(&status).map_err(|why| {
-        format!("{why} Tell the user; do not retry the search.")
-    })?;
+    licence::take_search(&status)
+        .map_err(|why| format!("{why} Tell the user; do not retry the search."))?;
     let settings = settings();
     let query = format!("{} · {}", p.keywords, country.label());
     let ttl = Duration::from_secs(settings.search_cache_minutes * 60);
@@ -993,7 +992,9 @@ fn watch_settings(args: &Value, w: &mut Watch) -> Result<(), String> {
     }
     if let Some(e) = args["email"].as_bool() {
         if e && licence::saved_key().is_none() {
-            return Err("email needs a licence: the user pastes one in JobScout's Pro window".into());
+            return Err(
+                "email needs a licence: the user pastes one in JobScout's Pro window".into(),
+            );
         }
         w.email = e;
     }

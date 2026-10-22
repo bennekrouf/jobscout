@@ -365,6 +365,20 @@ h2 .flag { width: 21px; height: 14px; }
 .modal p { line-height: 1.5; }
 .modal .check { margin-top: 10px; }
 .presets { display: flex; gap: 6px; margin-top: 8px; }
+/* Settings: api0's regions and the local ollama, one click each. */
+.region-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 8px; }
+.region {
+    display: flex; flex-direction: column; align-items: center; gap: 3px;
+    padding: 10px 6px; border-radius: 8px; cursor: pointer; font-family: inherit;
+    background: var(--bg1); color: var(--text2); border: 1px solid var(--border);
+}
+.region:hover { border-color: var(--accent); color: var(--text1); }
+.region.on { color: var(--text1); border-color: var(--accent); background: var(--bg3); }
+.region .flag { width: 30px; height: 20px; }
+.region-icon { font-size: 18px; line-height: 20px; }
+.region-label { font-size: 12px; font-weight: 600; }
+.region-note { font-size: 10px; color: var(--text3); text-align: center; }
+.region.on .region-note { color: var(--accent); }
 .profile-text { height: 50vh; margin-top: 12px; resize: vertical; font: 12px var(--mono); line-height: 1.5; }
 .modal-actions { display: flex; align-items: center; gap: 8px; margin-top: 18px; }
 
