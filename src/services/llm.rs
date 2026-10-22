@@ -10,6 +10,7 @@ use serde::Deserialize;
 use serde_json::{json, Value};
 
 use crate::model::{Job, Score, Settings};
+use crate::services::licence;
 
 const SYSTEM: &str = "You screen job postings for one candidate. Compare the posting with \
 the candidate profile: skills, experience, seniority, languages, location and the work \
@@ -65,7 +66,11 @@ pub async fn score(settings: &Settings, profile: &str, job: &Job) -> Result<Scor
         settings.llm_base_url.trim_end_matches('/')
     );
     let mut req = client().post(url).json(&body);
-    if let Some(key) = api_key(&settings.llm_key_env)? {
+    if is_api0(&settings.llm_base_url) {
+        // So api0 puts the credits down to JobScout.
+        req = req.header("X-Client-App", licence::PRODUCT);
+    }
+    if let Some(key) = key_for(settings)? {
         req = req.bearer_auth(key);
     }
     let resp = req.send().await.map_err(|e| e.to_string())?;
@@ -100,6 +105,29 @@ fn client() -> &'static reqwest::Client {
             .timeout(Duration::from_secs(180))
             .build()
             .expect("HTTP client builds")
+    })
+}
+
+/// Whether the scoring model is api0's, which takes the licence as its key.
+pub(crate) fn is_api0(base_url: &str) -> bool {
+    base_url
+        .trim()
+        .trim_end_matches('/')
+        .eq_ignore_ascii_case(licence::LLM_BASE_URL)
+}
+
+/// The key to send: the named environment variable's, or for api0 the licence
+/// number saved on this computer when the variable is not set.
+fn key_for(settings: &Settings) -> Result<Option<String>, String> {
+    if !is_api0(&settings.llm_base_url) {
+        return api_key(&settings.llm_key_env);
+    }
+    if let Ok(Some(key)) = api_key(&settings.llm_key_env) {
+        return Ok(Some(key));
+    }
+    licence::saved_key().map(Some).ok_or_else(|| {
+        "api0 needs a licence: get free AI credits or paste your licence number in the Pro window"
+            .to_string()
     })
 }
 
@@ -145,4 +173,17 @@ fn strip_fences(s: &str) -> &str {
         .or_else(|| s.strip_prefix("```"))
         .unwrap_or(s);
     s.strip_suffix("```").unwrap_or(s).trim()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn api0_is_recognised_however_the_url_is_typed() {
+        assert!(is_api0("https://gateway.api0.ai/v1"));
+        assert!(is_api0(" https://Gateway.api0.ai/v1/ "));
+        assert!(!is_api0("https://api.deepseek.com"));
+        assert!(!is_api0("http://localhost:11434/v1"));
+    }
 }

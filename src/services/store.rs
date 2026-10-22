@@ -124,7 +124,11 @@ pub fn save_jobs(country: Country, jobs: &[Job]) {
 }
 
 pub fn load_settings() -> Settings {
-    load(&data_dir().join("settings.json")).unwrap_or_default()
+    let mut settings: Settings = load(&data_dir().join("settings.json")).unwrap_or_default();
+    if settings.apply_api0_default() {
+        save_settings(&settings);
+    }
+    settings
 }
 
 pub fn save_settings(settings: &Settings) {

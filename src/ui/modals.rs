@@ -1,7 +1,7 @@
 use dioxus::prelude::*;
 
 use crate::model::{Backend, Settings, Watch};
-use crate::services::{notify, store};
+use crate::services::{llm, notify, store};
 use crate::state::{age, run_watch, AppState, Modal};
 use crate::ui::flag::Flag;
 
@@ -143,6 +143,16 @@ pub fn SettingsModal() -> Element {
                             w.llm_model = Settings::default().llm_model;
                             w.llm_key_env = Settings::default().llm_key_env;
                         },
+                        "api0"
+                    }
+                    button {
+                        class: "btn btn-small",
+                        onclick: move |_| {
+                            let mut w = s.write();
+                            w.llm_base_url = "https://api.deepseek.com".into();
+                            w.llm_model = "deepseek-chat".into();
+                            w.llm_key_env = "DEEPSEEK_API_KEY".into();
+                        },
                         "DeepSeek"
                     }
                     button {
@@ -162,6 +172,12 @@ pub fn SettingsModal() -> Element {
                 label { class: "field-label", "API key environment variable (empty for none)" }
                 input { class: "input", value: "{cur.llm_key_env}", oninput: move |e| s.write().llm_key_env = e.value() }
                 p { class: "muted small", "The key itself is read from your environment and never saved." }
+                if llm::is_api0(&cur.llm_base_url) {
+                    p { class: "muted small",
+                        "api0 needs no key: it uses the licence from the Pro window, and each \
+                         score takes from its AI credits."
+                    }
+                }
 
                 h3 { "France Travail API" }
                 p { class: "muted small",

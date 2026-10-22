@@ -32,6 +32,13 @@ pub const BUY_URL: &str = "https://mayorana.ch/en/apps/jobscout";
 
 const GATEWAY: &str = "https://gateway.api0.ai";
 
+/// api0's OpenAI-compatible endpoint. Its "default" model is the one the
+/// licence's plan pays for.
+pub const LLM_BASE_URL: &str = "https://gateway.api0.ai/v1";
+pub const LLM_MODEL: &str = "default";
+/// Read before the saved licence, for a number kept out of JobScout.
+pub const LLM_KEY_ENV: &str = "API0_API_KEY";
+
 /// How often the licence is checked while JobScout is open.
 pub const CHECK_EVERY: Duration = Duration::from_secs(24 * 3600);
 
@@ -309,9 +316,91 @@ fn licence_path() -> PathBuf {
     dir().join(LICENCE_FILE)
 }
 
-fn load() -> Option<Saved> {
+fn load_own() -> Option<Saved> {
     let text = std::fs::read_to_string(licence_path()).ok()?;
     serde_json::from_str(&text).ok()
+}
+
+/// What the licence file every Mayorana app shares says. One plan unlocks
+/// every app, so its number is typed once per computer: each app keeps only
+/// its own last answer from api0 beside it.
+#[derive(Clone, Debug, PartialEq)]
+pub enum Shared {
+    /// No app has written it yet.
+    Missing,
+    /// Removed from this computer, in any app: none of them is licensed.
+    Removed,
+    Licence(String),
+}
+
+/// `~/Library/Application Support/mayorana/licence` on a Mac,
+/// `%APPDATA%\mayorana\licence` on Windows, `~/.config/mayorana/licence` on Linux.
+fn shared_path() -> Option<PathBuf> {
+    Some(dirs::config_dir()?.join("mayorana").join("licence"))
+}
+
+fn load_shared() -> Shared {
+    let Some(path) = shared_path() else {
+        return Shared::Missing;
+    };
+    match std::fs::read_to_string(path) {
+        Ok(text) => normalise(&text).map_or(Shared::Removed, Shared::Licence),
+        Err(_) => Shared::Missing,
+    }
+}
+
+/// Writes `text` as the shared licence: a number, or nothing once removed.
+fn save_shared(text: &str) {
+    let write = || -> std::io::Result<()> {
+        let path = shared_path().ok_or_else(|| std::io::Error::other("no config folder"))?;
+        if let Some(parent) = path.parent() {
+            std::fs::create_dir_all(parent)?;
+        }
+        // Named after this app, so two apps writing at once don't share it.
+        let tmp = path.with_extension(format!("{PRODUCT}.tmp"));
+        std::fs::write(&tmp, text)?;
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::PermissionsExt;
+            std::fs::set_permissions(&tmp, std::fs::Permissions::from_mode(0o600))?;
+        }
+        std::fs::rename(&tmp, &path)
+    };
+    let _ = write();
+}
+
+/// This app's saved licence, brought in line with the shared one: a number
+/// typed in another app replaces this one (and its answer, to check again),
+/// and one removed there is removed here. `true` when this app's number
+/// should be shared, as it predates the shared file.
+pub fn reconcile(shared: Shared, own: Option<Saved>) -> (Option<Saved>, bool) {
+    match (shared, own) {
+        (Shared::Licence(l), Some(own)) if own.licence == l => (Some(own), false),
+        (Shared::Licence(licence), _) => (
+            Some(Saved {
+                licence,
+                ..Saved::default()
+            }),
+            false,
+        ),
+        (Shared::Removed, _) => (None, false),
+        (Shared::Missing, Some(own)) => (Some(own), true),
+        (Shared::Missing, None) => (None, false),
+    }
+}
+
+fn load() -> Option<Saved> {
+    let shared = load_shared();
+    if shared == Shared::Removed {
+        let _ = std::fs::remove_file(licence_path());
+    }
+    let (saved, share) = reconcile(shared, load_own());
+    if share {
+        if let Some(saved) = &saved {
+            save_shared(&saved.licence);
+        }
+    }
+    saved
 }
 
 fn save(saved: &Saved) -> Result<(), String> {
@@ -326,6 +415,12 @@ fn save(saved: &Saved) -> Result<(), String> {
         std::fs::rename(&tmp, &path)
     };
     write().map_err(|e| format!("The licence couldn't be saved: {e}"))
+}
+
+/// The licence number saved on this computer, which api0's model also takes
+/// as its key: its AI credits pay for the scoring.
+pub fn saved_key() -> Option<String> {
+    load().map(|saved| saved.licence)
 }
 
 /// The licence as of the last check, without asking api0.
@@ -389,6 +484,7 @@ pub async fn activate(typed: &str) -> Result<Status, String> {
         checked: now(),
     };
     save(&saved)?;
+    save_shared(&saved.licence);
     Ok(status_at(Some(&saved), now()))
 }
 
@@ -464,9 +560,11 @@ pub async fn request_free_credits(email: &str) -> Result<String, FreeError> {
     free_reply(status, &body)
 }
 
-/// Removes the licence from this computer (to move it to another one).
+/// Removes the licence from this computer (to move it to another one), for
+/// every Mayorana app on it.
 pub fn deactivate() {
     let _ = std::fs::remove_file(licence_path());
+    save_shared("");
 }
 
 #[cfg(test)]
@@ -627,5 +725,41 @@ mod tests {
         let now = 1_000 * DAY;
         let pro = status_at(Some(&saved(answer(&["jobscout"], true), now)), now);
         assert!(may_add_watch(&pro, 4));
+    }
+
+    #[test]
+    fn the_licence_typed_in_one_app_is_shared_with_every_other() {
+        let now = 1_000 * DAY;
+        let mine = saved(answer(&["*"], true), now);
+        let other = "BCDEF-GHJKL-MNPQR-STUVW".to_string();
+        // Already the same: this app's last answer stands.
+        assert_eq!(
+            reconcile(Shared::Licence(mine.licence.clone()), Some(mine.clone())),
+            (Some(mine.clone()), false)
+        );
+        // Typed in another app: taken, and checked again.
+        let (taken, share) = reconcile(Shared::Licence(other.clone()), Some(mine.clone()));
+        assert!(!share);
+        let taken = taken.unwrap();
+        assert_eq!(taken.licence, other);
+        assert!(taken.answer.is_none());
+        assert!(check_due(&taken, now));
+        assert_eq!(
+            reconcile(Shared::Licence(other.clone()), None)
+                .0
+                .map(|s| s.licence),
+            Some(other)
+        );
+        // Removed in another app: removed here too.
+        assert_eq!(
+            reconcile(Shared::Removed, Some(mine.clone())),
+            (None, false)
+        );
+        // Saved before the shared file existed: shared with the others.
+        assert_eq!(
+            reconcile(Shared::Missing, Some(mine.clone())),
+            (Some(mine), true)
+        );
+        assert_eq!(reconcile(Shared::Missing, None), (None, false));
     }
 }

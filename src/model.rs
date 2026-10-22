@@ -3,6 +3,8 @@
 use chrono::{DateTime, Duration, Utc};
 use serde::{Deserialize, Serialize};
 
+use crate::services::licence;
+
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 pub enum Status {
     #[default]
@@ -493,6 +495,32 @@ pub struct Settings {
     /// takes the rest.
     pub sidebar_width: f64,
     pub list_width: f64,
+    /// Set once settings from before api0 was the default have been looked at,
+    /// so DeepSeek picked again afterwards stays picked. Missing from a file
+    /// saved before then, so false there, while new settings start true.
+    #[serde(default)]
+    pub api0_default_applied: bool,
+}
+
+impl Settings {
+    /// Moves settings still on the old DeepSeek default to api0, whose free
+    /// credits every user has. A model the user chose is kept. Whether
+    /// anything changed, to save it.
+    pub fn apply_api0_default(&mut self) -> bool {
+        if self.api0_default_applied {
+            return false;
+        }
+        self.api0_default_applied = true;
+        if self.llm_base_url.trim_end_matches('/') == "https://api.deepseek.com"
+            && self.llm_model == "deepseek-chat"
+            && self.llm_key_env == "DEEPSEEK_API_KEY"
+        {
+            self.llm_base_url = licence::LLM_BASE_URL.into();
+            self.llm_model = licence::LLM_MODEL.into();
+            self.llm_key_env = licence::LLM_KEY_ENV.into();
+        }
+        true
+    }
 }
 
 impl Default for Settings {
@@ -502,9 +530,9 @@ impl Default for Settings {
             delay_ms: 2500,
             python: "python3".into(),
             headed: false,
-            llm_base_url: "https://api.deepseek.com".into(),
-            llm_model: "deepseek-chat".into(),
-            llm_key_env: "DEEPSEEK_API_KEY".into(),
+            llm_base_url: licence::LLM_BASE_URL.into(),
+            llm_model: licence::LLM_MODEL.into(),
+            llm_key_env: licence::LLM_KEY_ENV.into(),
             france_travail_client_id: String::new(),
             france_travail_secret_env: "FRANCE_TRAVAIL_CLIENT_SECRET".into(),
             reed_key_env: "REED_API_KEY".into(),
@@ -513,6 +541,57 @@ impl Default for Settings {
             search_cache_minutes: 10,
             sidebar_width: 270.0,
             list_width: 480.0,
+            api0_default_applied: true,
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn old_default() -> Settings {
+        Settings {
+            llm_base_url: "https://api.deepseek.com".into(),
+            llm_model: "deepseek-chat".into(),
+            llm_key_env: "DEEPSEEK_API_KEY".into(),
+            api0_default_applied: false,
+            ..Settings::default()
+        }
+    }
+
+    #[test]
+    fn settings_saved_before_api0_are_moved_to_it() {
+        let saved: Settings = serde_json::from_str(
+            r#"{"llm_base_url":"https://api.deepseek.com","llm_model":"deepseek-chat","llm_key_env":"DEEPSEEK_API_KEY"}"#,
+        )
+        .unwrap();
+        assert_eq!(saved, old_default());
+        let mut s = saved;
+        assert!(s.apply_api0_default());
+        assert_eq!(s.llm_base_url, licence::LLM_BASE_URL);
+        assert_eq!(s.llm_key_env, licence::LLM_KEY_ENV);
+        assert!(!s.apply_api0_default());
+    }
+
+    #[test]
+    fn a_chosen_model_is_kept() {
+        let mut ollama = Settings {
+            llm_base_url: "http://localhost:11434/v1".into(),
+            llm_key_env: String::new(),
+            ..old_default()
+        };
+        assert!(ollama.apply_api0_default());
+        assert_eq!(ollama.llm_base_url, "http://localhost:11434/v1");
+    }
+
+    #[test]
+    fn deepseek_picked_again_after_the_move_stays() {
+        let mut s = Settings {
+            api0_default_applied: true,
+            ..old_default()
+        };
+        assert!(!s.apply_api0_default());
+        assert_eq!(s.llm_model, "deepseek-chat");
     }
 }
