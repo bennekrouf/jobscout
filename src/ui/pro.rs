@@ -289,7 +289,7 @@ pub fn ProWindow() -> Element {
                         }
                         button {
                             class: "btn btn-ghost",
-                            title: "To move the licence to another computer",
+                            title: "Removes it from every Mayorana app on this computer, to move it to another one",
                             onclick: move |_| {
                                 licence::deactivate();
                                 pro.status.set(licence::current());

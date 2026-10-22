@@ -3,6 +3,23 @@
 What changed in each version of JobScout, for the people using it. Also
 published at <https://mayorana.ch/en/apps/jobscout/releases>.
 
+## [Unreleased]
+
+### Added
+
+- Score jobs with api0's model, paid for by your licence's AI credits, free
+  or Pro. It is now the scoring model: no API key to set up, since it uses
+  the licence number from the Pro window. If you were on DeepSeek as set up
+  out of the box, JobScout switches you to api0; a model you chose yourself
+  is kept, and DeepSeek is one click away under Scoring model in Settings.
+
+### Changed
+
+- One licence number for every Mayorana app on this computer. Paste it in any
+  of them and the others are Pro too the next time they start, with nothing to
+  paste again; a number already pasted in one app is shared the same way.
+  Removing the licence in the Pro window removes it from all of them.
+
 ## [0.1.11] - 2026-10-21
 
 ### Added

@@ -11,7 +11,7 @@ stepstone.be) or Austria (LinkedIn, stepstone.at).
 - **Search** LinkedIn's public guest endpoints. No login is used, so no account is at risk. You can filter by keywords, location, date posted, workplace type and experience level, and choose how many pages to fetch.
 - **Keep** every job found in `~/Library/Application Support/JobScout/<country>/jobs.json`, deduplicated by job id. Each job has a status (New / Saved / Applied / Hidden).
 - **Read** the full description and criteria inside the app. A job's description is fetched when you first open it.
-- **Score** jobs against your profile with any OpenAI-compatible model (DeepSeek by default, or a local ollama). Each score comes with a one-line verdict, strengths and gaps.
+- **Score** jobs against your profile with any OpenAI-compatible model (api0 by default, paid for by your licence's AI credits; or DeepSeek, or a local ollama). Each score comes with a one-line verdict, strengths and gaps.
 - **Export** the visible list to CSV.
 
 ## Install
@@ -68,8 +68,10 @@ cargo run            # or: dx serve
 cargo test           # parsers, including real saved LinkedIn pages
 ```
 
-For scoring, export the key named in Settings (default `DEEPSEEK_API_KEY`).
-The key is read from the environment and never written to disk.
+Scoring uses api0 by default, which needs no key: it takes the licence number
+saved in the Pro window (or `API0_API_KEY`, when set). For another model,
+export the key named in Settings. The key is read from the environment and
+never written to disk.
 
 France Travail (France) needs your own free API application: register one at
 [francetravail.io](https://francetravail.io), subscribe it to "Offres d'emploi
