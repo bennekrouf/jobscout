@@ -61,6 +61,13 @@ free for personal use. Commercial use requires a licence, which is
 [JobScout Pro](https://mayorana.ch/en/apps/jobscout). The name and icon are
 covered by [TRADEMARK.md](TRADEMARK.md).
 
+Every plan covers every country and any number of watches. What a plan sets is
+how many searches JobScout runs a month, counted on the computer across every
+country (`searches.json` in the data folder): 10 for the free version, 50 on
+Basic, 500 on Pro and 1000 on Max. A search from the sidebar or from Claude
+counts as one, and a watch's run only when it finds new jobs; the count starts
+again on the 1st.
+
 ## Run
 
 ```sh
@@ -161,6 +168,13 @@ Notifications: the packaged app (`dx bundle`) notifies as JobScout. Under
 `cargo run` the app has no bundle, so it notifies through `osascript` and the
 notification shows as coming from Script Editor. Use "Send test notification"
 in the Watches window to check.
+
+Email: tick Email on a watch and each run that finds something also sends it
+by email: the matches, or every new job when there is no profile to score
+against, up to 30 with their score and link. api0 sends it
+(`POST /v1/licence/email` with the licence as Bearer), to the licence's own
+email only and at most 30 a day, so it needs a licence — a paid plan or the
+free AI credits. The app never handles an address or a mail server.
 
 ## Caching
 

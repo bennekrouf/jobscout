@@ -420,6 +420,9 @@ pub struct Watch {
     pub last_run: Option<DateTime<Utc>>,
     #[serde(default)]
     pub last_result: Option<String>,
+    /// Also email what a run finds to the licence's email, through api0.
+    #[serde(default)]
+    pub email: bool,
 }
 
 impl Watch {
@@ -434,6 +437,7 @@ impl Watch {
             enabled: true,
             last_run: None,
             last_result: None,
+            email: false,
         }
     }
 

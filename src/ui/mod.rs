@@ -29,13 +29,17 @@ const CSS: &str = include_str!("../../assets/main.css");
 #[component]
 pub fn App() -> Element {
     let mut st = use_context_provider(AppState::new);
-    // JobScout Pro: the free version keeps one watch.
+    // JobScout Pro: the plan sets how many searches a month JobScout runs.
     use_context_provider(|| pro::Pro {
         open: Signal::new(false),
         status: Signal::new(crate::services::licence::current()),
     });
     // The licence is checked with api0 at start, then once a day.
     let mut pro_status = use_context::<pro::Pro>().status;
+    // The title bar follows the licence, however it changes.
+    use_effect(move || {
+        dioxus::desktop::window().set_title(&crate::window_title(&pro_status.read()));
+    });
     use_future(move || async move {
         pro_status.set(crate::services::licence::refresh(true).await);
         loop {

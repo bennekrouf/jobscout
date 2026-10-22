@@ -15,7 +15,16 @@ pub fn SearchPanel() -> Element {
     let mut p = use_signal(|| st.search.peek().clone());
     let busy = st.busy.read().is_some();
 
+    let status = pro.status.read().clone();
+    let limit = status.monthly_searches();
+    let left = limit.saturating_sub(*st.searches_used.read());
+
     let mut submit = move || {
+        // None left this month: the Pro window says why and what has more.
+        if left == 0 {
+            pro.open.set(true);
+            return;
+        }
         let params = p.read().clone();
         st.search.set(params.clone());
         store::save_search(country, &params);
@@ -157,20 +166,22 @@ pub fn SearchPanel() -> Element {
                     class: "btn btn-primary btn-wide",
                     r#type: "submit",
                     disabled: busy || current.sources.is_empty(),
+                    title: "Each search counts as one of the {limit} a month",
                     "Search"
+                }
+                button {
+                    class: if left == 0 { "searches-left out" } else { "searches-left" },
+                    r#type: "button",
+                    title: "Searches left this month, in every country. See the plans",
+                    onclick: move |_| pro.open.set(true),
+                    "{left} of {limit} searches left this month"
                 }
                 button {
                     class: "btn btn-wide btn-ghost watch-btn",
                     r#type: "button",
                     disabled: current.keywords.trim().is_empty(),
-                    title: "Run this search on a schedule and notify about high scores",
+                    title: "Run this search on a schedule and notify about high scores. Each run that finds new jobs counts as a search",
                     onclick: move |_| {
-                        // Without Pro, a second watch asks for Pro first.
-                        let status = pro.status.read().clone();
-                        if !crate::services::licence::may_add_watch(&status, super::pro::watch_count(st)) {
-                            pro.open.set(true);
-                            return;
-                        }
                         let w = Watch::new(p.read().clone());
                         st.watches.write().push(w);
                         st.save_watches();
