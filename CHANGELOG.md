@@ -3,6 +3,14 @@
 What changed in each version of JobScout, for the people using it. Also
 published at <https://mayorana.ch/en/apps/jobscout/releases>.
 
+## [Unreleased]
+
+### Removed
+
+- The "DeepSeek, your own key" button is gone from Settings: api0 scores in
+  Europe, China or the United States, or a local Ollama does. A model set by
+  hand keeps working.
+
 ## [0.1.14] - 2026-10-22
 
 ### Added

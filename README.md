@@ -11,7 +11,7 @@ stepstone.be) or Austria (LinkedIn, stepstone.at).
 - **Search** LinkedIn's public guest endpoints. No login is used, so no account is at risk. You can filter by keywords, location, date posted, workplace type and experience level, and choose how many pages to fetch.
 - **Keep** every job found in `~/Library/Application Support/JobScout/<country>/jobs.json`, deduplicated by job id. Each job has a status (New / Saved / Applied / Hidden).
 - **Read** the full description and criteria inside the app. A job's description is fetched when you first open it.
-- **Score** jobs against your profile with any OpenAI-compatible model (api0 by default, paid for by your licence's AI credits; or DeepSeek, or a local ollama). Each score comes with a one-line verdict, strengths and gaps.
+- **Score** jobs against your profile with any OpenAI-compatible model (api0 in Europe, China or the United States by default, paid for by your licence's AI credits; or a local ollama). Each score comes with a one-line verdict, strengths and gaps.
 - **Export** the visible list to CSV.
 
 ## Install
