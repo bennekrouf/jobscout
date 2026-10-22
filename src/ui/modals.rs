@@ -187,18 +187,6 @@ pub fn SettingsModal() -> Element {
                         span { class: "region-note", "on this computer, free" }
                     }
                 }
-                div { class: "presets",
-                    button {
-                        class: if cur.llm_base_url.contains("api.deepseek.com") { "btn btn-small on" } else { "btn btn-small" },
-                        onclick: move |_| {
-                            let mut w = s.write();
-                            w.llm_base_url = "https://api.deepseek.com".into();
-                            w.llm_model = "deepseek-chat".into();
-                            w.llm_key_env = "DEEPSEEK_API_KEY".into();
-                        },
-                        "DeepSeek, your own key"
-                    }
-                }
                 if let Some(r) = region {
                     if has_licence {
                         p { class: "muted small",

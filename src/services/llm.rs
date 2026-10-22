@@ -267,7 +267,7 @@ mod tests {
     fn api0_is_recognised_however_the_url_is_typed() {
         assert!(is_api0("https://gateway.api0.ai/v1"));
         assert!(is_api0(" https://Gateway.api0.ai/v1/ "));
-        assert!(!is_api0("https://api.deepseek.com"));
+        assert!(!is_api0("https://api.openai.com/v1"));
         assert!(!is_api0("http://localhost:11434/v1"));
     }
 

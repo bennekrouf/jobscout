@@ -474,7 +474,7 @@ pub struct Settings {
     pub delay_ms: u64,
     pub python: String,
     pub headed: bool,
-    /// Any OpenAI-compatible chat endpoint: DeepSeek, OpenAI, ollama's /v1 …
+    /// Any OpenAI-compatible chat endpoint: api0, OpenAI, ollama's /v1 …
     pub llm_base_url: String,
     pub llm_model: String,
     /// Name of the environment variable holding the API key — the key itself
@@ -500,7 +500,7 @@ pub struct Settings {
     pub sidebar_width: f64,
     pub list_width: f64,
     /// Set once settings from before api0 was the default have been looked at,
-    /// so DeepSeek picked again afterwards stays picked. Missing from a file
+    /// so the old default picked again afterwards stays picked. Missing from a file
     /// saved before then, so false there, while new settings start true.
     #[serde(default)]
     pub api0_default_applied: bool,
@@ -512,7 +512,7 @@ pub struct Settings {
 }
 
 impl Settings {
-    /// Moves settings still on the old DeepSeek default to api0, whose free
+    /// Moves settings still on the old default to api0, whose free
     /// credits every user has. A model the user chose is kept. Whether
     /// anything changed, to save it.
     ///
@@ -697,7 +697,7 @@ mod tests {
     }
 
     #[test]
-    fn deepseek_picked_again_after_the_move_stays() {
+    fn the_old_default_picked_again_after_the_move_stays() {
         let mut s = Settings {
             api0_default_applied: true,
             region_default_applied: true,

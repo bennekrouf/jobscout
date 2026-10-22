@@ -364,7 +364,6 @@ h2 .flag { width: 21px; height: 14px; }
 .modal h3 { font-size: 13px; margin: 20px 0 2px; color: var(--accent); }
 .modal p { line-height: 1.5; }
 .modal .check { margin-top: 10px; }
-.presets { display: flex; gap: 6px; margin-top: 8px; }
 /* Settings: api0's regions and the local ollama, one click each. */
 .region-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 8px; }
 .region {
