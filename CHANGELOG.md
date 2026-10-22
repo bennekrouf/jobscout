@@ -3,6 +3,18 @@
 What changed in each version of JobScout, for the people using it. Also
 published at <https://mayorana.ch/en/apps/jobscout/releases>.
 
+## [Unreleased]
+
+### Added
+
+- Settings offers three places to score in: Europe, China and the United
+  States, each one click with its flag. They run on your licence's AI credits
+  with no API key to set up, and each shows about how many credits a score
+  costs, so you can weigh them before scoring a list. Ollama on this computer
+  sits beside them, and DeepSeek with your own key is still one click away.
+  New installs score in Europe, and so do settings left on api0's plan
+  default: you see which region scores, and can pick another.
+
 ## [0.1.13] - 2026-10-22
 
 ### Changed

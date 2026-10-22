@@ -3,7 +3,7 @@
 use chrono::{DateTime, Duration, Utc};
 use serde::{Deserialize, Serialize};
 
-use crate::services::licence;
+use crate::services::{licence, llm};
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 pub enum Status {
@@ -504,28 +504,86 @@ pub struct Settings {
     /// saved before then, so false there, while new settings start true.
     #[serde(default)]
     pub api0_default_applied: bool,
+    /// Set once settings from before api0's regions have been looked at, so
+    /// "default" typed again afterwards stays. False in a file saved before
+    /// then, like the flag above.
+    #[serde(default)]
+    pub region_default_applied: bool,
 }
 
 impl Settings {
     /// Moves settings still on the old DeepSeek default to api0, whose free
     /// credits every user has. A model the user chose is kept. Whether
     /// anything changed, to save it.
+    ///
+    /// Then moves api0's "default" model, which left the choice to the plan,
+    /// to the first region, so Settings shows which one scores.
     pub fn apply_api0_default(&mut self) -> bool {
-        if self.api0_default_applied {
-            return false;
+        let mut changed = false;
+        if !self.api0_default_applied {
+            self.api0_default_applied = true;
+            if self.llm_base_url.trim_end_matches('/') == "https://api.deepseek.com"
+                && self.llm_model == "deepseek-chat"
+                && self.llm_key_env == "DEEPSEEK_API_KEY"
+            {
+                self.llm_base_url = licence::LLM_BASE_URL.into();
+                self.llm_model = llm::REGIONS[0].id.into();
+                self.llm_key_env = licence::LLM_KEY_ENV.into();
+            }
+            changed = true;
         }
-        self.api0_default_applied = true;
-        if self.llm_base_url.trim_end_matches('/') == "https://api.deepseek.com"
-            && self.llm_model == "deepseek-chat"
-            && self.llm_key_env == "DEEPSEEK_API_KEY"
-        {
-            self.llm_base_url = licence::LLM_BASE_URL.into();
-            self.llm_model = licence::LLM_MODEL.into();
-            self.llm_key_env = licence::LLM_KEY_ENV.into();
+        if !self.region_default_applied {
+            self.region_default_applied = true;
+            if llm::is_api0(&self.llm_base_url) && self.llm_model.trim() == licence::LLM_MODEL {
+                self.llm_model = llm::REGIONS[0].id.into();
+            }
+            changed = true;
         }
-        true
+        changed
     }
 }
+
+impl Settings {
+    /// The api0 region scoring runs in, if it is set to one.
+    pub fn region(&self) -> Option<&'static llm::Region> {
+        if !llm::is_api0(&self.llm_base_url) {
+            return None;
+        }
+        llm::REGIONS.iter().find(|r| r.id == self.llm_model.trim())
+    }
+
+    /// One click in Settings: api0, in this region.
+    pub fn use_region(&mut self, id: &str) {
+        self.llm_base_url = licence::LLM_BASE_URL.into();
+        self.llm_model = id.into();
+        self.llm_key_env = licence::LLM_KEY_ENV.into();
+    }
+
+    /// Whether scoring runs on ollama on this computer.
+    pub fn is_ollama(&self) -> bool {
+        self.llm_base_url.contains(":11434")
+    }
+
+    /// One click in Settings: ollama on this computer. A region or api0's
+    /// "default" is no ollama model, so the model is left to be typed.
+    pub fn use_ollama(&mut self) {
+        if self.region().is_some() || self.llm_model == licence::LLM_MODEL {
+            self.llm_model.clear();
+        }
+        self.llm_base_url = OLLAMA_URL.into();
+        self.llm_key_env.clear();
+    }
+
+    /// The scoring model in a few words, for the overview.
+    pub fn scoring_model(&self) -> String {
+        match self.region() {
+            Some(r) => format!("api0 in {}", r.label),
+            None => format!("{} at {}", self.llm_model, self.llm_base_url),
+        }
+    }
+}
+
+const OLLAMA_URL: &str = "http://localhost:11434/v1";
 
 impl Default for Settings {
     fn default() -> Self {
@@ -535,7 +593,7 @@ impl Default for Settings {
             python: "python3".into(),
             headed: false,
             llm_base_url: licence::LLM_BASE_URL.into(),
-            llm_model: licence::LLM_MODEL.into(),
+            llm_model: llm::REGIONS[0].id.into(),
             llm_key_env: licence::LLM_KEY_ENV.into(),
             france_travail_client_id: String::new(),
             france_travail_secret_env: "FRANCE_TRAVAIL_CLIENT_SECRET".into(),
@@ -546,6 +604,7 @@ impl Default for Settings {
             sidebar_width: 270.0,
             list_width: 480.0,
             api0_default_applied: true,
+            region_default_applied: true,
         }
     }
 }
@@ -560,6 +619,7 @@ mod tests {
             llm_model: "deepseek-chat".into(),
             llm_key_env: "DEEPSEEK_API_KEY".into(),
             api0_default_applied: false,
+            region_default_applied: false,
             ..Settings::default()
         }
     }
@@ -590,9 +650,57 @@ mod tests {
     }
 
     #[test]
+    fn api0_default_from_before_the_regions_moves_to_europe_once() {
+        let saved: Settings = serde_json::from_str(
+            r#"{"llm_base_url":"https://gateway.api0.ai/v1","llm_model":"default","llm_key_env":"API0_API_KEY","api0_default_applied":true}"#,
+        )
+        .unwrap();
+        let mut s = saved;
+        assert!(s.apply_api0_default());
+        assert_eq!(s.region().map(|r| r.id), Some("europe"));
+        // "default" typed again afterwards stays.
+        s.llm_model = "default".into();
+        assert!(!s.apply_api0_default());
+        assert_eq!(s.llm_model, "default");
+    }
+
+    #[test]
+    fn a_model_other_than_api0_default_is_not_moved_to_a_region() {
+        let mut ollama: Settings = serde_json::from_str(
+            r#"{"llm_base_url":"http://localhost:11434/v1","llm_model":"default","llm_key_env":"","api0_default_applied":true}"#,
+        )
+        .unwrap();
+        assert!(ollama.apply_api0_default());
+        assert_eq!(ollama.llm_model, "default");
+    }
+
+    #[test]
+    fn a_region_is_api0_with_the_region_as_its_model() {
+        let mut s = old_default();
+        assert_eq!(s.region(), None);
+        s.use_region("china");
+        assert_eq!(s.region().map(|r| r.id), Some("china"));
+        assert_eq!(s.scoring_model(), "api0 in China");
+        // api0 with a model named by hand is not a region.
+        s.llm_model = "default".into();
+        assert_eq!(s.region(), None);
+
+        s.use_region("usa");
+        s.use_ollama();
+        assert!(s.is_ollama() && s.region().is_none());
+        assert!(s.llm_model.is_empty() && s.llm_key_env.is_empty());
+    }
+
+    #[test]
+    fn new_settings_score_in_europe() {
+        assert_eq!(Settings::default().region().map(|r| r.id), Some("europe"));
+    }
+
+    #[test]
     fn deepseek_picked_again_after_the_move_stays() {
         let mut s = Settings {
             api0_default_applied: true,
+            region_default_applied: true,
             ..old_default()
         };
         assert!(!s.apply_api0_default());

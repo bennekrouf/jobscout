@@ -116,6 +116,90 @@ pub(crate) fn is_api0(base_url: &str) -> bool {
         .eq_ignore_ascii_case(licence::LLM_BASE_URL)
 }
 
+/// One of the AI regions api0 offers. Picking it sends its id as the model;
+/// api0 decides what runs there.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub struct Region {
+    pub id: &'static str,
+    pub label: &'static str,
+}
+
+/// In the order Settings shows them.
+#[rustfmt::skip]
+pub const REGIONS: &[Region] = &[
+    Region { id: "europe", label: "Europe" },
+    Region { id: "china", label: "China" },
+    Region { id: "usa", label: "United States" },
+];
+
+/// Tokens in a typical score: a profile, a description cut at
+/// [`MAX_DESCRIPTION_CHARS`] and the short JSON reply. Only for the estimate.
+pub const TYPICAL_SCORE_TOKENS: f64 = 4000.0;
+
+/// What api0 says one of its regions costs right now.
+#[derive(Clone, PartialEq, Debug)]
+pub struct RegionOffer {
+    pub id: String,
+    /// Credits on this region cost this many times the plain rate.
+    pub multiplier: f64,
+    pub tokens_per_credit: i64,
+}
+
+impl RegionOffer {
+    /// What a typical score costs, as api0 charges it: rounded up, at least 1.
+    pub fn credits_per_score(&self) -> i64 {
+        let per = self.tokens_per_credit.max(1) as f64;
+        ((TYPICAL_SCORE_TOKENS * self.multiplier.max(0.0) / per).ceil() as i64).max(1)
+    }
+}
+
+/// The regions in a `/v1/models` reply from api0.
+fn parse_region_offers(v: &Value) -> Vec<RegionOffer> {
+    let tokens_per_credit = v["tokens_per_credit"].as_i64().unwrap_or(10_000);
+    v["data"]
+        .as_array()
+        .into_iter()
+        .flatten()
+        .filter_map(|m| {
+            let id = m["id"].as_str()?;
+            REGIONS.iter().any(|r| r.id == id).then(|| RegionOffer {
+                id: id.to_string(),
+                multiplier: m["multiplier"].as_f64().unwrap_or(1.0),
+                tokens_per_credit,
+            })
+        })
+        .collect()
+}
+
+/// The licence api0 would be paid with: a number in the environment, else the
+/// one saved on this computer.
+pub fn api0_key() -> Option<String> {
+    api_key(licence::LLM_KEY_ENV)
+        .ok()
+        .flatten()
+        .or_else(licence::saved_key)
+}
+
+/// The regions api0 offers this licence now, with what each costs.
+pub async fn api0_regions() -> Result<Vec<RegionOffer>, String> {
+    let key = api0_key().ok_or("api0 needs a licence")?;
+    let resp = client()
+        .get(format!("{}/models", licence::LLM_BASE_URL))
+        .bearer_auth(key)
+        .header("X-Client-App", licence::PRODUCT)
+        .timeout(Duration::from_secs(15))
+        .send()
+        .await
+        .map_err(|e| format!("api0 is unreachable: {e}"))?;
+    let status = resp.status();
+    let v: Value = resp.json().await.unwrap_or_default();
+    if !status.is_success() {
+        let msg = v["error"]["message"].as_str().unwrap_or_default();
+        return Err(format!("api0 returned {status}: {msg}"));
+    }
+    Ok(parse_region_offers(&v))
+}
+
 /// The key to send: the named environment variable's, or for api0 the licence
 /// number saved on this computer when the variable is not set.
 fn key_for(settings: &Settings) -> Result<Option<String>, String> {
@@ -185,5 +269,22 @@ mod tests {
         assert!(is_api0(" https://Gateway.api0.ai/v1/ "));
         assert!(!is_api0("https://api.deepseek.com"));
         assert!(!is_api0("http://localhost:11434/v1"));
+    }
+
+    #[test]
+    fn a_region_costs_what_a_typical_score_spends_rounded_up() {
+        let v = json!({
+            "object": "list",
+            "tokens_per_credit": 10000,
+            "data": [
+                { "id": "europe", "multiplier": 1.0 },
+                { "id": "usa", "multiplier": 4.0 },
+                { "id": "default" }
+            ]
+        });
+        let offers = parse_region_offers(&v);
+        assert_eq!(offers.len(), 2, "only the regions");
+        assert_eq!(offers[0].credits_per_score(), 1);
+        assert_eq!(offers[1].credits_per_score(), 2);
     }
 }
