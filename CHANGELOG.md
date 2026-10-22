@@ -3,6 +3,23 @@
 What changed in each version of JobScout, for the people using it. Also
 published at <https://mayorana.ch/en/apps/jobscout/releases>.
 
+## [Unreleased]
+
+### Changed
+
+- Plans now differ by searches, not watches: every country is open on every
+  plan, and you keep as many watches as you like. The free version runs 10
+  searches a month; Basic 50, Pro 500 and Max 1000. A search from the
+  sidebar or from Claude counts as one, and a watch's run only when it finds
+  new jobs, across all countries, and the count starts again on the 1st. The sidebar shows how
+  many are left; the Pro window shows your plan's searches.
+
+### Added
+
+- Watch results by email. Tick Email on a watch and each run that finds
+  something sends you the jobs too, with their score and a link, at your
+  licence's email. Any licence works, including the free AI credits.
+
 ## [0.1.12] - 2026-10-22
 
 ### Added

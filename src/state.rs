@@ -57,7 +57,7 @@ pub fn age(at: DateTime<Utc>) -> String {
     }
 }
 use crate::services::sources::SearchEvent;
-use crate::services::{llm, notify, sources, store};
+use crate::services::{licence, llm, mail, notify, sources, store};
 
 #[derive(Clone, Copy, PartialEq)]
 pub enum Modal {
@@ -103,6 +103,9 @@ pub struct AppState {
     other_logs: Signal<std::collections::HashMap<Country, Vec<String>>>,
     pub modal: Signal<Modal>,
     pub watches: Signal<Vec<Watch>>,
+    /// Searches run this month, in every country and from Claude too: the
+    /// plan sets how many there may be. See `licence::take_search`.
+    pub searches_used: Signal<u32>,
 }
 
 impl AppState {
@@ -124,6 +127,7 @@ impl AppState {
             other_logs: Signal::new(Default::default()),
             modal: Signal::new(Modal::None),
             watches: Signal::new(store::load_watches(country)),
+            searches_used: Signal::new(licence::searches_used()),
         }
     }
 
@@ -175,6 +179,10 @@ impl AppState {
             self.profile.set(store::load_profile(country));
             what.push("profile");
         }
+        let used = licence::searches_used();
+        if *self.searches_used.peek() != used {
+            self.searches_used.set(used);
+        }
         if !what.is_empty() {
             self.log(format!(
                 "Loaded {} changed outside this window.",
@@ -189,6 +197,16 @@ impl AppState {
 
     pub fn save_watches(self) {
         store::save_watches(*self.country.peek(), &self.watches.peek());
+    }
+
+    /// Counts one search against the plan, or logs why there is none left.
+    fn take_search(mut self) -> Result<(), String> {
+        let taken = licence::take_search(&licence::current());
+        self.searches_used.set(licence::searches_used());
+        if let Err(why) = &taken {
+            self.log(why);
+        }
+        taken
     }
 
     pub fn log(mut self, msg: impl AsRef<str>) {
@@ -284,6 +302,9 @@ impl AppState {
 pub async fn run_search(mut st: AppState, p: SearchParams) {
     if p.keywords.trim().is_empty() {
         st.log("Enter keywords to search.");
+        return;
+    }
+    if st.busy.peek().is_some() || st.take_search().is_err() {
         return;
     }
     if !st.begin(format!("Searching “{}”", p.keywords.trim())) {
@@ -522,11 +543,32 @@ pub async fn run_watch(st: AppState, watch_id: String) {
     let Some(w) = st.watches.peek().iter().find(|w| w.id == watch_id).cloned() else {
         return;
     };
+    if st.busy.peek().is_some() {
+        return;
+    }
+    // A run counts as a search only when it finds something new, but needs
+    // one left to start.
+    if let Err(why) = licence::search_left(&licence::current()) {
+        st.log(&why);
+        // Not tried again before its next run is due.
+        st.update_watch(&watch_id, |w| {
+            w.last_run = Some(Utc::now());
+            w.last_result = Some(why);
+        });
+        return;
+    }
     if !st.begin(format!("Watch “{}”", w.name())) {
         return;
     }
     let settings = st.settings.peek().clone();
     let new_ids = search_pages(st, &w.search, &settings, false).await;
+    if !new_ids.is_empty() {
+        // Should another search have taken the last one meanwhile, this one
+        // goes uncounted: the jobs are found either way.
+        let _ = licence::take_search(&licence::current());
+        let mut used = st.searches_used;
+        used.set(licence::searches_used());
+    }
 
     let has_profile = !st.profile.peek().trim().is_empty();
     let to_score: Vec<String> = new_ids.iter().take(WATCH_SCORE_CAP).cloned().collect();
@@ -548,7 +590,7 @@ pub async fn run_watch(st: AppState, watch_id: String) {
         }
     }
 
-    let result = if has_profile {
+    let mut result = if has_profile {
         format!(
             "{} new, {} at {}+",
             new_ids.len(),
@@ -558,6 +600,22 @@ pub async fn run_watch(st: AppState, watch_id: String) {
     } else {
         format!("{} new, not scored (no profile)", new_ids.len())
     };
+
+    // By email too: the matches, or every new job when nothing is scored.
+    if w.email {
+        let jobs: Vec<Job> = if has_profile {
+            matches.clone()
+        } else {
+            new_ids.iter().filter_map(|id| st.job(id)).collect()
+        };
+        if !jobs.is_empty() {
+            let email = mail::watch_email(&w.name(), *st.country.peek(), &jobs, has_profile);
+            match mail::send(&email).await {
+                Ok(to) => result.push_str(&format!(", emailed to {to}")),
+                Err(why) => result.push_str(&format!(", {why}")),
+            }
+        }
+    }
     st.update_watch(&watch_id, |w| {
         w.last_run = Some(Utc::now());
         w.last_result = Some(result.clone());

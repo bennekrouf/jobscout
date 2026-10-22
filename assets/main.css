@@ -394,6 +394,13 @@ h2 .flag { width: 21px; height: 14px; }
 
 /* ── Watches ──────────────────────────────────────────────── */
 .watch-btn { margin-top: 8px; }
+.searches-left {
+    display: block; width: 100%; margin-top: 6px; padding: 2px 0;
+    background: none; border: 0; cursor: pointer;
+    color: var(--text2); font: inherit; font-size: 11px; text-align: center;
+}
+.searches-left:hover { text-decoration: underline; }
+.searches-left.out { color: var(--bad); }
 .warn { color: var(--mid); margin: 8px 0; }
 .watch {
     display: flex; align-items: center; gap: 12px;

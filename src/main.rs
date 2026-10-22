@@ -28,10 +28,15 @@ fn main() {
         .with_data_directory(services::store::data_dir().join("webview"))
         .with_window(
             WindowBuilder::new()
-                .with_title(format!("JobScout {}", env!("CARGO_PKG_VERSION")))
+                .with_title(window_title(&services::licence::current()))
                 .with_inner_size(LogicalSize::new(1360.0, 860.0)),
         );
     dioxus::LaunchBuilder::desktop()
         .with_cfg(cfg)
         .launch(ui::App);
+}
+
+/// The native title bar, as in every mayorana app: name, version and licence.
+pub fn window_title(status: &services::licence::Status) -> String {
+    format!("JobScout {}{}", env!("CARGO_PKG_VERSION"), status.title_badge())
 }

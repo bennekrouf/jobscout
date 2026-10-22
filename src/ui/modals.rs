@@ -237,7 +237,8 @@ pub fn WatchesModal() -> Element {
                 p { class: "muted",
                     "Each watch re-runs its search on a schedule while JobScout is open, \
                      scores what is new against your profile, and sends a desktop \
-                     notification for every new job at or above its threshold."
+                     notification for every new job at or above its threshold. \
+                     Tick Email to get the same jobs by email, at your licence's email."
                 }
                 if no_profile {
                     p { class: "warn", "No profile set: watches will list new jobs but cannot score or notify." }
@@ -269,8 +270,16 @@ pub fn WatchesModal() -> Element {
 fn WatchRow(watch: Watch, busy: bool) -> Element {
     let mut st = use_context::<AppState>();
     let id = watch.id.clone();
-    let (id_every, id_min, id_on, id_run, id_del) =
-        (id.clone(), id.clone(), id.clone(), id.clone(), id.clone());
+    let (id_every, id_min, id_on, id_run, id_del, id_mail) =
+        (id.clone(), id.clone(), id.clone(), id.clone(), id.clone(), id.clone());
+    // The licence is what api0 sends the email with, and to whose email.
+    let pro = use_context::<super::pro::Pro>();
+    let has_licence = pro.status.read().licence().is_some();
+    let mail_title = if has_licence {
+        "Also email what it finds to your licence's email"
+    } else {
+        "Emails go to your licence's email: paste a licence in the Pro window, or get free AI credits there"
+    };
     let last = match (&watch.last_run, &watch.last_result) {
         (Some(at), Some(r)) => format!("Last run {}: {r}", age(*at)),
         (Some(at), None) => format!("Last run {}", age(*at)),
@@ -332,6 +341,15 @@ fn WatchRow(watch: Watch, busy: bool) -> Element {
                         onchange: move |e| st.update_watch(&id_on, |w| w.enabled = e.checked()),
                     }
                     "On"
+                }
+                label { class: "check", title: mail_title,
+                    input {
+                        r#type: "checkbox",
+                        checked: watch.email && has_licence,
+                        disabled: !has_licence,
+                        onchange: move |e| st.update_watch(&id_mail, |w| w.email = e.checked()),
+                    }
+                    "Email"
                 }
                 button {
                     class: "btn btn-small",

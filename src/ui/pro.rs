@@ -1,11 +1,9 @@
-//! The JobScout Pro window: what the free version does, the licence on this
+//! The JobScout Pro window: the searches each plan gives, the licence on this
 //! computer, and where to paste a key.
 
 use dioxus::prelude::*;
 
-use crate::model::Country;
-use crate::services::licence::{self, FreeError, Status, FREE_WATCHES};
-use crate::services::store;
+use crate::services::licence::{self, plan_searches, FreeError, Status, FREE_SEARCHES};
 use crate::state::AppState;
 
 /// Shared by every part of the UI that can open the window or needs to know
@@ -16,20 +14,14 @@ pub struct Pro {
     pub status: Signal<Status>,
 }
 
-/// Watches saved in every country: the loaded one from memory, the others
-/// from disk.
-pub fn watch_count(st: AppState) -> usize {
-    let here = *st.country.read();
-    Country::ALL
-        .iter()
-        .map(|&c| {
-            if c == here {
-                st.watches.read().len()
-            } else {
-                store::load_watches(c).len()
-            }
-        })
-        .sum()
+/// What each plan gives, in one sentence.
+fn plans_line() -> String {
+    format!(
+        "Pro comes with a monthly plan on mayorana.ch: Basic runs {} searches a month, Pro {} and Max {}.",
+        plan_searches("basic"),
+        plan_searches("pro"),
+        plan_searches("max")
+    )
 }
 
 /// Opens `url` in the default browser.
@@ -53,13 +45,18 @@ pub fn ProButton() -> Element {
         Status::Pro(a) => (
             "✦ PRO",
             "btn pro-btn active",
-            format!("JobScout Pro, {} plan for {}", a.plan.name, a.email),
+            format!(
+                "JobScout Pro, {} plan for {}: {} searches a month",
+                a.plan.name,
+                a.email,
+                status.monthly_searches()
+            ),
         ),
         Status::NotPro(a) if a.is_free() => (
             "Get Pro…",
             "btn pro-btn",
             format!(
-                "Free: {} AI credits left this month. The free version keeps {FREE_WATCHES} watch; Pro keeps any number",
+                "Free: {} AI credits left this month, {FREE_SEARCHES} searches a month. Pro plans run more",
                 a.credits.left
             ),
         ),
@@ -71,7 +68,7 @@ pub fn ProButton() -> Element {
         Status::Free => (
             "Get Pro…",
             "btn pro-btn",
-            format!("The free version keeps {FREE_WATCHES} watch; Pro keeps any number"),
+            format!("The free version runs {FREE_SEARCHES} searches a month; Pro plans run more"),
         ),
     };
     rsx! {
@@ -82,6 +79,7 @@ pub fn ProButton() -> Element {
 #[component]
 pub fn ProWindow() -> Element {
     let mut pro = use_context::<Pro>();
+    let st = use_context::<AppState>();
     let mut key = use_signal(String::new);
     let mut error = use_signal(|| Option::<String>::None);
     let mut busy = use_signal(|| false);
@@ -92,6 +90,8 @@ pub fn ProWindow() -> Element {
         return rsx! {};
     }
     let status = pro.status.read().clone();
+    let limit = status.monthly_searches();
+    let used = (*st.searches_used.read()).min(limit);
     let licensed = status.licence().is_some();
     let on_free_plan = status.free_credits().is_some();
     let asks_number = !licensed || on_free_plan || matches!(status, Status::Unknown(_));
@@ -160,9 +160,9 @@ pub fn ProWindow() -> Element {
                 match &status {
                     Status::Free => rsx! {
                         p {
-                            "The free version keeps one watch: one search that runs on its own and notifies you about good matches. "
-                            "Searching, scoring and export are never limited. "
-                            "Pro keeps any number of watches, in every country. It comes with a monthly plan on mayorana.ch."
+                            "The free version runs {FREE_SEARCHES} searches a month, in any of JobScout's countries. "
+                            "Scoring and export are never limited. "
+                            "{plans_line()}"
                         }
                     },
                     Status::Pro(a) => rsx! {
@@ -174,7 +174,7 @@ pub fn ProWindow() -> Element {
                             "."
                         }
                         p { class: "small",
-                            "{a.credits.left} AI credits left this month. {a.renewal()}."
+                            "{limit} searches a month, in any country. {a.credits.left} AI credits left this month. {a.renewal()}."
                         }
                     },
                     Status::NotPro(a) if a.is_free() => rsx! {
@@ -186,8 +186,8 @@ pub fn ProWindow() -> Element {
                             ". {a.renewal()}."
                         }
                         p {
-                            "The free version keeps one watch. Pro keeps any number of watches, in every country. "
-                            "It comes with a monthly plan on mayorana.ch."
+                            "The free version runs {FREE_SEARCHES} searches a month, in any of JobScout's countries. "
+                            "{plans_line()}"
                         }
                     },
                     Status::NotPro(a) if !a.active => rsx! {
@@ -215,11 +215,21 @@ pub fn ProWindow() -> Element {
                         p { "The licence number on this computer isn't known. Check it against the email, or paste it again." }
                     },
                 }
+                p { class: if used >= limit { "pro-error small" } else { "muted small" },
+                    "{used} of {limit} searches used this month. A search from the sidebar or from Claude "
+                    "counts as one, and a watch's run when it finds new jobs; the count starts again on the 1st."
+                }
                 if !matches!(status, Status::Pro(_)) {
                     button {
                         class: "btn btn-primary pro-buy",
                         onclick: move |_| open_url(licence::BUY_URL),
                         if licensed && !on_free_plan { "Renew JobScout Pro" } else { "Buy JobScout Pro" }
+                    }
+                } else if used >= limit && status.monthly_searches() < plan_searches("max") {
+                    button {
+                        class: "btn btn-primary pro-buy",
+                        onclick: move |_| open_url(licence::BUY_URL),
+                        "See the bigger plans"
                     }
                 }
                 if asks_number {
