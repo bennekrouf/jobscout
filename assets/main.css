@@ -78,7 +78,7 @@ body {
 
 /* ── Controls ─────────────────────────────────────────────── */
 .btn {
-    font: 12px var(--sans);
+    font: 12px var(--mono);
     padding: 7px 14px;
     border-radius: 7px;
     border: 1px solid var(--border);
