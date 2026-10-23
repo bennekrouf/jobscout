@@ -3,6 +3,13 @@
 What changed in each version of JobScout, for the people using it. Also
 published at <https://mayorana.ch/en/apps/jobscout/releases>.
 
+## [Unreleased]
+
+### Changed
+
+- Buttons now have the same size, rounded corners and typeface as in
+  GitAgent, so they look alike across the Mayorana apps.
+
 ## [0.1.15] - 2026-10-22
 
 ### Removed
