@@ -27,8 +27,7 @@
     --src-bayt: #3fa7e0;
     --src-irishjobs: #4fc77a;
     color-scheme: dark;
-    --mono: 'SF Mono', 'Menlo', 'Monaco', 'Cascadia Code', 'Consolas', monospace;
-    --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --mono: 'SF Mono', 'Menlo', 'Monaco', 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
 }
 
 body.light {
@@ -62,8 +61,11 @@ body.light {
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
+/* Form controls do not inherit type by default; keep them in the shared stack. */
+input, button, textarea, select { font-family: inherit; }
+
 body {
-    font-family: var(--sans);
+    font-family: var(--mono);
     font-size: 13px;
     background: var(--bg0);
     color: var(--text1);
@@ -179,7 +181,7 @@ body {
 .country {
     display: flex; align-items: center; justify-content: center; gap: 6px;
     padding: 6px 4px;
-    font: 12px var(--sans);
+    font: 12px var(--mono);
     color: var(--text2);
     background: var(--bg2);
     border: 1px solid var(--border);
@@ -206,7 +208,7 @@ h2 .flag { width: 21px; height: 14px; }
 .list-tools .muted { flex: 1; }
 .tabs { display: flex; gap: 2px; }
 .tab {
-    font: 12px var(--sans);
+    font: 12px var(--mono);
     padding: 5px 10px;
     border: none; border-radius: 6px;
     background: transparent; color: var(--text2);
