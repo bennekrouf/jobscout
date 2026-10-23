@@ -3,6 +3,16 @@
 What changed in each version of JobScout, for the people using it. Also
 published at <https://mayorana.ch/en/apps/jobscout/releases>.
 
+## [Unreleased]
+
+### Changed
+
+- The new-version banner and the usage-statistics notice now look the same
+  as in GitAgent: a blue bar across the top, or the bottom for the notice,
+  with a Download link and a × to hide it.
+- Every action button is now 30px tall, borders included, like the
+  regular buttons beside it.
+
 ## [0.1.17] - 2026-10-23
 
 ### Changed
