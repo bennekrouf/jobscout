@@ -3,6 +3,22 @@
 What changed in each version of JobScout, for the people using it. Also
 published at <https://mayorana.ch/en/apps/jobscout/releases>.
 
+## [Unreleased]
+
+### Changed
+
+- Dialogs now have a title bar with a × to close them, and text fields have
+  the same size and typeface as in GitAgent.
+- An open dialog now dims the light/dark switch in the corner along with the
+  rest of the window, instead of leaving it lit on top.
+- The buttons along the top of the window now all have the same height,
+  borders included, and the light/dark switch matches them.
+
+### Fixed
+
+- Exporting jobs to CSV now creates the folder if it does not exist yet, and
+  a failed export says why in English, not only in Windows' display language.
+
 ## [0.1.16] - 2026-10-23
 
 ### Changed
