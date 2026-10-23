@@ -1041,10 +1041,29 @@ fn export_csv(args: &Value) -> Result<Value, String> {
     }
     let jobs = store::load_jobs(country);
     let rows = filtered(args, country, &jobs)?;
-    std::fs::write(&path, store::to_csv(&rows)).map_err(|e| format!("{}: {e}", path.display()))?;
+    let failed = |e: std::io::Error| format!("{}: {} ({e})", path.display(), io_reason(&e));
+    if let Some(parent) = path.parent() {
+        std::fs::create_dir_all(parent).map_err(failed)?;
+    }
+    std::fs::write(&path, store::to_csv(&rows)).map_err(failed)?;
     Ok(
         json!({ "country": country.label(), "jobs": rows.len(), "path": path.display().to_string() }),
     )
+}
+
+/// An I/O failure in English. The OS text that follows it in brackets comes
+/// in the system's display language, which on a French Windows is French.
+fn io_reason(e: &std::io::Error) -> &'static str {
+    use std::io::ErrorKind::*;
+    match e.kind() {
+        NotFound => "not found",
+        PermissionDenied => "permission denied",
+        AlreadyExists => "already exists",
+        IsADirectory => "is a folder",
+        ReadOnlyFilesystem => "read-only drive",
+        StorageFull => "the disk is full",
+        _ => "could not write",
+    }
 }
 
 #[cfg(test)]

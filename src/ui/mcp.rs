@@ -51,53 +51,58 @@ pub fn McpModal() -> Element {
     rsx! {
         div { class: "modal-bg",
             div { class: "modal wide",
-                h2 { "Use JobScout from Claude" }
-                p { class: "muted",
-                    "Ask Claude to search, read and score jobs, mark them Saved, Applied or \
-                     Hidden, update your profile and manage your watches. It works on the same \
-                     jobs as this window, and what it changes shows up here within a couple of \
-                     seconds."
+                div { class: "modal-head",
+                    h2 { "Use JobScout from Claude" }
+                    button { class: "modal-close", title: "Close", onclick: move |_| st.modal.set(Modal::None), "×" }
                 }
-
-                div { class: "mcp-step",
-                    div { class: "mcp-step-title", span { class: "mcp-num", "1" } "Claude Desktop" }
+                div { class: "modal-body",
                     p { class: "muted",
-                        "Settings \u{2192} Developer \u{2192} Edit Config, paste this in and save, \
-                         then quit Claude and open it again. If the file already has an "
-                        code { "mcpServers" }
-                        " section, add just the "
-                        code { "jobscout" }
-                        " entry to it."
+                        "Ask Claude to search, read and score jobs, mark them Saved, Applied or \
+                         Hidden, update your profile and manage your watches. It works on the same \
+                         jobs as this window, and what it changes shows up here within a couple of \
+                         seconds."
                     }
-                    Snippet { text: desktop.clone() }
-                    p { class: "muted mcp-path", "The file: {desktop_config_path()}" }
-                }
 
-                div { class: "mcp-step",
-                    div { class: "mcp-step-title", span { class: "mcp-num", "2" } "Claude Code" }
-                    p { class: "muted", "Run this once in a terminal:" }
-                    Snippet { text: code.clone() }
-                }
-
-                div { class: "mcp-step",
-                    div { class: "mcp-step-title", span { class: "mcp-num", "3" } "Try it" }
-                    p { class: "muted",
-                        "Ask: \u{201c}What are my best matches this week?\u{201d}, or \u{201c}Search \
-                         for data engineer jobs in Switzerland and score the new ones.\u{201d}"
+                    div { class: "mcp-step",
+                        div { class: "mcp-step-title", span { class: "mcp-num", "1" } "Claude Desktop" }
+                        p { class: "muted",
+                            "Settings \u{2192} Developer \u{2192} Edit Config, paste this in and save, \
+                             then quit Claude and open it again. If the file already has an "
+                            code { "mcpServers" }
+                            " section, add just the "
+                            code { "jobscout" }
+                            " entry to it."
+                        }
+                        Snippet { text: desktop.clone() }
+                        p { class: "muted mcp-path", "The file: {desktop_config_path()}" }
                     }
-                }
 
-                p { class: "mcp-note",
-                    "Scoring through Claude uses the model and key set in Settings, as it does \
-                     here. Claude in the browser (claude.ai) can\u{2019}t use this: it only \
-                     connects to servers on the internet, and JobScout runs on your computer. Any \
-                     other app that speaks MCP can, with the same command: "
-                    code { "{command} mcp" }
-                }
+                    div { class: "mcp-step",
+                        div { class: "mcp-step-title", span { class: "mcp-num", "2" } "Claude Code" }
+                        p { class: "muted", "Run this once in a terminal:" }
+                        Snippet { text: code.clone() }
+                    }
 
-                div { class: "modal-actions",
-                    span { class: "spacer" }
-                    button { class: "btn btn-primary", onclick: move |_| st.modal.set(Modal::None), "Done" }
+                    div { class: "mcp-step",
+                        div { class: "mcp-step-title", span { class: "mcp-num", "3" } "Try it" }
+                        p { class: "muted",
+                            "Ask: \u{201c}What are my best matches this week?\u{201d}, or \u{201c}Search \
+                             for data engineer jobs in Switzerland and score the new ones.\u{201d}"
+                        }
+                    }
+
+                    p { class: "mcp-note",
+                        "Scoring through Claude uses the model and key set in Settings, as it does \
+                         here. Claude in the browser (claude.ai) can\u{2019}t use this: it only \
+                         connects to servers on the internet, and JobScout runs on your computer. Any \
+                         other app that speaks MCP can, with the same command: "
+                        code { "{command} mcp" }
+                    }
+
+                    div { class: "modal-actions",
+                        span { class: "spacer" }
+                        button { class: "btn btn-primary", onclick: move |_| st.modal.set(Modal::None), "Done" }
+                    }
                 }
             }
         }

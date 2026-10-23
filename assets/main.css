@@ -100,9 +100,9 @@ body {
 .btn-wide { width: 100%; }
 
 .input {
-    font: 13px var(--sans);
+    font: 12px var(--mono);
     width: 100%;
-    padding: 7px 9px;
+    padding: 8px 10px;
     border-radius: 6px;
     border: 1px solid var(--border);
     background: var(--bg0);
@@ -346,21 +346,29 @@ h2 .flag { width: 21px; height: 14px; }
 /* ── Modals ───────────────────────────────────────────────── */
 .modal-bg {
     position: fixed; inset: 0;
-    background: rgba(0, 0, 0, 0.5);
+    background: rgba(0, 0, 0, 0.55);
     display: flex; align-items: center; justify-content: center;
-    z-index: 10;
+    z-index: 100;
 }
 .modal {
-    width: 520px;
-    max-height: 88vh;
+    width: 460px; max-width: calc(100vw - 32px);
+    max-height: 84vh;
     overflow-y: auto;
-    padding: 22px;
     border-radius: 12px;
     background: var(--bg1);
     border: 1px solid var(--border);
 }
-.modal.wide { width: 760px; }
-.modal h2 { font-size: 17px; margin-bottom: 8px; }
+.modal.wide { width: 620px; }
+.modal-head {
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    padding: 13px 16px; border-bottom: 1px solid var(--border);
+}
+.modal-head h2 { margin: 0; font-size: 13px; font-weight: 600; color: var(--text1); }
+.modal-close { padding: 0; background: none; border: none; color: var(--text3); font-size: 19px; line-height: 1; cursor: pointer; }
+.modal-close:hover { color: var(--text1); }
+.modal-body { padding: 16px; display: flex; flex-direction: column; gap: 13px; }
+/* Labels sit apart from their inputs, so the fields keep their own margins. */
+.modal .modal-body { display: block; }
 .modal h3 { font-size: 13px; margin: 20px 0 2px; color: var(--accent); }
 .modal p { line-height: 1.5; }
 .modal .check { margin-top: 10px; }
@@ -433,9 +441,9 @@ h2 .flag { width: 21px; height: 14px; }
 /* ── Theme toggle (top-right) — same as ShipScreen and GitAgent ── */
 .btn-theme {
     position: fixed;
-    top: 10px;
+    top: 8px; /* centred on the 46px header */
     right: 14px;
-    z-index: 1000;
+    z-index: 90; /* under a modal's backdrop, so an open dialog dims it */
     width: 30px;
     height: 30px;
     display: flex;
@@ -476,3 +484,6 @@ h2 .flag { width: 21px; height: 14px; }
     font-size: 12px;
 }
 .update-text { flex: 1; }
+
+/* Header controls: one height, borders included, whatever their padding or font. */
+.header .btn { height: 30px; box-sizing: border-box; padding-top: 0; padding-bottom: 0; display: inline-flex; align-items: center; justify-content: center; }
