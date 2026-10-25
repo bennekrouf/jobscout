@@ -135,10 +135,12 @@ begin
 
   if not HasWebView2() then
   begin
-    if MsgBox('{#MyAppName} needs the Microsoft Edge WebView2 Runtime, which is not installed.' + NL + NL +
-              'Open the download page now? Install the "Evergreen Bootstrapper", then run this setup again.',
-              mbConfirmation, MB_YESNO) = IDYES then
-      ShellExec('open', 'https://developer.microsoft.com/microsoft-edge/webview2/', '', '', SW_SHOWNORMAL, ewNoWait, ResultCode);
+    // Silently, there is no one to ask: fail with an exit code instead.
+    if not WizardSilent then
+      if MsgBox('{#MyAppName} needs the Microsoft Edge WebView2 Runtime, which is not installed.' + NL + NL +
+                'Open the download page now? Install the "Evergreen Bootstrapper", then run this setup again.',
+                mbConfirmation, MB_YESNO) = IDYES then
+        ShellExec('open', 'https://developer.microsoft.com/microsoft-edge/webview2/', '', '', SW_SHOWNORMAL, ewNoWait, ResultCode);
     Result := False;
     Exit;
   end;
@@ -159,11 +161,14 @@ begin
            'Your jobs, watches and settings are kept.' + NL + NL +
            'Continue?';
 
-  if MsgBox(Msg, mbConfirmation, MB_YESNO) = IDNO then
-  begin
-    Result := False;
-    Exit;
-  end;
+  // A silent install was already told to go ahead, and nobody is there to
+  // answer a question: Setup would wait on it forever.
+  if not WizardSilent then
+    if MsgBox(Msg, mbConfirmation, MB_YESNO) = IDNO then
+    begin
+      Result := False;
+      Exit;
+    end;
 
   UninstStr := GetUninstallString();
   if UninstStr <> '' then

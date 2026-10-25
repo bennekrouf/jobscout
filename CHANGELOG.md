@@ -3,6 +3,16 @@
 What changed in each version of JobScout, for the people using it. Also
 published at <https://mayorana.ch/en/apps/jobscout/releases>.
 
+## [Unreleased]
+
+### Fixed
+
+- Installing silently, as IT does for an unattended update with `/VERYSILENT`,
+  no longer hangs when JobScout is already installed: setup waited on a
+  question nobody could see. It now replaces the installed version without
+  asking, and stops with an error, instead of waiting, when the Microsoft
+  Edge WebView2 Runtime is missing.
+
 ## [0.1.18] - 2026-10-25
 
 ### Changed
