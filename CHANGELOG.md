@@ -3,7 +3,7 @@
 What changed in each version of JobScout, for the people using it. Also
 published at <https://mayorana.ch/en/apps/jobscout/releases>.
 
-## [Unreleased]
+## [0.1.19] - 2026-10-25
 
 ### Fixed
 
