@@ -27,7 +27,7 @@
     --src-bayt: #3fa7e0;
     --src-irishjobs: #4fc77a;
     color-scheme: dark;
-    --mono: 'SF Mono', 'Menlo', 'Monaco', 'Cascadia Code', 'Consolas', monospace;
+    --mono: 'SF Mono', 'Menlo', 'Monaco', 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
 }
 
 body.light {
