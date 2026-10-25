@@ -91,7 +91,7 @@ pub fn App() -> Element {
         theme::ThemeToggle {}
         if let (Some(info), false) = (update(), update_dismissed()) {
             div { class: "update-banner", role: "status",
-                span { class: "update-text",
+                span { class: "update-banner-text",
                     "JobScout "
                     strong { "{info.latest_version}" }
                     " is available (you have {env!(\"CARGO_PKG_VERSION\")})."
@@ -102,17 +102,17 @@ pub fn App() -> Element {
                     let url = info.release_url.clone();
                     rsx! {
                         button {
-                            class: "btn btn-primary btn-small",
+                            class: "update-banner-link",
                             onclick: move |_| pro::open_url(&url),
                             "Download"
                         }
                     }
                 }
                 button {
-                    class: "btn btn-ghost btn-small",
+                    class: "update-banner-dismiss",
                     title: "Hide until the next start",
                     onclick: move |_| update_dismissed.set(true),
-                    "Not now"
+                    "×"
                 }
             }
         }
