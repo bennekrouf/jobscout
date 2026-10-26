@@ -48,7 +48,8 @@ jobs, profile and watches; every tool takes an optional country (a code such as 
 and defaults to the one open in the JobScout window. Start with overview. search finds new \
 posts and adds them to the list; list_jobs and get_job read what is kept. score_jobs rates \
 jobs against the profile with the model set in JobScout's Settings: with a cloud model each \
-score is a paid call, so score the jobs the user asks about rather than everything. set_status \
+score is a paid call, so score the jobs the user asks about rather than everything; \
+set_scoring_model picks the api0 region (europe, china, usa) or ollama. set_status \
 marks jobs Saved, Applied or Hidden. set_profile replaces the whole profile: show the user the \
 text and get their agreement before saving. Watches are saved searches the JobScout window runs \
 on a schedule, only while it is open. The licence sets how many searches a month JobScout runs, \
@@ -161,6 +162,8 @@ fn tools() -> Value {
         "description": "Job ids, from list_jobs or search.",
     });
     let statuses: Vec<&str> = Status::ALL.iter().map(|s| s.label()).collect();
+    let mut scoring_choices: Vec<&str> = llm::REGIONS.iter().map(|r| r.id).collect();
+    scoring_choices.push("ollama");
     let search = json!({
         "country": country,
         "keywords": { "type": "string", "description": "What to search for, e.g. \"data engineer\"." },
@@ -328,6 +331,20 @@ fn tools() -> Value {
             },
         },
         {
+            "name": "set_scoring_model",
+            "description": "Sets where score_jobs runs, for every country: api0 in europe, \
+                            china or usa (paid from the licence's AI credits, which overview \
+                            shows), or ollama on this computer (free; its model must be set in \
+                            JobScout's Settings). Same as the buttons in Settings → Scoring model.",
+            "inputSchema": {
+                "type": "object",
+                "properties": {
+                    "model": { "type": "string", "enum": scoring_choices },
+                },
+                "required": ["model"],
+            },
+        },
+        {
             "name": "list_watches",
             "description": "The country's watches: saved searches the window runs on a schedule, \
                             scoring what is new and notifying about good matches.",
@@ -400,6 +417,7 @@ async fn call(name: &str, args: &Value) -> Result<Value, String> {
             store::save_profile(country, text);
             Ok(json!({ "country": country.label(), "saved": true, "chars": text.chars().count() }))
         }
+        "set_scoring_model" => set_scoring_model(args),
         "list_watches" => {
             let country = country(args)?;
             let watches: Vec<Value> = store::load_watches(country)
@@ -810,6 +828,30 @@ async fn cv_for_job(args: &Value) -> Result<Value, String> {
     });
     if let Some(n) = note {
         v["note"] = json!(n);
+    }
+    Ok(v)
+}
+
+/// Settings' Scoring model buttons: an api0 region, or ollama.
+fn set_scoring_model(args: &Value) -> Result<Value, String> {
+    let model = text(args, "model")?.to_lowercase();
+    let mut s = store::load_settings();
+    if model == "ollama" {
+        s.use_ollama();
+    } else {
+        let region = llm::REGIONS
+            .iter()
+            .find(|r| r.id == model || r.label.eq_ignore_ascii_case(&model))
+            .ok_or_else(|| format!("no scoring model {model}; use europe, china, usa or ollama"))?;
+        s.use_region(region.id);
+    }
+    store::save_settings(&s);
+    let mut v = json!({ "scoring_model": s.scoring_model() });
+    if s.is_ollama() && s.llm_model.trim().is_empty() {
+        v["note"] =
+            json!("ollama has no model set: choose one in JobScout's Settings before scoring");
+    } else if s.region().is_some() && llm::api0_key().is_none() {
+        v["note"] = json!("api0 needs a licence: get free AI credits or paste the licence number in JobScout's Pro window");
     }
     Ok(v)
 }

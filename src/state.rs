@@ -179,6 +179,13 @@ impl AppState {
             self.profile.set(store::load_profile(country));
             what.push("profile");
         }
+        if store::settings_changed_elsewhere() {
+            // The country stays this window's: switching it reloads everything.
+            let mut loaded = store::load_settings();
+            loaded.country = country;
+            self.settings.set(loaded);
+            what.push("settings");
+        }
         let used = licence::searches_used();
         if *self.searches_used.peek() != used {
             self.searches_used.set(used);
