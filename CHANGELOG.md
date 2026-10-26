@@ -3,6 +3,16 @@
 What changed in each version of JobScout, for the people using it. Also
 published at <https://mayorana.ch/en/apps/jobscout/releases>.
 
+## [Unreleased]
+
+### Changed
+
+- Through Claude, JobScout now works hand in hand with cvenom. Asking for
+  your CV opens it from cvenom, and asking to adapt or generate a CV for a
+  job hands the job's link and description to cvenom, which tailors your
+  real CV and returns the PDF, instead of Claude writing a CV of its own.
+  Connect the cvenom MCP server alongside JobScout to use it.
+
 ## [0.1.19] - 2026-10-25
 
 ### Fixed
