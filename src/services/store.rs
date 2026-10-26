@@ -88,6 +88,12 @@ pub fn changed_elsewhere(country: Country, file: &str) -> bool {
     changed_since_seen(&country_dir(country).join(file))
 }
 
+/// Whether settings.json was changed by another process since this one last
+/// read or wrote it: Claude can set the scoring model.
+pub fn settings_changed_elsewhere() -> bool {
+    changed_since_seen(&data_dir().join("settings.json"))
+}
+
 /// Before countries, everything sat in the data directory itself and was
 /// all Swiss. Moves those files into `ch/`, once: a file already in `ch/`
 /// is never overwritten. The last search came out of settings.json.

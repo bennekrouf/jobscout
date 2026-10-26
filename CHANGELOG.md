@@ -3,6 +3,15 @@
 What changed in each version of JobScout, for the people using it. Also
 published at <https://mayorana.ch/en/apps/jobscout/releases>.
 
+## [Unreleased]
+
+### Added
+
+- Claude can now switch where your jobs are scored: ask it to score in
+  Europe, China or the United States, or with Ollama on your computer, as
+  the buttons in Settings → Scoring model do. An open JobScout window picks
+  up the change within a couple of seconds.
+
 ## [0.1.20] - 2026-10-26
 
 ### Changed
