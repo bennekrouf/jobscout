@@ -29,6 +29,12 @@ pub fn code_command(command: &str) -> String {
     format!("claude mcp add jobscout --scope user -- \"{command}\" mcp")
 }
 
+/// The one line that adds it to Codex. Its CLI, IDE extension and app share
+/// one list of servers, each one there for every project.
+pub fn codex_command(command: &str) -> String {
+    format!("codex mcp add jobscout -- \"{command}\" mcp")
+}
+
 /// Where Claude Desktop keeps its config, for the person who would rather
 /// open it themselves than go through the app's menu.
 fn desktop_config_path() -> &'static str {
@@ -47,12 +53,13 @@ pub fn McpModal() -> Element {
     let command = command();
     let desktop = desktop_config(&command);
     let code = code_command(&command);
+    let codex = codex_command(&command);
 
     rsx! {
         div { class: "modal-bg",
             div { class: "modal wide",
                 div { class: "modal-head",
-                    h2 { "Use JobScout from Claude" }
+                    h2 { "Use JobScout from Claude or Codex" }
                     button { class: "modal-close", title: "Close", onclick: move |_| st.modal.set(Modal::None), "×" }
                 }
                 div { class: "modal-body",
@@ -84,7 +91,13 @@ pub fn McpModal() -> Element {
                     }
 
                     div { class: "mcp-step",
-                        div { class: "mcp-step-title", span { class: "mcp-num", "3" } "Try it" }
+                        div { class: "mcp-step-title", span { class: "mcp-num", "3" } "Codex" }
+                        p { class: "muted", "Run this once in a terminal:" }
+                        Snippet { text: codex.clone() }
+                    }
+
+                    div { class: "mcp-step",
+                        div { class: "mcp-step-title", span { class: "mcp-num", "4" } "Try it" }
                         p { class: "muted",
                             "Ask: \u{201c}What are my best matches this week?\u{201d}, or \u{201c}Search \
                              for data engineer jobs in Switzerland and score the new ones.\u{201d}"
@@ -162,6 +175,14 @@ mod tests {
         assert_eq!(
             code_command("/Apps/Job Scout/jobscout"),
             "claude mcp add jobscout --scope user -- \"/Apps/Job Scout/jobscout\" mcp"
+        );
+    }
+
+    #[test]
+    fn the_codex_command_quotes_a_path_with_spaces() {
+        assert_eq!(
+            codex_command("/A B/jobscout"),
+            "codex mcp add jobscout -- \"/A B/jobscout\" mcp"
         );
     }
 }
