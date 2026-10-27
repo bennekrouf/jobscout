@@ -1,5 +1,7 @@
 # JobScout
 
+![JobScout's job list for Switzerland: the search form on the left, 1,170 jobs from LinkedIn, jobs.ch and jobup.ch in the middle](docs/screenshot.png)
+
 A desktop app (Rust + Dioxus) that collects job posts and ranks them against
 your profile, for one country at a time: Switzerland (LinkedIn, jobs.ch,
 jobup.ch), Singapore (LinkedIn, MyCareersFuture, JobStreet), Germany
