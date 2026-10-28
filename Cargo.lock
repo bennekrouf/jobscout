@@ -1033,7 +1033,7 @@ dependencies = [
 
 [[package]]
 name = "desktop-kit"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "base64 0.22.1",
  "dioxus",
@@ -2828,7 +2828,7 @@ dependencies = [
 
 [[package]]
 name = "jobscout"
-version = "0.1.25"
+version = "0.1.26"
 dependencies = [
  "arboard",
  "base64 0.22.1",
