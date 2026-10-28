@@ -193,7 +193,6 @@ pub fn SearchPanel() -> Element {
             }
 
             div { class: "sidebar-foot",
-                super::feedback::FeedbackLine {}
             }
         }
     }

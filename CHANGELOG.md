@@ -3,6 +3,19 @@
 What changed in each version of JobScout, for the people using it. Also
 published at <https://mayorana.ch/en/apps/jobscout/releases>.
 
+## [Unreleased]
+
+### Changed
+
+- The bar across the top of the window now looks and works the same in every
+  mayorana app: the name and version on the left, and on the right Profile,
+  Watches, the scoring model, Settings, MCP, Feedback, the light/dark switch and
+  the Pro badge in the corner.
+- The scoring model is in the bar, with its region's flag; a click opens
+  Settings to change it.
+- The Feedback link moved from the bottom of the search panel into the bar, and
+  the light/dark switch is part of the bar instead of floating over it.
+
 ## [0.1.24] - 2026-10-28
 
 ### Changed

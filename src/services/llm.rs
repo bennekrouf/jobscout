@@ -117,21 +117,7 @@ pub(crate) fn is_api0(base_url: &str) -> bool {
         .eq_ignore_ascii_case(licence::LLM_BASE_URL)
 }
 
-/// One of the AI regions api0 offers. Picking it sends its id as the model;
-/// api0 decides what runs there.
-#[derive(Clone, Copy, PartialEq, Eq, Debug)]
-pub struct Region {
-    pub id: &'static str,
-    pub label: &'static str,
-}
-
-/// In the order Settings shows them.
-#[rustfmt::skip]
-pub const REGIONS: &[Region] = &[
-    Region { id: "europe", label: "Europe" },
-    Region { id: "china", label: "China" },
-    Region { id: "usa", label: "United States" },
-];
+pub use desktop_kit::region::{Region, REGIONS};
 
 /// Tokens in a typical score: a profile, a description cut at
 /// [`MAX_DESCRIPTION_CHARS`] and the short JSON reply. Only for the estimate.

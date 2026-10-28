@@ -1,6 +1,7 @@
 //! The JobScout Pro window: the searches each plan gives, the licence on this
 //! computer, and where to paste a key.
 
+use desktop_kit::ui::{ProBadge, ProLook};
 use dioxus::prelude::*;
 
 use crate::services::licence::{self, plan_searches, FreeError, Status, StatusExt, FREE_SEARCHES};
@@ -48,38 +49,22 @@ pub fn open_url(url: &str) {
 pub fn ProButton() -> Element {
     let mut pro = use_context::<Pro>();
     let status = pro.status.read().clone();
-    let (label, class, title) = match &status {
-        Status::Pro(a) => (
-            "✦ PRO",
-            "btn pro-btn active",
-            format!(
+    let title = match &status {
+        Status::Pro(a) => format!(
                 "JobScout Pro, {} plan for {}: {} searches a month",
                 a.plan.name,
                 a.email,
                 status.monthly_searches()
             ),
-        ),
-        Status::NotPro(a) if a.is_free() => (
-            "Get Pro…",
-            "btn pro-btn",
-            format!(
+        Status::NotPro(a) if a.is_free() => format!(
                 "Free: {} AI credits left this month, {FREE_SEARCHES} searches a month. Pro plans run more",
                 a.credits.left
             ),
-        ),
-        Status::NotPro(_) | Status::Offline(_) | Status::Unknown(_) => (
-            "✦ RENEW PRO",
-            "btn pro-btn renew",
-            "Your licence doesn't make this JobScout Pro right now".to_owned(),
-        ),
-        Status::Free => (
-            "Get Pro…",
-            "btn pro-btn",
-            format!("The free version runs {FREE_SEARCHES} searches a month; Pro plans run more"),
-        ),
+        Status::NotPro(_) | Status::Offline(_) | Status::Unknown(_) => "Your licence doesn't make this JobScout Pro right now".to_owned(),
+        Status::Free => format!("The free version runs {FREE_SEARCHES} searches a month; Pro plans run more"),
     };
     rsx! {
-        button { class, title, onclick: move |_| pro.open.set(true), "{label}" }
+        ProBadge { look: ProLook::of(&status), title, onclick: move |_| pro.open.set(true) }
     }
 }
 

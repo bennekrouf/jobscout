@@ -30,6 +30,17 @@
     --mono: 'SF Mono', 'Menlo', 'Monaco', 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
 }
 
+/* The shared header's colours (desktop-kit). On body, so body.light below
+   changes them too. */
+body {
+    --kit-bar: var(--bg1);
+    --kit-line: var(--border);
+    --kit-hover: var(--bg2);
+    --kit-text: var(--text1);
+    --kit-muted: var(--text3);
+    --kit-accent: var(--accent);
+}
+
 body.light {
     --bg0: #f6fafb;
     --bg1: #ebf3f5;
@@ -145,7 +156,7 @@ body {
        inside it can scroll. */
     grid-template-rows: minmax(0, 1fr);
     /* Less the header above and the status bar below. */
-    height: calc(100vh - 46px - 34px);
+    height: calc(100vh - var(--kit-header-h) - 34px);
 }
 .shell > * { min-height: 0; }
 .shell.dragging { user-select: none; cursor: col-resize; }
@@ -166,15 +177,6 @@ body {
     display: flex; flex-direction: column;
     overflow-y: auto;
 }
-.header {
-    display: flex; align-items: center; gap: 8px;
-    height: 46px;
-    padding: 0 58px 0 16px; /* right: clear of the theme toggle */
-    background: var(--bg1);
-    border-bottom: 1px solid var(--border);
-}
-.brand { display: flex; align-items: center; gap: 8px; font: 600 15px var(--mono); }
-.brand-mark { color: var(--accent); font-size: 18px; }
 
 /* One country's context at a time: the flags switch it. */
 .countries { display: grid; grid-template-columns: repeat(auto-fill, minmax(36px, 1fr)); gap: 6px; margin: 4px 0 10px; }
@@ -196,9 +198,6 @@ body {
 h2 .flag { width: 21px; height: 14px; }
 .search-form .btn-primary { margin-top: 18px; }
 .sidebar-foot { margin-top: auto; padding-top: 16px; display: flex; flex-direction: column; gap: 8px; }
-.feedback-line { text-align: center; font-size: 12px; color: var(--text3); padding-top: 4px; }
-.feedback-line a { color: var(--text3); text-decoration: none; }
-.feedback-line a:hover { color: var(--text2); text-decoration: underline; }
 
 /* ── List ─────────────────────────────────────────────────── */
 .list { display: flex; flex-direction: column; min-width: 0; }
@@ -273,7 +272,6 @@ h2 .flag { width: 21px; height: 14px; }
 /* ── Detail ───────────────────────────────────────────────── */
 .detail { overflow-y: auto; padding: 20px 24px; min-width: 0; }
 .detail.empty { display: flex; align-items: center; justify-content: center; }
-.detail-head { padding-right: 36px; } /* clear of the theme toggle */
 .detail-head h1 { font-size: 19px; line-height: 1.3; margin-bottom: 6px; }
 .detail-sub { color: var(--text2); margin-bottom: 4px; }
 .actions { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 14px; }
@@ -440,35 +438,6 @@ h2 .flag { width: 21px; height: 14px; }
 .watch-controls .check { margin-top: 0; }
 .score-input { width: 58px; }
 
-/* ── Theme toggle (top-right) — same as ShipScreen and GitAgent ── */
-.btn-theme {
-    position: fixed;
-    top: 8px; /* centred on the 46px header */
-    right: 14px;
-    z-index: 90; /* under a modal's backdrop, so an open dialog dims it */
-    width: 30px;
-    height: 30px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: var(--bg1);
-    border: 1px solid var(--border);
-    border-radius: 7px;
-    color: var(--text2);
-    cursor: pointer;
-    transition: border-color 0.15s, color 0.15s;
-}
-.btn-theme:hover { border-color: var(--accent); color: var(--accent); }
-.theme-icon {
-    width: 15px; height: 15px;
-    fill: none; stroke: currentColor; stroke-width: 1.75;
-    stroke-linecap: round; stroke-linejoin: round;
-}
-
-/* ── JobScout Pro ─────────────────────────────────────────────── */
-.pro-btn { border-color: var(--accent); color: var(--accent); background: transparent; }
-.pro-btn.active { font-weight: 600; letter-spacing: .04em; }
-.pro-btn.renew { border-color: var(--mid); color: var(--mid); }
 .pro-buy { align-self: flex-start; margin: 12px 0 8px; }
 .pro-ok { color: var(--good); }
 .pro-error { color: var(--bad); }
@@ -535,9 +504,6 @@ button.update-banner-link {
 }
 body.light .update-banner, body.light .consent-banner { background: #1e5fb8; }
 .update-text { flex: 1; }
-
-/* Header controls: one height, borders included, whatever their padding or font. */
-.header .btn { height: 30px; box-sizing: border-box; padding-top: 0; padding-bottom: 0; display: inline-flex; align-items: center; justify-content: center; }
 
 /* Small buttons stand beside regular ones, so they share the 30px height;
    Copy inside a code snippet stays small. */

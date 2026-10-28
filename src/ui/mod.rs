@@ -1,5 +1,4 @@
 mod detail;
-mod feedback;
 mod flag;
 mod header;
 mod jobs;
@@ -7,7 +6,6 @@ mod mcp;
 mod modals;
 pub mod pro;
 mod search;
-mod theme;
 
 use dioxus::prelude::*;
 
@@ -88,7 +86,6 @@ pub fn App() -> Element {
 
     rsx! {
         style { {CSS} }
-        theme::ThemeToggle {}
         if let (Some(info), false) = (update(), update_dismissed()) {
             div { class: "update-banner", role: "status",
                 span { class: "update-banner-text",
