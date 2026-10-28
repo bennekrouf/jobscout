@@ -99,7 +99,7 @@ pub fn App() -> Element {
                 {
                     // A button, not a link: the URL must open in the browser,
                     // never in the app's own webview.
-                    let url = info.release_url.clone();
+                    let url = info.download_url.clone();
                     rsx! {
                         button {
                             class: "update-banner-link",

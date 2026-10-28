@@ -1032,6 +1032,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "desktop-kit"
+version = "0.1.0"
+dependencies = [
+ "base64 0.22.1",
+ "dirs 6.0.0",
+ "getrandom 0.3.4",
+ "serde",
+ "serde_json",
+ "tokio",
+]
+
+[[package]]
 name = "digest"
 version = "0.10.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2821,6 +2833,7 @@ dependencies = [
  "base64 0.22.1",
  "block2",
  "chrono",
+ "desktop-kit",
  "dioxus",
  "dirs 5.0.1",
  "notify-rust",
@@ -6189,7 +6202,7 @@ version = "0.1.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c2a7b1c03c876122aa43f3020e6c3c3ee5c05081c9a00739faf7503aeba10d22"
 dependencies = [
- "windows-sys 0.61.2",
+ "windows-sys 0.48.0",
 ]
 
 [[package]]

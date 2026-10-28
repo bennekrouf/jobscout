@@ -19,8 +19,7 @@ const BASE: &str = "https://www.linkedin.com/jobs-guest/jobs/api";
 
 /// LinkedIn covers every country, so the loaded one is the location.
 pub fn search_url(p: &SearchParams, country: Country, start: u32) -> String {
-    let mut url = reqwest::Url::parse(&format!("{BASE}/seeMoreJobPostings/search"))
-        .expect("constant URL parses");
+    let mut url = super::fetch::site_url(&format!("{BASE}/seeMoreJobPostings/search"));
     {
         let mut q = url.query_pairs_mut();
         q.append_pair("keywords", p.keywords.trim());
@@ -147,7 +146,7 @@ pub fn parse_detail(html: &str) -> Option<JobDetail> {
 }
 
 fn sel(s: &str) -> Selector {
-    Selector::parse(s).expect("constant selector parses")
+    super::fetch::selector(s)
 }
 
 fn first_text(el: ElementRef, s: &Selector) -> Option<String> {

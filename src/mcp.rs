@@ -24,6 +24,7 @@ use crate::model::{
     Backend, Contract, Country, Job, Posted, SearchParams, Settings, Source, Status, Watch,
     EXPERIENCE,
 };
+use crate::services::licence::StatusExt;
 use crate::services::sources::SearchEvent;
 use crate::services::{licence, llm, sources, store};
 use crate::state::{freshness, Freshness};
@@ -67,8 +68,13 @@ cvenom tools are connected, tell the user to connect the cvenom MCP server rathe
 one.";
 
 pub fn serve() {
-    let runtime = tokio::runtime::Runtime::new().expect("tokio runtime");
-    runtime.block_on(serve_stdio());
+    match tokio::runtime::Runtime::new() {
+        Ok(runtime) => runtime.block_on(serve_stdio()),
+        Err(e) => {
+            eprintln!("jobscout mcp: could not start: {e}");
+            std::process::exit(1);
+        }
+    }
 }
 
 async fn serve_stdio() {
@@ -671,6 +677,8 @@ fn row(j: &Job) -> Value {
         "found": j.found_at.format("%Y-%m-%d").to_string(),
         "has_description": j.detail.is_some(),
     });
+    // `json!({ .. })` always makes an object.
+    #[allow(clippy::expect_used)]
     let o = v.as_object_mut().expect("an object");
     if let Some(p) = &j.posted {
         o.insert("posted".into(), json!(p));
@@ -774,6 +782,8 @@ async fn fresh_job(args: &Value) -> Result<(Job, Option<String>), String> {
 async fn get_job(args: &Value) -> Result<Value, String> {
     let (job, note) = fresh_job(args).await?;
     let mut v = row(&job);
+    // `json!({ .. })` always makes an object.
+    #[allow(clippy::expect_used)]
     let o = v.as_object_mut().expect("an object");
     if let Some(d) = &job.detail {
         let description: String = d.description.chars().take(DESCRIPTION_CAP).collect();
@@ -811,7 +821,7 @@ async fn get_job(args: &Value) -> Result<Value, String> {
 /// names the tool, rather than leaving the model to write a CV itself.
 async fn cv_for_job(args: &Value) -> Result<Value, String> {
     let (job, note) = fresh_job(args).await?;
-    let mut cvenom = json!({ "job_url": job.url });
+    let mut cvenom = json!({ "job_url": job.url, "job_title": job.title, "company": job.company });
     if let Some(d) = &job.detail {
         let description: String = d.description.chars().take(DESCRIPTION_CAP).collect();
         cvenom["job_description"] = json!(description);
@@ -820,8 +830,8 @@ async fn cv_for_job(args: &Value) -> Result<Value, String> {
         "job": { "id": job.id, "title": job.title, "company": job.company, "location": job.location },
         "cvenom_arguments": cvenom,
         "next": "Call cvenom-list-profiles for the profile name (ask the user if there are \
-                 several), then cvenom-optimize-and-generate with profile and the \
-                 cvenom_arguments above; set lang to fr or de when the posting is in French or \
+                 several), then cvenom-optimize-and-generate with profile and all the \
+                 cvenom_arguments above (job_title and company name the PDF); set lang to fr or de when the posting is in French or \
                  German. Give the user the download_url it returns, unchanged. For the tailored \
                  text without a PDF, use cvenom-optimize-cv-for-job with the same arguments; for \
                  a cover letter, cvenom-write-cover-letter with job_description and lang.",
@@ -992,7 +1002,10 @@ async fn score_jobs(args: &Value) -> Result<Value, String> {
         }
         match score_one(country, id, &profile, &settings).await {
             Ok(job) => {
-                let s = job.score.as_ref().expect("just scored");
+                let Some(s) = job.score.as_ref() else {
+                    results.push(json!({ "id": id, "error": "not scored" }));
+                    continue;
+                };
                 results.push(json!({
                     "id": id,
                     "title": job.title,

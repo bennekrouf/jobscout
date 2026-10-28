@@ -31,6 +31,8 @@ permissions:
   contents: write
 
 env:
+  # The desktop-kit tag the apps build against; move it to take a kit change.
+  DESKTOP_KIT_REF: v0.1.0
   APP: jobscout
   APP_NAME: JobScout
   # Must match `[bundle] identifier` in Dioxus.toml and BUNDLE_ID in
@@ -49,6 +51,17 @@ jobs:
         if: github.event_name == 'workflow_dispatch'
         with:
           fetch-depth: 0
+
+      # desktop-kit, the code every desktop app shares, sits beside the app
+      # (Cargo.toml: path = "../desktop-kit"), at the tag DESKTOP_KIT_REF pins.
+      - uses: actions/checkout@v4
+        with:
+          repository: bennekrouf/desktop-kit
+          ref: ${{ env.DESKTOP_KIT_REF }}
+          path: desktop-kit
+      - name: Put desktop-kit beside the app
+        shell: bash
+        run: mv desktop-kit ../desktop-kit
 
       - name: Bump version and tag
         if: github.event_name == 'workflow_dispatch'
@@ -108,9 +121,19 @@ jobs:
         with:
           ref: ${{ needs.prepare.outputs.tag }}
 
-      - uses: dtolnay/rust-toolchain@stable
+      # desktop-kit, the code every desktop app shares, sits beside the app
+      # (Cargo.toml: path = "../desktop-kit"), at the tag DESKTOP_KIT_REF pins.
+      - uses: actions/checkout@v4
         with:
-          targets: aarch64-apple-darwin,x86_64-apple-darwin
+          repository: bennekrouf/desktop-kit
+          ref: ${{ env.DESKTOP_KIT_REF }}
+          path: desktop-kit
+      - name: Put desktop-kit beside the app
+        shell: bash
+        run: mv desktop-kit ../desktop-kit
+
+      # Installs the version rust-toolchain.toml pins.
+      - run: rustup toolchain install && rustup target add aarch64-apple-darwin x86_64-apple-darwin
 
       - uses: actions/cache@v4
         with:
@@ -282,7 +305,19 @@ jobs:
         with:
           ref: ${{ needs.prepare.outputs.tag }}
 
-      - uses: dtolnay/rust-toolchain@stable
+      # desktop-kit, the code every desktop app shares, sits beside the app
+      # (Cargo.toml: path = "../desktop-kit"), at the tag DESKTOP_KIT_REF pins.
+      - uses: actions/checkout@v4
+        with:
+          repository: bennekrouf/desktop-kit
+          ref: ${{ env.DESKTOP_KIT_REF }}
+          path: desktop-kit
+      - name: Put desktop-kit beside the app
+        shell: bash
+        run: mv desktop-kit ../desktop-kit
+
+      # Installs the version rust-toolchain.toml pins.
+      - run: rustup toolchain install
 
       - uses: actions/cache@v4
         with:
@@ -419,7 +454,19 @@ jobs:
         with:
           ref: ${{ needs.prepare.outputs.tag }}
 
-      - uses: dtolnay/rust-toolchain@stable
+      # desktop-kit, the code every desktop app shares, sits beside the app
+      # (Cargo.toml: path = "../desktop-kit"), at the tag DESKTOP_KIT_REF pins.
+      - uses: actions/checkout@v4
+        with:
+          repository: bennekrouf/desktop-kit
+          ref: ${{ env.DESKTOP_KIT_REF }}
+          path: desktop-kit
+      - name: Put desktop-kit beside the app
+        shell: bash
+        run: mv desktop-kit ../desktop-kit
+
+      # Installs the version rust-toolchain.toml pins.
+      - run: rustup toolchain install
 
       - uses: actions/cache@v4
         with:

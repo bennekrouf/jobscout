@@ -104,7 +104,8 @@ fn client() -> &'static reqwest::Client {
         reqwest::Client::builder()
             .timeout(Duration::from_secs(180))
             .build()
-            .expect("HTTP client builds")
+            // Settings the builder refuses still leave the plain client.
+            .unwrap_or_else(|_| reqwest::Client::new())
     })
 }
 

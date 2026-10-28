@@ -23,7 +23,7 @@ use crate::model::{Job, JobDetail, Posted, SearchParams, Source, Status};
 const SITE: &str = "https://sg.jobstreet.com";
 
 pub fn search_url(p: &SearchParams, page: u32) -> String {
-    let mut url = reqwest::Url::parse(&format!("{SITE}/jobs")).expect("constant URL parses");
+    let mut url = super::fetch::site_url(&format!("{SITE}/jobs"));
     {
         let mut q = url.query_pairs_mut();
         q.append_pair("keywords", p.keywords.trim());

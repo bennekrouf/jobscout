@@ -6,17 +6,8 @@
 
 use dioxus::prelude::*;
 
-/// The app's page on the site: releases, docs, the other apps.
-const SITE_URL: &str = "https://mayorana.ch/en/apps/jobscout";
-
-/// The contact form with the topic set and the app and version filled in, so a
-/// message says what it is about without the sender having to.
-fn contact_url() -> String {
-    format!(
-        "https://mayorana.ch/en/contact?service=tools&app=JobScout&v={}",
-        env!("CARGO_PKG_VERSION")
-    )
-}
+use desktop_kit::feedback::contact_url;
+use desktop_kit::feedback::site_url;
 
 /// A quiet line of two links. Plain links rather than `open_url`: the webview
 /// hands them to the system browser itself, `&` and all.
@@ -31,7 +22,7 @@ pub fn FeedbackLine() -> Element {
                 "Feedback"
             }
             span { " · " }
-            a { href: SITE_URL, target: "_blank", "mayorana.ch" }
+            a { href: "{site_url()}", target: "_blank", "mayorana.ch" }
         }
     }
 }

@@ -57,8 +57,7 @@ pub fn search_url(source: Source, p: &SearchParams, page: u32) -> Option<String>
         return None;
     }
     let keywords = p.keywords.trim();
-    let mut url = reqwest::Url::parse(&format!("{}/jobs/{}", site(source), slug(keywords)))
-        .expect("site URL parses");
+    let mut url = super::fetch::site_url(&format!("{}/jobs/{}", site(source), slug(keywords)));
     {
         let mut q = url.query_pairs_mut();
         q.append_pair("q", keywords);

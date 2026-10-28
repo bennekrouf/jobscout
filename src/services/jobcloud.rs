@@ -11,7 +11,7 @@
 //!   * detail: the posting's own URL, one full `JobPosting`.
 
 use chrono::{DateTime, Utc};
-use scraper::{Html, Selector};
+use scraper::Html;
 use serde_json::Value;
 
 use super::text::markup_to_text;
@@ -22,7 +22,7 @@ pub fn search_url(source: Source, p: &SearchParams, page: u32) -> String {
         Source::Jobup => "https://www.jobup.ch/en/jobs/",
         _ => "https://www.jobs.ch/en/vacancies/",
     };
-    let mut url = reqwest::Url::parse(base).expect("constant URL parses");
+    let mut url = super::fetch::site_url(base);
     {
         let mut q = url.query_pairs_mut();
         q.append_pair("term", p.keywords.trim());
@@ -110,7 +110,7 @@ fn to_job(source: Source, item: &Value, query: &str, now: DateTime<Utc>) -> Opti
 
 fn json_ld(html: &str) -> Vec<Value> {
     let doc = Html::parse_document(html);
-    let sel = Selector::parse(r#"script[type="application/ld+json"]"#).expect("constant selector");
+    let sel = super::fetch::selector(r#"script[type="application/ld+json"]"#);
     doc.select(&sel)
         .filter_map(|s| serde_json::from_str::<Value>(&s.text().collect::<String>()).ok())
         .flat_map(|v| match v {

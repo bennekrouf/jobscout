@@ -1,6 +1,7 @@
 use dioxus::prelude::*;
 
 use crate::model::{Contract, Country, Posted, Watch, EXPERIENCE};
+use crate::services::licence::StatusExt;
 use crate::services::store;
 use crate::state::{run_search, AppState, Modal};
 use crate::ui::flag::Flag;
