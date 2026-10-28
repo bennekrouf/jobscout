@@ -12,6 +12,7 @@ use crate::state::{AppState, Modal};
 pub fn Header() -> Element {
     let mut st = use_context::<AppState>();
     let theme = use_theme();
+    let pro = use_context::<desktop_kit::ui::Pro>();
     let profile_len = st.profile.read().trim().chars().count();
     let n_watches = st.watches.read().len();
     let (label, region) = {
@@ -50,7 +51,7 @@ pub fn Header() -> Element {
                     onclick: move |_| st.modal.set(Modal::Settings),
                 }
             },
-            pro: rsx! { super::pro::ProButton {} },
+            pro: rsx! { desktop_kit::ui::ProButton { pro, hint: super::pro::hint() } },
         }
     }
 }

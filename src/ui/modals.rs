@@ -335,7 +335,7 @@ fn WatchRow(watch: Watch, busy: bool) -> Element {
         id.clone(),
     );
     // The licence is what api0 sends the email with, and to whose email.
-    let pro = use_context::<super::pro::Pro>();
+    let pro = use_context::<desktop_kit::ui::Pro>();
     let has_licence = pro.status.read().licence().is_some();
     let mail_title = if has_licence {
         "Also email what it finds to your licence's email"
