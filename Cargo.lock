@@ -2828,7 +2828,7 @@ dependencies = [
 
 [[package]]
 name = "jobscout"
-version = "0.1.26"
+version = "0.1.27"
 dependencies = [
  "arboard",
  "base64 0.22.1",
