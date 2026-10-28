@@ -438,108 +438,12 @@ h2 .flag { width: 21px; height: 14px; }
 .watch-controls .check { margin-top: 0; }
 .score-input { width: 58px; }
 
-.pro-buy { align-self: flex-start; margin: 12px 0 8px; }
-.pro-ok { color: var(--good); }
-.pro-error { color: var(--bad); }
-.free-credits { margin-top: 10px; }
-.free-row { display: flex; gap: 6px; align-items: center; }
-.free-row .licence-key { flex: 1; min-width: 0; }
-.licence-key { width: 100%; margin: 6px 0; padding: 8px; border-radius: 7px; resize: vertical; background: var(--bg0); color: var(--text1); border: 1px solid var(--border); font: 12px var(--mono); }
-
 /* ── Update banner ───────────────────────────────────────────── */
-/* Update, notice and consent banners: GitAgent's, so every app shows them alike. */
-.update-banner {
-    position: fixed;
-    top: 0; left: 0; right: 0;
-    z-index: 999;
-    background: #4fa3ff;
-    color: #fff;
-    padding: 8px 16px;
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    font: 13px var(--mono);
-    box-shadow: 0 2px 6px rgba(0,0,0,0.25);
-}
-.update-banner-text { flex: 1; }
-.update-banner-text strong { font-weight: 700; }
-.update-banner-link {
-    color: #fff;
-    text-decoration: underline;
-    font-weight: 600;
-    padding: 4px 10px;
-    border: 1px solid rgba(255,255,255,0.4);
-    border-radius: 4px;
-}
-.update-banner-link:hover { background: rgba(255,255,255,0.15); }
-.update-banner-dismiss {
-    background: transparent;
-    border: none;
-    color: #fff;
-    font-size: 20px;
-    cursor: pointer;
-    padding: 0 4px;
-    opacity: 0.7;
-}
-.update-banner-dismiss:hover { opacity: 1; }
-button.update-banner-link {
-    background: transparent;
-    cursor: pointer;
-    font-family: inherit;
-    font-size: inherit;
-    height: auto;
-}
-.consent-banner {
-    position: fixed;
-    bottom: 0; left: 0; right: 0;
-    z-index: 999;
-    background: #4fa3ff;
-    color: #fff;
-    padding: 10px 16px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    font: 13px var(--mono);
-    box-shadow: 0 -2px 6px rgba(0,0,0,0.25);
-}
-body.light .update-banner, body.light .consent-banner { background: #1e5fb8; }
+
 .update-text { flex: 1; }
 
 /* Small buttons stand beside regular ones, so they share the 30px height;
    Copy inside a code snippet stays small. */
 .btn-small:not(.mcp-copy) { height: 30px; box-sizing: border-box; padding-top: 0; padding-bottom: 0; }
 
-/* ── Pro, once active ─────────────────────────────────────────────
-   One line that says so, the plan's numbers small below it, and nothing
-   to undo it with: removing or re-checking the licence just pasted is the
-   last thing to put in front of someone at that moment. */
-.pro-done { text-align: center; }
-.modal.pro-done {
-    position: relative;
-    width: 340px; max-width: calc(100vw - 32px);
-    padding: 30px 28px 22px;
-}
-.pro-done .modal-close { position: absolute; top: 10px; right: 12px; }
-.pro-done .pro-done-mark {
-    width: 44px; height: 44px; margin: 0 auto 14px; border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    background: var(--good); color: #fff; font-size: 22px; font-weight: 700;
-}
-.pro-done .pro-done-title { margin: 0 0 4px; font-size: 15px; font-weight: 700; color: var(--text1); }
-.pro-done .pro-done-sub { margin: 0; font-size: 12px; color: var(--text3); }
-.pro-done .pro-done-meta { margin: 16px 0 0; font-size: 11px; line-height: 1.6; color: var(--text3); }
-.pro-done .pro-done-manage {
-    display: inline-block; margin-top: 12px; padding: 0; border: 0; background: none;
-    font-size: 10.5px; color: var(--text3); text-decoration: underline; cursor: pointer;
-}
-.pro-done .pro-done-manage:hover:not(:disabled) { color: var(--text1); }
-.pro-done .pro-done-manage:disabled { opacity: 0.6; cursor: default; }
-.pro-done .pro-done-error { margin: 8px 0 0; font-size: 11px; color: var(--bad); }
-
-/* The licence being checked: a small ring in place of the button's label. */
-.pro-spinner {
-    display: inline-block; width: 11px; height: 11px; vertical-align: -1px;
-    border: 2px solid currentColor; border-right-color: transparent; border-radius: 50%;
-    animation: pro-spin 0.7s linear infinite;
-}
-@keyframes pro-spin { to { transform: rotate(360deg); } }
+.kit-pro-details .pro-out { color: var(--bad); }

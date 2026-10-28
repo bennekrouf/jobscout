@@ -11,7 +11,6 @@ mod state;
 mod ui;
 
 use dioxus::desktop::{Config, LogicalSize, WindowBuilder};
-use services::licence::StatusExt;
 
 fn main() {
     kit::init();
@@ -44,6 +43,6 @@ pub fn window_title(status: &services::licence::Status) -> String {
     format!(
         "JobScout {}{}",
         env!("CARGO_PKG_VERSION"),
-        status.title_badge()
+        services::licence::title_badge(status)
     )
 }

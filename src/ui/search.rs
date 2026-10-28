@@ -11,7 +11,7 @@ use crate::ui::flag::Flag;
 #[component]
 pub fn SearchPanel() -> Element {
     let mut st = use_context::<AppState>();
-    let mut pro = use_context::<super::pro::Pro>();
+    let mut pro = use_context::<desktop_kit::ui::Pro>();
     let country = *st.country.read();
     let mut p = use_signal(|| st.search.peek().clone());
     let busy = st.busy.read().is_some();

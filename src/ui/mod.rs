@@ -28,22 +28,11 @@ const CSS: &str = include_str!("../../assets/main.css");
 pub fn App() -> Element {
     let mut st = use_context_provider(AppState::new);
     // JobScout Pro: the plan sets how many searches a month JobScout runs.
-    use_context_provider(|| pro::Pro {
-        open: Signal::new(false),
-        status: Signal::new(crate::services::licence::current()),
-    });
     // The licence is checked with api0 at start, then once a day.
-    let mut pro_status = use_context::<pro::Pro>().status;
+    let pro = desktop_kit::ui::use_pro();
     // The title bar follows the licence, however it changes.
     use_effect(move || {
-        dioxus::desktop::window().set_title(&crate::window_title(&pro_status.read()));
-    });
-    use_future(move || async move {
-        pro_status.set(crate::services::licence::refresh(true).await);
-        loop {
-            tokio::time::sleep(std::time::Duration::from_secs(3600)).await;
-            pro_status.set(crate::services::licence::refresh(false).await);
-        }
+        dioxus::desktop::window().set_title(&crate::window_title(&pro.status.read()));
     });
     let modal = *st.modal.read();
     let mut drag = use_signal(|| Option::<Drag>::None);
@@ -56,17 +45,6 @@ pub fn App() -> Element {
         loop {
             tokio::time::sleep(std::time::Duration::from_secs(2)).await;
             st.reload_changed();
-        }
-    });
-
-    // A newer release on mayorana.ch, offered in a banner. After the window
-    // is up, never in its way; DISABLE_UPDATE_CHECK turns it off.
-    let mut update = use_signal(|| Option::<crate::services::update_check::UpdateInfo>::None);
-    let mut update_dismissed = use_signal(|| false);
-    use_future(move || async move {
-        tokio::time::sleep(std::time::Duration::from_secs(3)).await;
-        if let Some(info) = crate::services::update_check::check().await {
-            update.set(Some(info));
         }
     });
 
@@ -86,33 +64,7 @@ pub fn App() -> Element {
 
     rsx! {
         style { {CSS} }
-        if let (Some(info), false) = (update(), update_dismissed()) {
-            div { class: "update-banner", role: "status",
-                span { class: "update-banner-text",
-                    "JobScout "
-                    strong { "{info.latest_version}" }
-                    " is available (you have {env!(\"CARGO_PKG_VERSION\")})."
-                }
-                {
-                    // A button, not a link: the URL must open in the browser,
-                    // never in the app's own webview.
-                    let url = info.download_url.clone();
-                    rsx! {
-                        button {
-                            class: "update-banner-link",
-                            onclick: move |_| pro::open_url(&url),
-                            "Download"
-                        }
-                    }
-                }
-                button {
-                    class: "update-banner-dismiss",
-                    title: "Hide until the next start",
-                    onclick: move |_| update_dismissed.set(true),
-                    "×"
-                }
-            }
-        }
+        desktop_kit::ui::Banners {}
         header::Header {}
         // Each column has a minimum, and the job pane gets what is left: on a
         // narrow window the list gives way before the job pane disappears.
@@ -164,7 +116,11 @@ pub fn App() -> Element {
             Modal::Mcp => rsx! { mcp::McpModal {} },
             Modal::None => rsx! {},
         }
-        pro::ProWindow {}
+        desktop_kit::ui::ProWindow {
+            pro,
+            pitch: pro::pitch(),
+            details: pro::details(&pro.status.read(), *st.searches_used.read()),
+        }
     }
 }
 

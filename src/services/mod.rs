@@ -16,5 +16,4 @@ pub mod sources;
 pub mod stepstone;
 pub mod store;
 pub mod text;
-pub mod update_check;
 pub mod webkit;
