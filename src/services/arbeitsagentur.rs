@@ -28,7 +28,7 @@ pub const PAGE_SIZE: u32 = 25;
 
 /// `page` is 1-based, like the API's.
 pub fn search_url(p: &SearchParams, page: u32) -> String {
-    let mut url = reqwest::Url::parse(&format!("{API}/pc/v6/jobs")).expect("constant URL parses");
+    let mut url = super::fetch::site_url(&format!("{API}/pc/v6/jobs"));
     {
         let mut q = url.query_pairs_mut();
         q.append_pair("was", p.keywords.trim());

@@ -58,7 +58,9 @@ pub async fn get(url: &str, settings: &Settings) -> Result<String, FetchError> {
     if slot.is_none() {
         *slot = Some(start(settings).await?);
     }
-    let h = slot.as_mut().expect("just started");
+    let Some(h) = slot.as_mut() else {
+        return Err(FetchError::Browser("Camoufox did not start".into()));
+    };
     match request(h, url).await {
         Ok(reply) => match reply.error {
             Some(e) => Err(FetchError::Browser(format!("Camoufox: {e}"))),
@@ -92,8 +94,9 @@ async fn start(settings: &Settings) -> Result<Helper, FetchError> {
         .spawn()
         .map_err(|e| FetchError::Browser(format!("could not run {}: {e}", settings.python)))?;
 
-    let stdin = child.stdin.take().expect("piped");
-    let lines = BufReader::new(child.stdout.take().expect("piped")).lines();
+    let unread = || FetchError::Browser("Camoufox's input or output could not be opened".into());
+    let stdin = child.stdin.take().ok_or_else(unread)?;
+    let lines = BufReader::new(child.stdout.take().ok_or_else(unread)?).lines();
     let mut h = Helper {
         _child: child,
         stdin,

@@ -13,7 +13,7 @@
 //!     the same shape the JobCloud boards publish.
 
 use chrono::{DateTime, Utc};
-use scraper::{ElementRef, Html, Selector};
+use scraper::{ElementRef, Html};
 
 use super::jobcloud;
 use super::text::squash;
@@ -23,8 +23,8 @@ const SITE: &str = "https://www.bayt.com";
 
 /// `page` is 1-based, like the site's.
 pub fn search_url(p: &SearchParams, page: u32) -> String {
-    let mut url = reqwest::Url::parse(&format!("{SITE}/en/uae/jobs/{}-jobs/", slug(&p.keywords)))
-        .expect("site URL parses");
+    let mut url =
+        super::fetch::site_url(&format!("{SITE}/en/uae/jobs/{}-jobs/", slug(&p.keywords)));
     if page > 1 {
         url.query_pairs_mut().append_pair("page", &page.to_string());
     }
@@ -46,7 +46,7 @@ fn slug(keywords: &str) -> String {
 pub fn parse_search(html: &str, query: &str) -> Vec<Job> {
     let now = Utc::now();
     let doc = Html::parse_document(html);
-    let card = Selector::parse("li[data-js-job][data-job-id]").expect("constant selector");
+    let card = super::fetch::selector("li[data-js-job][data-job-id]");
     doc.select(&card)
         .filter_map(|c| to_job(c, query, now))
         .collect()
@@ -59,7 +59,7 @@ pub fn parse_detail(html: &str) -> Option<JobDetail> {
 }
 
 fn to_job(card: ElementRef, query: &str, now: DateTime<Utc>) -> Option<Job> {
-    let sel = |s: &str| Selector::parse(s).expect("constant selector");
+    let sel = |s: &str| super::fetch::selector(s);
     let first = |s: &str| card.select(&sel(s)).next();
     let text = |e: ElementRef| squash(&e.text().collect::<String>());
 

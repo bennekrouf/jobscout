@@ -191,26 +191,41 @@ async fn send(req: reqwest::RequestBuilder) -> Result<String, FetchError> {
     classify(status, body)
 }
 
+/// A job site's address: a constant, sometimes with a slug of the keywords. These always
+/// parse; a broken one fails that source's tests.
+#[allow(clippy::expect_used)]
+pub fn site_url(address: &str) -> reqwest::Url {
+    reqwest::Url::parse(address).expect("a job site's address parses")
+}
+
+/// A CSS selector written in the source. These always parse; a broken one fails that
+/// source's tests.
+#[allow(clippy::expect_used)]
+pub fn selector(css: &str) -> scraper::Selector {
+    scraper::Selector::parse(css).expect("a selector written in the source parses")
+}
+
 fn client() -> &'static reqwest::Client {
     static CLIENT: OnceLock<reqwest::Client> = OnceLock::new();
     CLIENT.get_or_init(|| {
         let mut headers = reqwest::header::HeaderMap::new();
         headers.insert(
             reqwest::header::ACCEPT,
-            "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
-                .parse()
-                .unwrap(),
+            reqwest::header::HeaderValue::from_static(
+                "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+            ),
         );
         headers.insert(
             reqwest::header::ACCEPT_LANGUAGE,
-            "en-US,en;q=0.9".parse().unwrap(),
+            reqwest::header::HeaderValue::from_static("en-US,en;q=0.9"),
         );
         reqwest::Client::builder()
             .user_agent(USER_AGENT)
             .default_headers(headers)
             .timeout(Duration::from_secs(30))
             .build()
-            .expect("HTTP client builds")
+            // Settings the builder refuses still leave the plain client.
+            .unwrap_or_else(|_| reqwest::Client::new())
     })
 }
 

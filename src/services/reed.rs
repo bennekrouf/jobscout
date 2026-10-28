@@ -27,7 +27,7 @@ pub const PAGE_SIZE: u32 = 100;
 
 /// `page` is 1-based; each page skips the ones before it.
 pub fn search_url(p: &SearchParams, page: u32) -> String {
-    let mut url = reqwest::Url::parse(&format!("{API}/search")).expect("constant URL parses");
+    let mut url = super::fetch::site_url(&format!("{API}/search"));
     url.query_pairs_mut()
         .append_pair("keywords", p.keywords.trim())
         .append_pair("resultsToTake", &PAGE_SIZE.to_string())

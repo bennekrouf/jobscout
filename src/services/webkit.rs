@@ -68,6 +68,8 @@ mod mac {
     fn view(mtm: MainThreadMarker) -> Retained<WKWebView> {
         VIEW.with(|v| {
             v.borrow_mut()
+                // SAFETY: called on the main thread (`mtm` proves it), with a configuration
+                // and frame that are valid for the whole call.
                 .get_or_insert_with(|| unsafe {
                     let config = WKWebViewConfiguration::new(mtm);
                     config.setWebsiteDataStore(&WKWebsiteDataStore::defaultDataStore(mtm));
@@ -90,6 +92,7 @@ mod mac {
         let target = NSURL::URLWithString(&NSString::from_str(url))
             .ok_or_else(|| FetchError::Browser(format!("not a URL: {url}")))?;
         let _ = eval(&view, MARK_OLD).await;
+        // SAFETY: the view and the request are live objects, used on the main thread.
         unsafe { view.loadRequest(&NSURLRequest::requestWithURL(&target)) };
 
         let start = Instant::now();
@@ -113,6 +116,7 @@ mod mac {
             }
             return Ok(html);
         }
+        // SAFETY: the view is a live object, used on the main thread.
         unsafe { view.stopLoading() };
         Err(if challenged {
             // Never got through: a block, the same as an HTTP 403.
@@ -130,8 +134,10 @@ mod mac {
         let (tx, rx) = oneshot::channel();
         let tx = Cell::new(Some(tx));
         let done = block2::RcBlock::new(move |value: *mut AnyObject, error: *mut NSError| {
+            // SAFETY: WebKit passes null or a valid NSError that lives through this call.
             let out = match unsafe { error.as_ref() } {
                 Some(e) => Err(e.localizedDescription().to_string()),
+                // SAFETY: likewise, the value is null or a valid object for this call.
                 None => unsafe { value.as_ref() }
                     .and_then(|v| v.downcast_ref::<NSString>())
                     .map(|s| s.to_string())
@@ -141,6 +147,8 @@ mod mac {
                 let _ = tx.send(out);
             }
         });
+        // SAFETY: the view is a live object on the main thread, and WebKit copies the
+        // completion block, so it outlives this call.
         unsafe { view.evaluateJavaScript_completionHandler(&NSString::from_str(js), Some(&done)) };
         rx.await.map_err(|_| "page went away".to_string())?
     }

@@ -44,8 +44,7 @@ pub fn search_url(p: &SearchParams, page: u32, now: DateTime<Utc>) -> Option<Str
         return None;
     }
     let last = first + PAGE_SIZE - 1;
-    let mut url =
-        reqwest::Url::parse(&format!("{API}/offres/search")).expect("constant URL parses");
+    let mut url = super::fetch::site_url(&format!("{API}/offres/search"));
     {
         let mut q = url.query_pairs_mut();
         q.append_pair("motsCles", p.keywords.trim());

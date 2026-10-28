@@ -3,7 +3,7 @@
 
 use dioxus::prelude::*;
 
-use crate::services::licence::{self, plan_searches, FreeError, Status, FREE_SEARCHES};
+use crate::services::licence::{self, plan_searches, FreeError, Status, StatusExt, FREE_SEARCHES};
 use crate::state::AppState;
 
 /// Shared by every part of the UI that can open the window or needs to know
