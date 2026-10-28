@@ -22,6 +22,12 @@ published at <https://mayorana.ch/en/apps/jobscout/releases>.
   activates it.
 - The Pro window shows the searches used this month on every plan, Pro included.
 
+## [0.1.26] - 2026-10-28
+
+### Changed
+
+- Build and packaging only — no user-visible change.
+
 ## [0.1.25] - 2026-10-28
 
 ### Changed
