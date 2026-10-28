@@ -14,11 +14,16 @@ use std::time::Duration;
 
 use super::fetch::FetchError;
 
+// The loader is macOS only: elsewhere `get` says so without loading anything.
+
 /// Longest a page may take, Cloudflare check included.
+#[cfg_attr(not(target_os = "macos"), allow(dead_code))]
 const LOAD_LIMIT: Duration = Duration::from_secs(45);
+#[cfg_attr(not(target_os = "macos"), allow(dead_code))]
 const POLL: Duration = Duration::from_millis(500);
 
 /// Cloudflare's interstitial, by its title or its script.
+#[cfg_attr(not(target_os = "macos"), allow(dead_code))]
 fn is_challenge(title: &str, html: &str) -> bool {
     let t = title.trim().to_lowercase();
     ["just a moment", "un instant", "einen moment"]
