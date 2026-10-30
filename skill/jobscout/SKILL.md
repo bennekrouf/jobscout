@@ -1,6 +1,6 @@
 ---
 name: jobscout
-description: Drive JobScout, the desktop app that collects job posts from LinkedIn and national job boards (Switzerland, Germany, France, the UK, Ireland, Belgium, Austria, Singapore, the UAE) and scores them against the user's CV, through its MCP tools. Use this whenever the user mentions JobScout, or asks to search for jobs, find their best matches, score or rank job posts against their profile, mark jobs saved or applied, set up a recurring job search (a watch), export jobs to CSV, or tailor a CV or cover letter for a job they found. Also use it when JobScout's tools are missing and the user wants to connect the app.
+description: How to run a job search with JobScout, the desktop app that collects posts from LinkedIn and national job boards and scores them against the user's CV. Read this skill before calling any jobscout tool (overview, search, list_jobs, get_job, score_jobs, set_status, set_profile, add_watch, cv_for_job), because it has the order to call them in, what costs searches or AI credits, what needs the user's yes, and how to present matches. Use it whenever the user mentions JobScout, or asks to find, search, score, rank, compare or shortlist job posts, see their best matches, mark jobs saved, applied or hidden, set up a recurring job search, export jobs to CSV, or tailor a CV for a job they found.
 ---
 
 # JobScout
@@ -90,3 +90,22 @@ user to connect the cvenom server.
   stepstone.de, stepstone.be and Totaljobs) need the window's browser engine
   and only work over MCP when Camoufox is set up in Settings. If a search
   there returns nothing, say so and suggest searching from the window.
+
+## How to report back
+
+For a list of matches, use a table, best score first, at most ten rows:
+
+| Score | Title | Company | Location | Board | Status | Verdict |
+|---|---|---|---|---|---|---|
+
+The verdict is the score's one line, not your own. Under the table, say how
+many jobs the list holds in all, how many were new from this search, and how
+many are still unscored.
+
+For one job: title, company, location and link on the first line; then the
+score with its strengths and gaps as two short lists; then the three or four
+lines of the description that matter for this user (contract, seniority,
+language, remote policy, salary if given).
+
+After `set_status`, `set_profile` or a watch change, confirm in one line what
+changed and for which jobs or country.
