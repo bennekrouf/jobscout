@@ -69,7 +69,9 @@ returns (a PDF; give the user its download_url unchanged), or cvenom-optimize-cv
 tailored text only. A cover letter is cvenom-write-cover-letter, a fit check \
 cvenom-analyze-job-fit. Never write or rewrite a CV yourself: always go through cvenom. If no \
 cvenom tools are connected, tell the user to connect the cvenom MCP server rather than writing \
-one.";
+one. \
+Before calling these tools, read the jobscout skill if one is available: it has the confirmation \
+rules, defaults and report layouts that these instructions leave out.";
 
 pub fn serve() {
     match tokio::runtime::Runtime::new() {
