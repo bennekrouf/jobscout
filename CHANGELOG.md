@@ -3,6 +3,17 @@
 What changed in each version of JobScout, for the people using it. Also
 published at <https://mayorana.ch/en/apps/jobscout/releases>.
 
+## [Unreleased]
+
+### Changed
+
+- JobScout's answers to Claude and other agents are shorter, so a long
+  session spends fewer tokens: empty fields are left out and nothing is
+  padded with spacing.
+- A search now lists the first 20 new jobs it found instead of all of
+  them, and says how many more it kept; the job list returns 20 jobs
+  unless asked for more. Both leave out details only a single job needs.
+
 ## [0.1.30] - 2026-10-31
 
 ### Changed

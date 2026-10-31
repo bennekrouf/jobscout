@@ -34,8 +34,12 @@ use crate::state::{freshness, Freshness};
 const PROTOCOL: &str = "2025-06-18";
 
 /// Jobs one `list_jobs` returns unless asked for fewer, and at most.
-const LIST_DEFAULT: usize = 50;
+const LIST_DEFAULT: usize = 20;
 const LIST_MAX: usize = 200;
+/// New jobs one `search` lists; the rest are kept and list_jobs reads them.
+/// A wide search can add a hundred, and each one is in the client's context
+/// for the rest of the conversation.
+const SEARCH_SHOWN: usize = 20;
 /// Jobs one `score_jobs` call may score: each is a model call, and the call
 /// holds the server until all of them are done.
 const SCORE_MAX: usize = 20;
@@ -148,8 +152,24 @@ fn error(id: Value, code: i64, message: &str) -> Value {
     json!({ "jsonrpc": "2.0", "id": id, "error": { "code": code, "message": message } })
 }
 
+/// A tool result as the client reads it: compact, with no null fields. It
+/// stays in the client's context for the rest of the conversation, so every
+/// byte here is paid for again on each later turn.
 fn pretty(value: &Value) -> String {
-    serde_json::to_string_pretty(value).unwrap_or_default()
+    serde_json::to_string(&without_nulls(value.clone())).unwrap_or_default()
+}
+
+fn without_nulls(value: Value) -> Value {
+    match value {
+        Value::Object(map) => Value::Object(
+            map.into_iter()
+                .filter(|(_, v)| !v.is_null())
+                .map(|(k, v)| (k, without_nulls(v)))
+                .collect(),
+        ),
+        Value::Array(items) => Value::Array(items.into_iter().map(without_nulls).collect()),
+        other => other,
+    }
 }
 
 // ── Tool definitions ─────────────────────────────────────────────────────
@@ -288,7 +308,7 @@ fn tools() -> Value {
             "name": "search",
             "description": "Searches the country's boards, adds the posts not seen before to its \
                             jobs (a post found on two boards is kept once), and returns those new \
-                            ones. Takes a few seconds per page. Each call counts as one of the searches \
+                            ones (the first 20; list_jobs has the rest). Takes a few seconds per page. Each call counts as one of the searches \
                             the licence gives a month; overview says how many are left.",
             "inputSchema": { "type": "object", "properties": search, "required": ["keywords"] },
         },
@@ -665,6 +685,15 @@ fn overview() -> Value {
 }
 
 /// A job without its description, as lists show it.
+/// A job in a list: its row without what only get_job needs.
+fn list_row(j: &Job) -> Value {
+    let mut v = row(j);
+    if let Some(o) = v.as_object_mut() {
+        o.remove("has_description");
+    }
+    v
+}
+
 fn row(j: &Job) -> Value {
     let mut v = json!({
         "id": j.id,
@@ -745,7 +774,7 @@ fn list_jobs(args: &Value) -> Result<Value, String> {
         .iter()
         .skip(offset)
         .take(limit)
-        .map(|j| row(j))
+        .map(|j| list_row(j))
         .collect();
     Ok(json!({
         "country": country.label(),
@@ -950,13 +979,19 @@ async fn search(args: &Value) -> Result<Value, String> {
     }
 
     let jobs = store::load_jobs(country);
-    let new: Vec<Value> = added
+    let new: Vec<&Job> = added
         .iter()
         .filter_map(|id| jobs.iter().find(|j| j.id == *id))
-        .map(row)
         .collect();
+    let shown: Vec<Value> = new.iter().take(SEARCH_SHOWN).map(|j| list_row(j)).collect();
     let mut v =
-        json!({ "country": country.label(), "query": query, "new_jobs": new.len(), "jobs": new });
+        json!({ "country": country.label(), "query": query, "new_jobs": new.len(), "jobs": shown });
+    if new.len() > SEARCH_SHOWN {
+        v["more"] = json!(format!(
+            "{} more new jobs are kept; list_jobs with status New lists them",
+            new.len() - SEARCH_SHOWN
+        ));
+    }
     if !notes.is_empty() {
         v["notes"] = json!(notes);
     }
