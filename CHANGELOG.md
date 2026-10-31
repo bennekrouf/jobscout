@@ -3,6 +3,15 @@
 What changed in each version of JobScout, for the people using it. Also
 published at <https://mayorana.ch/en/apps/jobscout/releases>.
 
+## [Unreleased]
+
+### Changed
+
+- When you use JobScout from Claude, Codex or another agent, the agent now reads
+  the JobScout skill first if you have it installed, so it follows the skill's
+  rules on what needs your yes and lays out its answers the way the skill
+  describes.
+
 ## [0.1.31] - 2026-10-31
 
 ### Changed
