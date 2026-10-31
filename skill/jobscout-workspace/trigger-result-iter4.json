@@ -1,0 +1,171 @@
+{
+  "skill_name": "jobscout",
+  "description": "How to run a job search with JobScout, the desktop app that collects posts from LinkedIn and national job boards and scores them against the user's CV. Read this skill before calling any jobscout tool (overview, search, list_jobs, get_job, score_jobs, set_status, set_profile, add_watch, cv_for_job), because it has the order to call them in, what costs searches or AI credits, what needs the user's yes, and how to present matches. Use it whenever the user mentions JobScout, or asks to find, search, score, rank, compare or shortlist job posts, see their best matches, mark jobs saved, applied or hidden, set up a recurring job search, export jobs to CSV, or tailor a CV for a job they found.",
+  "results": [
+    {
+      "query": "any new data engineering jobs in zurich this week that fit my profile? only show me the ones above 75",
+      "should_trigger": true,
+      "trigger_rate": 0.6666666666666666,
+      "triggers": 2,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "search for senior rust developer roles in Germany, remote or hybrid, and score the new ones against my CV",
+      "should_trigger": true,
+      "trigger_rate": 0.3333333333333333,
+      "triggers": 1,
+      "runs": 3,
+      "pass": false
+    },
+    {
+      "query": "I applied to the Swisscom and Roche ones yesterday, mark them applied and hide the recruiter spam posts from that agency",
+      "should_trigger": true,
+      "trigger_rate": 0.3333333333333333,
+      "triggers": 1,
+      "runs": 3,
+      "pass": false
+    },
+    {
+      "query": "set up something that checks linkedin and jobs.ch every 6 hours for 'product owner' in Geneva and pings me when something scores over 80",
+      "should_trigger": true,
+      "trigger_rate": 0.6666666666666666,
+      "triggers": 2,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "what are my best 5 matches in jobscout right now and why",
+      "should_trigger": true,
+      "trigger_rate": 0.3333333333333333,
+      "triggers": 1,
+      "runs": 3,
+      "pass": false
+    },
+    {
+      "query": "my scores all look random, like a junior php job got 82. I think my profile in jobscout is outdated, can you help me rewrite it",
+      "should_trigger": true,
+      "trigger_rate": 0.6666666666666666,
+      "triggers": 2,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "export all the jobs I saved in France to a csv on my desktop so I can share with my career coach",
+      "should_trigger": true,
+      "trigger_rate": 0.6666666666666666,
+      "triggers": 2,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "tailor my cv for that Datadog SRE job in Dublin I saved yesterday",
+      "should_trigger": true,
+      "trigger_rate": 0.6666666666666666,
+      "triggers": 2,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "compare the 3 highest scored ML jobs in Singapore and tell me which gaps come up most",
+      "should_trigger": true,
+      "trigger_rate": 0.6666666666666666,
+      "triggers": 2,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "is scoring with api0 eating my credits? switch jobscout scoring to my local ollama",
+      "should_trigger": true,
+      "trigger_rate": 0.6666666666666666,
+      "triggers": 2,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "rewrite my CV summary to sound more senior, I'm a backend engineer with 8 years in fintech",
+      "should_trigger": false,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "write a cover letter for a product manager role at Spotify, here's the job description: ...",
+      "should_trigger": false,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "what's a realistic salary for a senior data engineer in Zurich in 2026",
+      "should_trigger": false,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "write a python scraper that pulls job posts from indeed and saves them to sqlite",
+      "should_trigger": false,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "how should I prepare for a system design interview at a bank next tuesday",
+      "should_trigger": false,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "I'm hiring: write a LinkedIn job post for a mid-level React developer in Lausanne, hybrid",
+      "should_trigger": false,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "my linkedin profile gets no recruiter views, how do I improve the headline and about section",
+      "should_trigger": false,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "negotiate this offer for me: 135k CHF base, they say no equity, I want 150",
+      "should_trigger": false,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "is it better to apply through linkedin easy apply or the company site directly",
+      "should_trigger": false,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "draft a polite email declining a job offer from Nestl\u00e9 after the final round",
+      "should_trigger": false,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": true
+    }
+  ],
+  "summary": {
+    "total": 20,
+    "passed": 17,
+    "failed": 3
+  }
+}
