@@ -17,8 +17,8 @@
 use std::time::Duration;
 
 use chrono::Utc;
+use desktop_kit::mcp::Server;
 use serde_json::{json, Map, Value};
-use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 
 use crate::model::{
     Backend, Contract, Country, Job, Posted, SearchParams, Settings, Source, Status, Watch,
@@ -28,10 +28,6 @@ use crate::services::licence::StatusExt;
 use crate::services::sources::SearchEvent;
 use crate::services::{licence, llm, sources, store};
 use crate::state::{freshness, Freshness};
-
-/// The newest protocol revision this server speaks. A client asking for an
-/// older one gets its own back; everything used here exists in all of them.
-const PROTOCOL: &str = "2025-06-18";
 
 /// Jobs one `list_jobs` returns unless asked for fewer, and at most.
 const LIST_DEFAULT: usize = 20;
@@ -59,105 +55,24 @@ connect the cvenom MCP server. \
 Before calling these tools, read the jobscout skill if one is available: it has the confirmation \
 rules, defaults and report layouts that these instructions leave out.";
 
+/// What the client is told: the plumbing is desktop-kit's, the tools are below.
+const SERVER: Server = Server {
+    name: "jobscout",
+    version: env!("CARGO_PKG_VERSION"),
+    instructions: INSTRUCTIONS,
+    tools,
+    library: false,
+};
+
 pub fn serve() {
-    match tokio::runtime::Runtime::new() {
-        Ok(runtime) => runtime.block_on(serve_stdio()),
+    let runtime = match tokio::runtime::Runtime::new() {
+        Ok(runtime) => runtime,
         Err(e) => {
             eprintln!("jobscout mcp: could not start: {e}");
             std::process::exit(1);
         }
-    }
-}
-
-async fn serve_stdio() {
-    let mut lines = BufReader::new(tokio::io::stdin()).lines();
-    let mut stdout = tokio::io::stdout();
-
-    while let Ok(Some(line)) = lines.next_line().await {
-        if line.trim().is_empty() {
-            continue;
-        }
-        let Ok(message) = serde_json::from_str::<Value>(&line) else {
-            write(&mut stdout, &error(Value::Null, -32700, "not JSON")).await;
-            continue;
-        };
-        // A notification (no id) asks for nothing back: `initialized`,
-        // cancellations, and whatever later revisions add.
-        let Some(id) = message.get("id").cloned() else {
-            continue;
-        };
-        let method = message["method"].as_str().unwrap_or("");
-        let params = &message["params"];
-
-        let reply = match method {
-            "initialize" => {
-                let asked = params["protocolVersion"].as_str().unwrap_or(PROTOCOL);
-                let version = if asked <= PROTOCOL { asked } else { PROTOCOL };
-                result(
-                    id,
-                    json!({
-                        "protocolVersion": version,
-                        "capabilities": { "tools": {} },
-                        "serverInfo": { "name": "jobscout", "version": env!("CARGO_PKG_VERSION") },
-                        "instructions": INSTRUCTIONS,
-                    }),
-                )
-            }
-            "ping" => result(id, json!({})),
-            "tools/list" => result(id, json!({ "tools": tools() })),
-            "tools/call" => {
-                let name = params["name"].as_str().unwrap_or("");
-                let args = &params["arguments"];
-                let (text, is_error) = match call(name, args).await {
-                    Ok(value) => (pretty(&value), false),
-                    Err(why) => (why, true),
-                };
-                result(
-                    id,
-                    json!({ "content": [{ "type": "text", "text": text }], "isError": is_error }),
-                )
-            }
-            _ => error(id, -32601, &format!("no method {method}")),
-        };
-        write(&mut stdout, &reply).await;
-    }
-}
-
-async fn write(stdout: &mut tokio::io::Stdout, reply: &Value) {
-    // One message per line, and nothing else ever on stdout: the client reads
-    // it as the protocol, so a stray print is a corrupt message.
-    let mut bytes = serde_json::to_vec(reply).unwrap_or_default();
-    bytes.push(b'\n');
-    let _ = stdout.write_all(&bytes).await;
-    let _ = stdout.flush().await;
-}
-
-fn result(id: Value, result: Value) -> Value {
-    json!({ "jsonrpc": "2.0", "id": id, "result": result })
-}
-
-fn error(id: Value, code: i64, message: &str) -> Value {
-    json!({ "jsonrpc": "2.0", "id": id, "error": { "code": code, "message": message } })
-}
-
-/// A tool result as the client reads it: compact, with no null fields. It
-/// stays in the client's context for the rest of the conversation, so every
-/// byte here is paid for again on each later turn.
-fn pretty(value: &Value) -> String {
-    serde_json::to_string(&without_nulls(value.clone())).unwrap_or_default()
-}
-
-fn without_nulls(value: Value) -> Value {
-    match value {
-        Value::Object(map) => Value::Object(
-            map.into_iter()
-                .filter(|(_, v)| !v.is_null())
-                .map(|(k, v)| (k, without_nulls(v)))
-                .collect(),
-        ),
-        Value::Array(items) => Value::Array(items.into_iter().map(without_nulls).collect()),
-        other => other,
-    }
+    };
+    runtime.block_on(SERVER.serve_async(|c| async move { call(&c.name, &c.args).await }));
 }
 
 // ── Tool definitions ─────────────────────────────────────────────────────
