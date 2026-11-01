@@ -3,6 +3,13 @@
 What changed in each version of JobScout, for the people using it. Also
 published at <https://mayorana.ch/en/apps/jobscout/releases>.
 
+## [Unreleased]
+
+### Added
+
+- A visual cue for the splitter handle has been added, making it easier to grab
+  and adjust the split view.
+
 ## [0.1.36] - 2026-11-01
 
 ### Added
