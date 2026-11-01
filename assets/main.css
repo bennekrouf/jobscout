@@ -165,8 +165,15 @@ body {
 .splitter::after {
     content: "";
     position: absolute; top: 0; bottom: 0; left: 2px;
-    width: 1px;
+    width: 2px; margin-left: -0.5px;
     background: var(--border);
+}
+/* Three dots mid-height mark where to grab. */
+.splitter::before {
+    content: ""; position: absolute; z-index: 1; pointer-events: none;
+    top: 50%; left: 50%; width: 4px; height: 22px; transform: translate(-50%, -50%);
+    border-radius: 2px;
+    background: radial-gradient(circle, var(--text3, #888) 1.3px, transparent 1.6px) center / 4px 7.33px repeat-y;
 }
 .splitter:hover::after, .splitter.on::after { left: 1px; width: 3px; background: var(--accent); }
 .drag-layer { position: fixed; inset: 0; z-index: 20; cursor: col-resize; }
