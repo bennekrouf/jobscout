@@ -32,7 +32,7 @@ permissions:
 
 env:
   # The desktop-kit tag the apps build against; move it to take a kit change.
-  DESKTOP_KIT_REF: v0.1.5
+  DESKTOP_KIT_REF: v0.1.6
   APP: jobscout
   APP_NAME: JobScout
   # Must match `[bundle] identifier` in Dioxus.toml and BUNDLE_ID in
