@@ -3,6 +3,15 @@
 What changed in each version of JobScout, for the people using it. Also
 published at <https://mayorana.ch/en/apps/jobscout/releases>.
 
+## [Unreleased]
+
+### Changed
+
+- Using JobScout from Claude, Codex or another agent takes less of the agent's
+  context on every message, including ones that have nothing to do with
+  JobScout: its instructions are a few lines, and what a setting every tool
+  takes means is said once rather than in each tool.
+
 ## [0.1.32] - 2026-10-31
 
 ### Changed
