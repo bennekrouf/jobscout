@@ -3,6 +3,17 @@
 What changed in each version of JobScout, for the people using it. Also
 published at <https://mayorana.ch/en/apps/jobscout/releases>.
 
+## [Unreleased]
+
+### Added
+
+- Install & restart, on the banner that says a new version is out: one click
+  downloads it, checks it, puts it in place of the version you have and opens
+  it again, on macOS, Windows and Linux. No disk image to open, drag and throw
+  away, no setup to click through. If an update can't finish, JobScout says why
+  the next time it opens. Where it can't replace itself (an app in a folder you
+  can't change), the banner offers the download instead.
+
 ## [0.1.34] - 2026-11-01
 
 ### Changed
