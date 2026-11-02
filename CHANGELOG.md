@@ -3,6 +3,13 @@
 What changed in each version of JobScout, for the people using it. Also
 published at <https://mayorana.ch/en/apps/jobscout/releases>.
 
+## [Unreleased]
+
+### Changed
+
+- The profile and watches actions are now accessible from the Settings modal.
+  The header has been updated to include a settings gear and model badge.
+
 ## [0.1.41] - 2026-11-02
 
 ### Changed
