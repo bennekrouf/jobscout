@@ -3,6 +3,14 @@
 What changed in each version of JobScout, for the people using it. Also
 published at <https://mayorana.ch/en/apps/jobscout/releases>.
 
+## [Unreleased]
+
+### Changed
+
+- The "Use JobScout from Claude or Codex" window now looks and reads the same as
+  in the other Mayorana apps, with a copy button on every step, and Escape
+  closes it.
+
 ## [0.1.40] - 2026-11-02
 
 ### Changed
