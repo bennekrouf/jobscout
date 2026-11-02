@@ -396,29 +396,14 @@ h2 .flag { width: 21px; height: 14px; }
 .profile-text { height: 50vh; margin-top: 12px; resize: vertical; font: 12px var(--mono); line-height: 1.5; }
 .modal-actions { display: flex; align-items: center; gap: 8px; margin-top: 18px; }
 
-/* ── MCP: using JobScout from Claude ─────────────────────────── */
-.mcp-step { display: flex; flex-direction: column; gap: 6px; margin-top: 16px; }
-.mcp-step p { margin: 0; }
-.mcp-step-title { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; }
-.mcp-num {
-    display: inline-flex; align-items: center; justify-content: center;
-    width: 18px; height: 18px; border-radius: 50%;
-    font-size: 11px; color: #fff; background: var(--accent-bg);
-}
-.mcp-snippet-wrap { position: relative; }
-.mcp-snippet {
-    margin: 0; padding: 10px 76px 10px 12px;
-    border-radius: 8px; border: 1px solid var(--border); background: var(--bg0);
-    font: 11.5px var(--mono); line-height: 1.5; color: var(--text1);
-    white-space: pre-wrap; word-break: break-all; user-select: text;
-}
-.mcp-copy { position: absolute; top: 6px; right: 6px; }
-.mcp-path { font-size: 11px; word-break: break-all; }
-.mcp-note {
-    margin-top: 16px; padding: 9px 11px; border-radius: 8px;
-    background: var(--bg2); color: var(--text2); font-size: 11.5px; line-height: 1.6;
-}
-.mcp-note code, .mcp-step code { font: 11px var(--mono); word-break: break-all; }
+
+
+
+
+
+
+
+
 
 /* ── Watches ──────────────────────────────────────────────── */
 .watch-btn { margin-top: 8px; }
@@ -449,8 +434,7 @@ h2 .flag { width: 21px; height: 14px; }
 
 .update-text { flex: 1; }
 
-/* Small buttons stand beside regular ones, so they share the 30px height;
-   Copy inside a code snippet stays small. */
-.btn-small:not(.mcp-copy) { height: 30px; box-sizing: border-box; padding-top: 0; padding-bottom: 0; }
+/* Small buttons stand beside regular ones, so they share the 30px height. */
+.btn-small { height: 30px; box-sizing: border-box; padding-top: 0; padding-bottom: 0; }
 
 .kit-pro-details .pro-out { color: var(--bad); }
