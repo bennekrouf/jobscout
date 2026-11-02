@@ -104,6 +104,8 @@ body {
 }
 .btn:hover:not(:disabled) { background: var(--bg3); border-color: var(--accent); }
 .btn:disabled { opacity: 0.45; cursor: default; }
+/* Settings opens the profile and the watches, which the header has no room for. */
+.settings-open { display: flex; gap: 8px; flex-wrap: wrap; }
 .btn.on { border-color: var(--accent); color: var(--accent); }
 .btn-primary { background: var(--accent-bg); border-color: var(--accent-bg); color: #fff; }
 .btn-primary:hover:not(:disabled) { background: var(--accent); border-color: var(--accent); }

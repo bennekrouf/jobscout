@@ -27,6 +27,9 @@ const CSS: &str = include_str!("../../assets/main.css");
 #[component]
 pub fn App() -> Element {
     let mut st = use_context_provider(AppState::new);
+    // Here rather than in the header: Settings, where it is chosen, reads it too.
+    let theme = desktop_kit::ui::use_theme();
+    use_context_provider(|| theme);
     // JobScout Pro: the plan sets how many searches a month JobScout runs.
     // The licence is checked with api0 at start, then once a day.
     let pro = desktop_kit::ui::use_pro();

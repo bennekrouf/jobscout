@@ -71,6 +71,9 @@ pub fn ProfileModal() -> Element {
 #[component]
 pub fn SettingsModal() -> Element {
     let mut st = use_context::<AppState>();
+    let theme = use_context::<desktop_kit::ui::Theme>();
+    let profile_len = st.profile.read().trim().chars().count();
+    let n_watches = st.watches.read().len();
     let mut s = use_signal(|| st.settings.peek().clone());
     let cur = s.read().clone();
     // What each api0 region costs, asked once when the window opens.
@@ -114,6 +117,20 @@ pub fn SettingsModal() -> Element {
                     button { class: "modal-close", title: "Close", onclick: move |_| st.modal.set(Modal::None), "×" }
                 }
                 div { class: "modal-body",
+
+                    h3 { "You" }
+                    div { class: "settings-open",
+                        button {
+                            class: "btn",
+                            onclick: move |_| st.modal.set(Modal::Profile),
+                            if profile_len == 0 { "Set your profile…" } else { "Profile ({profile_len} chars)…" }
+                        }
+                        button {
+                            class: "btn",
+                            onclick: move |_| st.modal.set(Modal::Watches),
+                            if n_watches == 0 { "Watches…" } else { "Watches ({n_watches})…" }
+                        }
+                    }
 
                     h3 { "Fetching" }
                     label { class: "field-label", "Backend" }
@@ -247,6 +264,9 @@ pub fn SettingsModal() -> Element {
                     }
                     label { class: "field-label", "API key environment variable" }
                     input { class: "input", value: "{cur.reed_key_env}", oninput: move |e| s.write().reed_key_env = e.value() }
+
+                    h3 { "General" }
+                    desktop_kit::ui::SettingsGeneral { theme }
 
                     div { class: "modal-actions",
                         span { class: "muted small", "Data: {store::data_dir().display()}" }
