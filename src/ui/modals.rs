@@ -71,6 +71,7 @@ pub fn ProfileModal() -> Element {
 #[component]
 pub fn SettingsModal() -> Element {
     let mut st = use_context::<AppState>();
+    desktop_kit::ui::use_escape(EventHandler::new(move |_| st.modal.set(Modal::None)));
     let theme = use_context::<desktop_kit::ui::Theme>();
     let profile_len = st.profile.read().trim().chars().count();
     let n_watches = st.watches.read().len();
