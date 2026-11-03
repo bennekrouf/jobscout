@@ -3,6 +3,17 @@
 What changed in each version of JobScout, for the people using it. Also
 published at <https://mayorana.ch/en/apps/jobscout/releases>.
 
+## [Unreleased]
+
+### Changed
+
+- The header has no gear any more: the flag already opens Settings, so the
+  gear beside it was a second button for the same window.
+
+### Fixed
+
+- Esc closes Settings.
+
 ## [0.1.46] - 2026-11-03
 
 ### Changed
