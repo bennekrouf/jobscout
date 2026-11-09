@@ -83,10 +83,12 @@ pub fn SettingsModal() -> Element {
         offers.set(Some(llm::api0_regions().await));
     });
     let has_licence = llm::api0_key().is_some();
+    let closed = desktop_kit::ui::use_closed_regions();
     let region_notes: Vec<(&'static llm::Region, String)> = llm::REGIONS
         .iter()
         .map(|r| {
             let note = match offers.read().as_ref() {
+                _ if closed.read().iter().any(|c| c == r.id) => llm::COMING_SOON.to_string(),
                 _ if !has_licence => "needs a licence".to_string(),
                 None => "\u{2026}".to_string(),
                 Some(Err(_)) => "unavailable".to_string(),
@@ -198,7 +200,8 @@ pub fn SettingsModal() -> Element {
                             button {
                                 key: "{r.id}",
                                 class: if region == Some(r) { "region on" } else { "region" },
-                                title: "api0, in {r.label}",
+                                disabled: note == llm::COMING_SOON,
+                                title: if note == llm::COMING_SOON { llm::COMING_SOON.to_string() } else { format!("api0, in {}", r.label) },
                                 onclick: move |_| s.write().use_region(r.id),
                                 RegionFlag { id: r.id }
                                 span { class: "region-label", "{r.label}" }
