@@ -7,6 +7,10 @@ published at <https://mayorana.ch/en/apps/jobscout/releases>.
 
 ### Fixed
 
+- Ollama can no longer be picked on a computer where it isn't installed or
+  running: its button is greyed out and says "not detected".
+- An open region no longer reads "unavailable" when its price couldn't be
+  fetched. It stays selectable and says "price unknown".
 - When api0 or your model can't be reached, the error gives the full cause and
   says whether it was a timeout, a proxy, a certificate or a name that couldn't
   be resolved.

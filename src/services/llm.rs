@@ -246,6 +246,29 @@ pub async fn api0_regions() -> Result<Vec<RegionOffer>, String> {
     Ok(parse_region_offers(&v))
 }
 
+pub const OLLAMA_MISSING: &str = "Ollama isn\u{2019}t answering on this computer. Install it \
+     from ollama.com or start it, then reopen Settings.";
+
+/// Whether ollama answers on this computer. Short: it is local or it is not.
+pub async fn ollama_answers() -> bool {
+    client()
+        .get(format!("{}/models", crate::model::OLLAMA_URL))
+        .timeout(Duration::from_secs(3))
+        .send()
+        .await
+        .is_ok_and(|r| r.status().is_success())
+}
+
+/// The Ollama button's note, and whether it can't be clicked: until ollama has
+/// answered there is nothing on this computer to run a model.
+pub fn ollama_choice(found: Option<bool>) -> (&'static str, bool) {
+    match found {
+        Some(true) => ("on this computer, free", false),
+        Some(false) => ("not detected", true),
+        None => ("\u{2026}", true),
+    }
+}
+
 /// The key to send: the named environment variable's, or for api0 the licence
 /// number saved on this computer when the variable is not set.
 fn key_for(settings: &Settings) -> Result<Option<String>, String> {
@@ -308,6 +331,13 @@ fn strip_fences(s: &str) -> &str {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn ollama_can_only_be_chosen_once_it_has_answered() {
+        assert_eq!(ollama_choice(Some(true)), ("on this computer, free", false));
+        assert_eq!(ollama_choice(Some(false)), ("not detected", true));
+        assert!(ollama_choice(None).1);
+    }
 
     #[test]
     fn api0_is_recognised_however_the_url_is_typed() {
