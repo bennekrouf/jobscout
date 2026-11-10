@@ -3,6 +3,13 @@
 What changed in each version of JobScout, for the people using it. Also
 published at <https://mayorana.ch/en/apps/jobscout/releases>.
 
+## [Unreleased]
+
+### Fixed
+
+- Disabled regions are now grayed out and unselectable in the UI, preventing
+  users from selecting unavailable options.
+
 ## [0.1.48] - 2026-11-06
 
 ### Changed
