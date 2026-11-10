@@ -583,7 +583,7 @@ impl Settings {
     }
 }
 
-const OLLAMA_URL: &str = "http://localhost:11434/v1";
+pub const OLLAMA_URL: &str = "http://localhost:11434/v1";
 
 impl Default for Settings {
     fn default() -> Self {
