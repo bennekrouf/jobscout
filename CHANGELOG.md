@@ -3,6 +3,15 @@
 What changed in each version of JobScout, for the people using it. Also
 published at <https://mayorana.ch/en/apps/jobscout/releases>.
 
+## [Unreleased]
+
+### Fixed
+
+- When the model can't be reached, the error message now includes the full cause
+  and specifies whether it was a timeout, a proxy issue, a certificate problem,
+  or a name resolution error. This helps users understand and address the issue
+  more effectively.
+
 ## [0.1.50] - 2026-11-10
 
 ### Fixed
