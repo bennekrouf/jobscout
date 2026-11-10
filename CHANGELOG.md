@@ -3,6 +3,14 @@
 What changed in each version of JobScout, for the people using it. Also
 published at <https://mayorana.ch/en/apps/jobscout/releases>.
 
+## [Unreleased]
+
+### Fixed
+
+- When api0 or your model can't be reached, the error gives the full cause and
+  says whether it was a timeout, a proxy, a certificate or a name that couldn't
+  be resolved.
+
 ## [0.1.49] - 2026-11-10
 
 ### Fixed
