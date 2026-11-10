@@ -82,6 +82,12 @@ pub fn SettingsModal() -> Element {
     use_future(move || async move {
         offers.set(Some(llm::api0_regions().await));
     });
+    // Whether there is an ollama to offer, asked once when the window opens.
+    let mut ollama_found = use_signal(|| Option::<bool>::None);
+    use_future(move || async move {
+        ollama_found.set(Some(llm::ollama_answers().await));
+    });
+    let (ollama_note, ollama_off) = llm::ollama_choice(ollama_found());
     let has_licence = llm::api0_key().is_some();
     let closed = desktop_kit::ui::use_closed_regions();
     let region_notes: Vec<(&'static llm::Region, String)> = llm::REGIONS
@@ -91,7 +97,9 @@ pub fn SettingsModal() -> Element {
                 _ if closed.read().iter().any(|c| c == r.id) => llm::COMING_SOON.to_string(),
                 _ if !has_licence => "needs a licence".to_string(),
                 None => "\u{2026}".to_string(),
-                Some(Err(_)) => "unavailable".to_string(),
+                // Only the price could not be read: the closed list above
+                // is what says whether the region is open.
+                Some(Err(_)) => "price unknown".to_string(),
                 Some(Ok(list)) => match list.iter().find(|o| o.id == r.id) {
                     Some(o) => {
                         let n = o.credits_per_score();
@@ -210,11 +218,12 @@ pub fn SettingsModal() -> Element {
                         }
                         button {
                             class: if cur.is_ollama() { "region on" } else { "region" },
-                            title: "A model running on this computer",
+                            disabled: ollama_off,
+                            title: if ollama_off { llm::OLLAMA_MISSING } else { "A model running on this computer" },
                             onclick: move |_| s.write().use_ollama(),
                             span { class: "region-icon", "\u{1F4BB}" }
                             span { class: "region-label", "Ollama" }
-                            span { class: "region-note", "on this computer, free" }
+                            span { class: "region-note", "{ollama_note}" }
                         }
                     }
                     if let Some(r) = region {
