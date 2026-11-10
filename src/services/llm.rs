@@ -73,7 +73,10 @@ pub async fn score(settings: &Settings, profile: &str, job: &Job) -> Result<Scor
     if let Some(key) = key_for(settings)? {
         req = req.bearer_auth(key);
     }
-    let resp = req.send().await.map_err(|e| e.to_string())?;
+    let resp = req
+        .send()
+        .await
+        .map_err(|e| network_error("the model can't be reached", &e))?;
     let status = resp.status();
     let v: Value = resp.json().await.map_err(|e| e.to_string())?;
     if !status.is_success() {
@@ -107,6 +110,62 @@ fn client() -> &'static reqwest::Client {
             // Settings the builder refuses still leave the plain client.
             .unwrap_or_else(|_| reqwest::Client::new())
     })
+}
+
+/// Why a request got no answer, with every underlying cause. reqwest's own
+/// message stops at "error sending request", which hides the one part that
+/// says what to fix. Keys travel in a header, which errors never quote.
+fn network_error(what: &str, e: &reqwest::Error) -> String {
+    describe_network_failure(what, &error_chain(e), e.is_timeout())
+}
+
+/// An error and its sources, joined, without repeating what a link already said.
+fn error_chain(e: &(dyn std::error::Error + 'static)) -> String {
+    let mut parts = vec![e.to_string()];
+    let mut source = e.source();
+    while let Some(cause) = source {
+        let text = cause.to_string();
+        if !parts.last().is_some_and(|last| last.contains(&text)) {
+            parts.push(text);
+        }
+        source = cause.source();
+    }
+    parts.join(": ")
+}
+
+fn describe_network_failure(what: &str, chain: &str, timed_out: bool) -> String {
+    let lower = chain.to_lowercase();
+    let has = |markers: &[&str]| markers.iter().any(|m| lower.contains(m));
+    let cause = if timed_out || has(&["timed out", "timeout"]) {
+        Some("no answer within the time limit; a slow network, VPN or proxy can cause this")
+    } else if has(&[
+        "certificate",
+        "self signed",
+        "self-signed",
+        "not trusted",
+        "untrusted",
+    ]) {
+        Some(
+            "this computer does not trust the certificate it was shown; a proxy that \
+             inspects TLS usually needs its root certificate installed",
+        )
+    } else if has(&["proxy", "tunnel"]) {
+        Some("the proxy refused or could not open the connection; check the proxy settings")
+    } else if has(&[
+        "dns error",
+        "failed to lookup address",
+        "name or service not known",
+        "nodename nor servname",
+        "no such host",
+    ]) {
+        Some("the server name could not be resolved; check the network or VPN")
+    } else {
+        None
+    };
+    match cause {
+        Some(cause) => format!("{what}: {cause}. {chain}"),
+        None => format!("{what}: {chain}"),
+    }
 }
 
 /// Whether the scoring model is api0's, which takes the licence as its key.
@@ -177,7 +236,7 @@ pub async fn api0_regions() -> Result<Vec<RegionOffer>, String> {
         .timeout(Duration::from_secs(15))
         .send()
         .await
-        .map_err(|e| format!("api0 is unreachable: {e}"))?;
+        .map_err(|e| network_error("api0 is unreachable", &e))?;
     let status = resp.status();
     let v: Value = resp.json().await.unwrap_or_default();
     if !status.is_success() {
@@ -303,5 +362,83 @@ mod tests {
         assert_eq!(offers.len(), 2, "only the regions");
         assert_eq!(offers[0].credits_per_score(), 1);
         assert_eq!(offers[1].credits_per_score(), 2);
+    }
+
+    #[test]
+    fn each_kind_of_network_failure_is_named() {
+        let said = |chain: &str| describe_network_failure("api0 is unreachable", chain, false);
+        assert!(
+            said("error sending request: invalid peer certificate: UnknownIssuer")
+                .contains("does not trust the certificate")
+        );
+        assert!(said("error sending request: unsuccessful tunnel").contains("the proxy refused"));
+        assert!(said("dns error: failed to lookup address information")
+            .contains("could not be resolved"));
+        assert!(said("connection timed out").contains("time limit"));
+        assert_eq!(
+            said("connection refused"),
+            "api0 is unreachable: connection refused"
+        );
+    }
+
+    /// A real refused connection: the sources reach the message, the key does not.
+    #[tokio::test]
+    async fn the_error_gives_the_full_cause_and_never_the_key() {
+        let listener = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
+        let url = format!("http://{}/v1/models", listener.local_addr().unwrap());
+        drop(listener);
+        let e = reqwest::Client::new()
+            .get(&url)
+            .bearer_auth("sk-very-secret")
+            .send()
+            .await
+            .unwrap_err();
+        let said = network_error("api0 is unreachable", &e);
+        assert!(said.contains("error sending request"), "{said}");
+        assert!(
+            said.len() > e.to_string().len() + "api0 is unreachable: ".len(),
+            "{said}"
+        );
+        assert!(!said.contains("sk-very-secret"), "{said}");
+    }
+
+    /// A real proxy turning the connection away.
+    #[tokio::test]
+    async fn a_proxy_that_refuses_the_tunnel_is_named() {
+        use tokio::io::{AsyncReadExt, AsyncWriteExt};
+        let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let proxy = format!("http://{}", listener.local_addr().unwrap());
+        tokio::spawn(async move {
+            let (mut socket, _) = listener.accept().await.unwrap();
+            let mut buffer = [0u8; 1024];
+            let _ = socket.read(&mut buffer).await;
+            let _ = socket.write_all(b"HTTP/1.1 403 Forbidden\r\n\r\n").await;
+        });
+        let e = reqwest::Client::builder()
+            .proxy(reqwest::Proxy::all(proxy).unwrap())
+            .build()
+            .unwrap()
+            .get("https://gateway.api0.ai/v1/models")
+            .send()
+            .await
+            .unwrap_err();
+        let said = network_error("api0 is unreachable", &e);
+        assert!(said.contains("the proxy refused"), "{said}");
+    }
+
+    /// A real server that accepts and never answers.
+    #[tokio::test]
+    async fn a_server_that_never_answers_reads_as_a_timeout() {
+        let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let url = format!("http://{}/", listener.local_addr().unwrap());
+        let e = reqwest::Client::new()
+            .get(&url)
+            .timeout(std::time::Duration::from_millis(100))
+            .send()
+            .await
+            .unwrap_err();
+        let said = network_error("api0 is unreachable", &e);
+        assert!(said.contains("time limit"), "{said}");
+        drop(listener);
     }
 }

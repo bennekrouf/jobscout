@@ -11,6 +11,9 @@ published at <https://mayorana.ch/en/apps/jobscout/releases>.
   running: its button is greyed out and says "not detected".
 - An open region no longer reads "unavailable" when its price couldn't be
   fetched. It stays selectable and says "price unknown".
+- When api0 or your model can't be reached, the error gives the full cause and
+  says whether it was a timeout, a proxy, a certificate or a name that couldn't
+  be resolved.
 
 ## [0.1.49] - 2026-11-10
 
