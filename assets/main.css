@@ -388,7 +388,8 @@ h2 .flag { width: 21px; height: 14px; }
     padding: 10px 6px; border-radius: 8px; cursor: pointer; font-family: inherit;
     background: var(--bg1); color: var(--text2); border: 1px solid var(--border);
 }
-.region:hover { border-color: var(--accent); color: var(--text1); }
+.region:not(:disabled):hover { border-color: var(--accent); color: var(--text1); }
+.region:disabled { opacity: 0.5; cursor: default; }
 .region.on { color: var(--text1); border-color: var(--accent); background: var(--bg3); }
 .region .flag { width: 30px; height: 20px; }
 .region-icon { font-size: 18px; line-height: 20px; }

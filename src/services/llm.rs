@@ -117,7 +117,7 @@ pub(crate) fn is_api0(base_url: &str) -> bool {
         .eq_ignore_ascii_case(licence::LLM_BASE_URL)
 }
 
-pub use desktop_kit::region::{Region, REGIONS};
+pub use desktop_kit::region::{Region, COMING_SOON, DEFAULT as DEFAULT_REGION, REGIONS};
 
 /// Tokens in a typical score: a profile, a description cut at
 /// [`MAX_DESCRIPTION_CHARS`] and the short JSON reply. Only for the estimate.

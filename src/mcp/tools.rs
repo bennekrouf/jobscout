@@ -187,7 +187,9 @@ pub(super) fn tools() -> Value {
             "description": "Sets where score_jobs runs, for every country: api0 in europe, \
                             china or usa (paid from the licence's AI credits, which overview \
                             shows), or ollama on this computer (free; its model must be set in \
-                            JobScout's Settings). Same as the buttons in Settings → Scoring model.",
+                            JobScout's Settings). Same as the buttons in Settings → Scoring model: \
+                            a region api0 has not opened yet is refused, and the answer says \
+                            which are open.",
             "inputSchema": {
                 "type": "object",
                 "properties": {

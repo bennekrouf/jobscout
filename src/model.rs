@@ -527,7 +527,7 @@ impl Settings {
                 && self.llm_key_env == "DEEPSEEK_API_KEY"
             {
                 self.llm_base_url = licence::LLM_BASE_URL.into();
-                self.llm_model = llm::REGIONS[0].id.into();
+                self.llm_model = llm::DEFAULT_REGION.id.into();
                 self.llm_key_env = licence::LLM_KEY_ENV.into();
             }
             changed = true;
@@ -535,7 +535,7 @@ impl Settings {
         if !self.region_default_applied {
             self.region_default_applied = true;
             if llm::is_api0(&self.llm_base_url) && self.llm_model.trim() == licence::LLM_MODEL {
-                self.llm_model = llm::REGIONS[0].id.into();
+                self.llm_model = llm::DEFAULT_REGION.id.into();
             }
             changed = true;
         }
@@ -593,7 +593,7 @@ impl Default for Settings {
             python: "python3".into(),
             headed: false,
             llm_base_url: licence::LLM_BASE_URL.into(),
-            llm_model: llm::REGIONS[0].id.into(),
+            llm_model: llm::DEFAULT_REGION.id.into(),
             llm_key_env: licence::LLM_KEY_ENV.into(),
             france_travail_client_id: String::new(),
             france_travail_secret_env: "FRANCE_TRAVAIL_CLIENT_SECRET".into(),
@@ -650,14 +650,14 @@ mod tests {
     }
 
     #[test]
-    fn api0_default_from_before_the_regions_moves_to_europe_once() {
+    fn api0_default_from_before_the_regions_moves_to_the_default_region_once() {
         let saved: Settings = serde_json::from_str(
             r#"{"llm_base_url":"https://gateway.api0.ai/v1","llm_model":"default","llm_key_env":"API0_API_KEY","api0_default_applied":true}"#,
         )
         .unwrap();
         let mut s = saved;
         assert!(s.apply_api0_default());
-        assert_eq!(s.region().map(|r| r.id), Some("europe"));
+        assert_eq!(s.region().map(|r| r.id), Some("china"));
         // "default" typed again afterwards stays.
         s.llm_model = "default".into();
         assert!(!s.apply_api0_default());
@@ -692,8 +692,8 @@ mod tests {
     }
 
     #[test]
-    fn new_settings_score_in_europe() {
-        assert_eq!(Settings::default().region().map(|r| r.id), Some("europe"));
+    fn new_settings_score_in_the_default_region() {
+        assert_eq!(Settings::default().region().map(|r| r.id), Some("china"));
     }
 
     #[test]

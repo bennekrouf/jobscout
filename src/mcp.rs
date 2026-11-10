@@ -106,7 +106,7 @@ async fn call(name: &str, args: &Value) -> Result<Value, String> {
             store::save_profile(country, text);
             Ok(json!({ "country": country.label(), "saved": true, "chars": text.chars().count() }))
         }
-        "set_scoring_model" => set_scoring_model(args),
+        "set_scoring_model" => set_scoring_model(args).await,
         "list_watches" => {
             let country = country(args)?;
             let watches: Vec<Value> = store::load_watches(country)

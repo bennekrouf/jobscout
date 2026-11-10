@@ -230,7 +230,7 @@ pub(super) async fn cv_for_job(args: &Value) -> Result<Value, String> {
 }
 
 /// Settings' Scoring model buttons: an api0 region, or ollama.
-pub(super) fn set_scoring_model(args: &Value) -> Result<Value, String> {
+pub(super) async fn set_scoring_model(args: &Value) -> Result<Value, String> {
     let model = text(args, "model")?.to_lowercase();
     let mut s = store::load_settings();
     if model == "ollama" {
@@ -240,6 +240,7 @@ pub(super) fn set_scoring_model(args: &Value) -> Result<Value, String> {
             .iter()
             .find(|r| r.id == model || r.label.eq_ignore_ascii_case(&model))
             .ok_or_else(|| format!("no scoring model {model}; use europe, china, usa or ollama"))?;
+        desktop_kit::region::ensure_open(region).await?;
         s.use_region(region.id);
     }
     store::save_settings(&s);
