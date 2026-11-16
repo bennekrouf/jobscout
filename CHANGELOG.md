@@ -3,6 +3,18 @@
 What changed in each version of JobScout, for the people using it. Also
 published at <https://mayorana.ch/en/apps/jobscout/releases>.
 
+## [Unreleased]
+
+### Fixed
+
+- The key names in Settings (for the AI model, Reed and France Travail) must
+  now be environment variable names: letters, digits and `_`. Anything else
+  is refused with a message saying so, instead of being handed to your shell,
+  which would have run what it said.
+- A key found in your shell profile is kept for the session without changing
+  JobScout's own environment, which other parts of the app read at the same
+  time.
+
 ## [0.1.51] - 2026-11-10
 
 ### Fixed

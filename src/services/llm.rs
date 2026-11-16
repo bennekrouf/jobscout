@@ -2,7 +2,8 @@
 //! endpoint, asking for a JSON object back rather than prose to pick a number
 //! out of.
 
-use std::sync::OnceLock;
+use std::collections::HashMap;
+use std::sync::{Mutex, OnceLock, PoisonError};
 use std::time::Duration;
 
 use chrono::Utc;
@@ -284,6 +285,25 @@ fn key_for(settings: &Settings) -> Result<Option<String>, String> {
     })
 }
 
+/// Variables found through the login shell, kept for the rest of the session.
+/// Kept here rather than put into the process environment: `set_var` while
+/// other threads may read the environment is undefined behaviour on Unix.
+fn from_shell() -> &'static Mutex<HashMap<String, String>> {
+    static FOUND: OnceLock<Mutex<HashMap<String, String>>> = OnceLock::new();
+    FOUND.get_or_init(Default::default)
+}
+
+/// A name the shell can only read as a variable name: letters, digits and `_`,
+/// not starting with a digit. The name comes from Settings and goes into a
+/// shell command.
+fn is_env_name(var: &str) -> bool {
+    let mut chars = var.chars();
+    chars
+        .next()
+        .is_some_and(|c| c.is_ascii_alphabetic() || c == '_')
+        && chars.all(|c| c.is_ascii_alphanumeric() || c == '_')
+}
+
 /// The key from the named environment variable. An app opened from Finder does
 /// not inherit the terminal's environment, so a missing variable is looked up
 /// once in a login shell and kept for the rest of the session.
@@ -292,10 +312,22 @@ pub(crate) fn api_key(var: &str) -> Result<Option<String>, String> {
     if var.is_empty() {
         return Ok(None);
     }
+    if !is_env_name(var) {
+        return Err(format!(
+            "\"{var}\" is not an environment variable name: use letters, digits and _ in Settings"
+        ));
+    }
     if let Ok(v) = std::env::var(var) {
         if !v.is_empty() {
             return Ok(Some(v));
         }
+    }
+    if let Some(v) = from_shell()
+        .lock()
+        .unwrap_or_else(PoisonError::into_inner)
+        .get(var)
+    {
+        return Ok(Some(v.clone()));
     }
     let shell = std::env::var("SHELL").unwrap_or_else(|_| "/bin/zsh".into());
     let out = std::process::Command::new(shell)
@@ -315,7 +347,10 @@ pub(crate) fn api_key(var: &str) -> Result<Option<String>, String> {
             "{var} is not set — export it in your shell profile, or change it in Settings"
         ));
     }
-    std::env::set_var(var, &value);
+    from_shell()
+        .lock()
+        .unwrap_or_else(PoisonError::into_inner)
+        .insert(var.to_string(), value.clone());
     Ok(Some(value))
 }
 
@@ -331,6 +366,28 @@ fn strip_fences(s: &str) -> &str {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn only_variable_names_reach_the_shell() {
+        assert!(is_env_name("OPENAI_API_KEY"));
+        assert!(is_env_name("_key2"));
+        for bad in [
+            "",
+            "2KEY",
+            "KEY;touch x",
+            "KEY $(id)",
+            "KEY`id`",
+            "A-B",
+            "KEY\nX",
+        ] {
+            assert!(!is_env_name(bad), "{bad:?}");
+            if !bad.is_empty() {
+                assert!(api_key(bad)
+                    .unwrap_err()
+                    .contains("not an environment variable name"));
+            }
+        }
+    }
 
     #[test]
     fn ollama_can_only_be_chosen_once_it_has_answered() {
