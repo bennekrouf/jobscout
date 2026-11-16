@@ -449,6 +449,47 @@ jobs:
           New-Item -ItemType Directory -Path dist -Force | Out-Null
           & $iscc /DMyAppVersion=$version installer\installer.iss
 
+      # The .msi for IT departments (Intune, Group Policy), beside the .exe.
+      # Same signed binary inside; see installer\${{ env.APP }}.wxs.
+      - name: Install WiX
+        shell: pwsh
+        run: |
+          dotnet tool install --global wix --version 5.0.2
+          wix extension add --global WixToolset.Util.wixext/5.0.2
+
+      - name: Build .msi
+        shell: pwsh
+        run: |
+          $version = "$env:TAG".TrimStart("v")
+          New-Item -ItemType Directory -Path dist -Force | Out-Null
+          wix build installer\${{ env.APP }}.wxs -ext WixToolset.Util.wixext -arch x64 `
+            -d Version=$version -o dist\${{ env.APP }}.msi
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          Remove-Item dist\${{ env.APP }}.wixpdb -ErrorAction SilentlyContinue
+
+      - name: Sign .msi
+        if: steps.winsign.outputs.have == 'true'
+        uses: azure/trusted-signing-action@v0
+        with:
+          azure-tenant-id:     ${{ secrets.AZURE_TENANT_ID }}
+          azure-client-id:     ${{ secrets.AZURE_CLIENT_ID }}
+          azure-client-secret: ${{ secrets.AZURE_CLIENT_SECRET }}
+          endpoint:                     ${{ secrets.TRUSTED_SIGNING_ENDPOINT }}
+          trusted-signing-account-name: ${{ secrets.TRUSTED_SIGNING_ACCOUNT }}
+          certificate-profile-name:     ${{ secrets.TRUSTED_SIGNING_CERT_PROFILE }}
+          files-folder: dist
+          files-folder-filter: msi
+          file-digest: SHA256
+          timestamp-rfc3161: http://timestamp.acs.microsoft.com
+          timestamp-digest: SHA256
+
+      # After signing: signing rewrites the file.
+      - name: Checksum .msi
+        shell: pwsh
+        run: |
+          $hash = (Get-FileHash dist\${{ env.APP }}.msi -Algorithm SHA256).Hash.ToLower()
+          "$hash  ${{ env.APP }}.msi" | Out-File "dist\${{ env.APP }}.msi.sha256" -Encoding ASCII
+
       - name: Sign installer
         if: steps.winsign.outputs.have == 'true'
         uses: azure/trusted-signing-action@v0
@@ -479,6 +520,8 @@ jobs:
           path: |
             dist\${{ env.APP }}-setup.exe
             dist\${{ env.APP }}-setup.exe.sha256
+            dist\${{ env.APP }}.msi
+            dist\${{ env.APP }}.msi.sha256
 
   build-linux:
     needs: [prepare]

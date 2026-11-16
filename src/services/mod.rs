@@ -10,6 +10,7 @@ pub mod linkedin;
 pub mod llm;
 pub mod mail;
 pub mod mcf;
+pub mod no_window;
 pub mod notify;
 pub mod reed;
 pub mod sources;
