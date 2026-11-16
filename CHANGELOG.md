@@ -3,6 +3,27 @@
 What changed in each version of JobScout, for the people using it. Also
 published at <https://mayorana.ch/en/apps/jobscout/releases>.
 
+## [Unreleased]
+
+### Added
+
+- JobScout is now also published as an .msi for IT departments, to deploy with
+  Intune, Group Policy or SCCM: `msiexec /i jobscout.msi ALLUSERS=1 /qn`
+  installs it for every user. Double-clicked, it installs for you alone with no
+  admin prompt, and it replaces an install made with the setup .exe.
+- IT departments can manage JobScout on Windows with Group Policy or Intune:
+  turn off the update check, self-update or usage statistics, and set
+  the licence number for every user, under
+  `HKLM\SOFTWARE\Policies\Mayorana\JobScout`.
+
+### Fixed
+
+- On Windows, JobScout no longer opens a black command window next to its
+  own, and closing that window no longer quits the app.
+- Installing over an existing JobScout on Windows no longer gets stuck on
+  "Setup was unable to automatically close all applications". Setup now
+  closes JobScout and its helper processes itself before replacing it.
+
 ## [0.1.52] - 2026-11-16
 
 ### Fixed

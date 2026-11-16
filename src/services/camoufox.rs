@@ -6,6 +6,7 @@
 //! app's data on first use, so a bundled app needs nothing beside it but a
 //! Python that has `camoufox` installed.
 
+use crate::services::no_window::NoWindow;
 use std::process::Stdio;
 use std::sync::OnceLock;
 use std::time::Duration;
@@ -82,6 +83,7 @@ async fn start(settings: &Settings) -> Result<Helper, FetchError> {
         .unwrap_or_else(|_| Stdio::null());
 
     let mut cmd = Command::new(&settings.python);
+    cmd.no_window();
     cmd.arg("-I").arg(&script);
     if settings.headed {
         cmd.arg("--headed");

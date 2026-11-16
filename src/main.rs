@@ -2,6 +2,8 @@
 //!
 //! One window, three columns: the search, the jobs found so far, and the one
 //! selected. Everything found is kept between runs (see `services::store`).
+// Release builds on Windows are GUI programs: no cmd window opens beside the app.
+#![cfg_attr(all(windows, not(debug_assertions)), windows_subsystem = "windows")]
 
 mod kit;
 mod mcp;
