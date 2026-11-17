@@ -37,7 +37,7 @@
     <Launch Condition="Installed OR WindowsBuild &gt;= 17763"
             Message="JobScout needs Windows 10 version 1809 or later." />
 
-    <Icon Id="JobScoutIcon" SourceFile="..\assets\icon.ico" />
+    <Icon Id="JobScoutIcon" SourceFile="assets\icon.ico" />
     <Property Id="ARPPRODUCTICON" Value="JobScoutIcon" />
     <Property Id="ARPURLINFOABOUT" Value="https://mayorana.ch/en/apps/jobscout" />
     <Property Id="ARPHELPLINK" Value="https://mayorana.ch/en/apps/jobscout" />
@@ -89,13 +89,13 @@
     <StandardDirectory Id="ProgramFiles64Folder">
       <Directory Id="INSTALLFOLDER" Name="JobScout">
         <Component Id="App">
-          <File Id="JobScoutExe" Source="..\target\release\jobscout.exe" KeyPath="yes" />
+          <File Id="JobScoutExe" Source="target\release\jobscout.exe" KeyPath="yes" />
         </Component>
         <Component Id="WebView2Loader">
-          <File Source="..\target\release\WebView2Loader.dll" KeyPath="yes" />
+          <File Source="target\release\WebView2Loader.dll" KeyPath="yes" />
         </Component>
         <Component Id="AppIcon">
-          <File Id="IconFile" Source="..\assets\icon.ico" KeyPath="yes" />
+          <File Id="IconFile" Source="assets\icon.ico" KeyPath="yes" />
         </Component>
       </Directory>
     </StandardDirectory>
