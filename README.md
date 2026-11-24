@@ -35,12 +35,12 @@ JobScout checks mayorana.ch for a newer version shortly after it starts. Set
 ## Use from Claude (MCP)
 
 `jobscout mcp` serves JobScout's jobs to an MCP client over stdio, with no
-window (`src/mcp.rs`). The **MCP** button in the sidebar shows the Claude
-Desktop config and the Claude Code command, pointing at the installed
-executable. The tools: `overview`, `list_jobs`, `get_job`, `search`,
-`score_jobs`, `set_status`, `get_profile`, `set_profile`, `list_watches`,
-`add_watch`, `update_watch`, `delete_watch` and `export_csv`. Each takes an
-optional `country` and defaults to the one open in the window.
+window (`src/mcp.rs`). The **MCP** button at the top of the window installs it
+in Claude Desktop, Claude Code, Codex and VS Code, shows where it is installed
+and running, and tests it. The tools: `overview`, `list_jobs`, `get_job`,
+`search`, `score_jobs`, `set_status`, `get_profile`, `set_profile`,
+`list_watches`, `add_watch`, `update_watch`, `delete_watch` and `export_csv`.
+Each takes an optional `country` and defaults to the one open in the window.
 
 The server and the window share the same files. The server reads, changes
 and writes a file in one go, and the window reloads any file another process

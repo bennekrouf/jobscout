@@ -69,7 +69,9 @@ pub async fn score(settings: &Settings, profile: &str, job: &Job) -> Result<Scor
     let mut req = client().post(url).json(&body);
     if is_api0(&settings.llm_base_url) {
         // So api0 puts the credits down to JobScout.
-        req = req.header("X-Client-App", licence::PRODUCT);
+        req = req
+            .header("X-Client-App", licence::PRODUCT)
+            .header("X-Feature", "score_job");
     }
     if let Some(key) = key_for(settings)? {
         req = req.bearer_auth(key);
