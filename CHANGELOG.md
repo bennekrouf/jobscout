@@ -3,6 +3,18 @@
 What changed in each version of JobScout, for the people using it. Also
 published at <https://mayorana.ch/en/apps/jobscout/releases>.
 
+## [Unreleased]
+
+### Changed
+
+- The MCP window now connects JobScout for you. For Claude Desktop, Claude
+  Code, Codex and VS Code it shows whether JobScout is installed there and
+  running, with Install, Update and Uninstall buttons, and a Test that starts
+  the server and counts its tools. Before, you copied commands and edited
+  Claude's config file yourself; those steps are still there, under By hand.
+- Claude Desktop undoes a change made to its settings while it is open:
+  JobScout waits for you to quit it, then installs.
+
 ## [0.1.54] - 2026-11-17
 
 ### Changed
