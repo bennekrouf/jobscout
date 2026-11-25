@@ -51,10 +51,12 @@ pub enum Country {
     Ireland,
     Belgium,
     Austria,
+    UnitedStates,
+    Canada,
 }
 
 impl Country {
-    pub const ALL: [Country; 9] = [
+    pub const ALL: [Country; 11] = [
         Country::Switzerland,
         Country::Singapore,
         Country::Germany,
@@ -64,6 +66,8 @@ impl Country {
         Country::Ireland,
         Country::Belgium,
         Country::Austria,
+        Country::UnitedStates,
+        Country::Canada,
     ];
 
     /// Folder name under the data directory.
@@ -78,6 +82,8 @@ impl Country {
             Country::Ireland => "ie",
             Country::Belgium => "be",
             Country::Austria => "at",
+            Country::UnitedStates => "us",
+            Country::Canada => "ca",
         }
     }
 
@@ -92,6 +98,8 @@ impl Country {
             Country::Ireland => "Ireland",
             Country::Belgium => "Belgium",
             Country::Austria => "Austria",
+            Country::UnitedStates => "United States",
+            Country::Canada => "Canada",
         }
     }
 
@@ -99,6 +107,7 @@ impl Country {
     pub fn short_label(self) -> &'static str {
         match self {
             Country::Uae => "UAE",
+            Country::UnitedStates => "US",
             c => c.label(),
         }
     }
@@ -114,6 +123,9 @@ impl Country {
             Country::Ireland => &[Source::LinkedIn, Source::IrishJobs],
             Country::Belgium => &[Source::LinkedIn, Source::StepStoneBelgium],
             Country::Austria => &[Source::LinkedIn, Source::StepStoneAustria],
+            // Indeed and Dice disallow their search pages in robots.txt.
+            Country::UnitedStates => &[Source::LinkedIn],
+            Country::Canada => &[Source::LinkedIn, Source::JobBank],
         }
     }
 }
@@ -157,6 +169,9 @@ pub enum Source {
     /// allows only their first search page; Austria's refuses plain HTTP.
     StepStoneBelgium,
     StepStoneAustria,
+    /// Job Bank, the Government of Canada's board, with partner boards'
+    /// postings too. Plain HTTP throughout.
+    JobBank,
 }
 
 impl Source {
@@ -184,6 +199,7 @@ impl Source {
             Source::IrishJobs => "IrishJobs",
             Source::StepStoneBelgium => "stepstone.be",
             Source::StepStoneAustria => "stepstone.at",
+            Source::JobBank => "Job Bank",
         }
     }
 
@@ -202,6 +218,7 @@ impl Source {
             Source::Bayt => "src-bayt",
             Source::IrishJobs => "src-irishjobs",
             Source::StepStoneBelgium | Source::StepStoneAustria => "src-stepstone",
+            Source::JobBank => "src-jobbank",
         }
     }
 }

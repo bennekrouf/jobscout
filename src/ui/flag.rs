@@ -77,9 +77,34 @@ pub fn Flag(country: Country) -> Element {
             rect { width: "30", height: "20", fill: "#C8102E" }
             rect { y: "6.67", width: "30", height: "6.67", fill: "#fff" }
         },
+        Country::UnitedStates => rsx! { {usa()} },
+        Country::Canada => rsx! {
+            // 2:1, cropped at the sides like the UK's.
+            rect { width: "30", height: "20", fill: "#fff" }
+            rect { width: "7.5", height: "20", fill: "#D80621" }
+            rect { x: "22.5", width: "7.5", height: "20", fill: "#D80621" }
+            path {
+                d: "M15,3.6 15.9,5.3 16.8,4.9 16.4,7.6 17.8,6.2 18.1,7 19.6,6.7 19.1,8.3 \
+                    19.8,8.6 17.2,10.8 17.5,11.7 15.2,11.4 15.25,14.2 14.75,14.2 14.8,11.4 \
+                    12.5,11.7 12.8,10.8 10.2,8.6 10.9,8.3 10.4,6.7 11.9,7 12.2,6.2 13.6,7.6 \
+                    13.2,4.9 14.1,5.3 z",
+                fill: "#D80621",
+            }
+        },
     };
     rsx! {
         svg { class: "flag", view_box: "0 0 30 20", "aria-hidden": "true", {flag} }
+    }
+}
+
+/// The Stars and Stripes, stars left out: they would be dots this small.
+fn usa() -> Element {
+    rsx! {
+        rect { width: "30", height: "20", fill: "#fff" }
+        for i in 0..7 {
+            rect { y: "{f64::from(i) * 40.0 / 13.0}", width: "30", height: "{20.0 / 13.0}", fill: "#B22234" }
+        }
+        rect { width: "12", height: "{140.0 / 13.0}", fill: "#3C3B6E" }
     }
 }
 
@@ -106,13 +131,7 @@ pub fn RegionFlag(id: &'static str) -> Element {
                 polygon { points: STAR, fill: "#FFFF00", transform: "translate({x} {y}) scale(1)" }
             }
         },
-        "usa" => rsx! {
-            rect { width: "30", height: "20", fill: "#fff" }
-            for i in 0..7 {
-                rect { y: "{f64::from(i) * 40.0 / 13.0}", width: "30", height: "{20.0 / 13.0}", fill: "#B22234" }
-            }
-            rect { width: "12", height: "{140.0 / 13.0}", fill: "#3C3B6E" }
-        },
+        "usa" => usa(),
         _ => rsx! {
             rect { width: "30", height: "20", fill: "#888" }
         },

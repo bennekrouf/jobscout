@@ -8,7 +8,8 @@ jobup.ch), Singapore (LinkedIn, MyCareersFuture, JobStreet), Germany
 (LinkedIn, Arbeitsagentur, StepStone), France (LinkedIn, France Travail), the
 United Kingdom (LinkedIn, Totaljobs, Reed), the United Arab Emirates
 (LinkedIn, Bayt), Ireland (LinkedIn, IrishJobs), Belgium (LinkedIn,
-stepstone.be) or Austria (LinkedIn, stepstone.at).
+stepstone.be), Austria (LinkedIn, stepstone.at), the United States (LinkedIn)
+or Canada (LinkedIn, Job Bank).
 
 - **Search** LinkedIn's public guest endpoints. No login is used, so no account is at risk. You can filter by keywords, location, date posted, workplace type and experience level, and choose how many pages to fetch.
 - **Keep** every job found in `~/Library/Application Support/JobScout/<country>/jobs.json`, deduplicated by job id. Each job has a status (New / Saved / Applied / Hidden).
@@ -125,6 +126,10 @@ into `ch/`, and a file already in `ch/` is never overwritten.
 | 🇮🇪 | IrishJobs | The StepStone platform, read like StepStone: search via `__PRELOADED_STATE__` (`/jobs/{keywords}?q=…&postedWithin=N&page=N`; its robots.txt allows `?q…&page=`), job pages via JSON-LD. Always in a browser: plain HTTP gets a 403, robots.txt included | Keywords, date posted (last day or week on the site, always also in the app). All of Ireland. Workplace and experience don't apply |
 | 🇧🇪 | stepstone.be | The StepStone platform, read like StepStone. Its robots.txt allows `/jobs/{keywords}?q=…` with nothing after `q`, so only the first page, 25 postings, and no filter on the site. Search over plain HTTP, job pages in a browser | Keywords, date posted (filtered in the app). All of Belgium. Workplace and experience don't apply |
 | 🇦🇹 | stepstone.at | As stepstone.be, but always in a browser: plain HTTP gets a 403, robots.txt included | Keywords, date posted (filtered in the app). All of Austria. Workplace and experience don't apply |
+| 🇨🇦 | Job Bank | The Government of Canada's board (`jobbank.gc.ca`): public search (`/jobsearch/jobsearch?searchstring=…&sort=D&page=N`) read from the job cards, and job pages (`/jobsearch/jobposting/{id}`) via their schema.org microdata. It lists partner boards' postings (Talent.com, Indeed, Jobillico …) next to its own. Always over plain HTTP; its robots.txt allows everything | Keywords, date posted (filtered in the app). All of Canada. Workplace and experience don't apply |
+
+The United States has LinkedIn only: Indeed's and Dice's
+robots.txt disallow their search pages.
 
 Both JobCloud sites (jobs.ch and jobup.ch) share posting ids, so a job listed on
 both appears once. Across LinkedIn and JobCloud, a job with the same title and
