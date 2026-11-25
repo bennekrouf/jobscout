@@ -3,6 +3,7 @@ pub mod bayt;
 pub mod camoufox;
 pub mod fetch;
 pub mod francetravail;
+pub mod jobbank;
 pub mod jobcloud;
 pub mod jobstreet;
 pub mod licence;

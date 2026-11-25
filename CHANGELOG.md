@@ -3,6 +3,18 @@
 What changed in each version of JobScout, for the people using it. Also
 published at <https://mayorana.ch/en/apps/jobscout/releases>.
 
+## [Unreleased]
+
+### Added
+
+- The United States and Canada. Pick the American flag to search LinkedIn
+  across the whole US, or the Canadian flag to search LinkedIn and Job Bank,
+  the Government of Canada's job board, across all of Canada. Job Bank also
+  lists postings from partner boards such as Talent.com and Indeed, with
+  salaries where the employer gives them, and needs no key and no browser
+  backend. Each country keeps its own jobs, watches, profile, last search and
+  activity log, like every country.
+
 ## [0.1.55] - 2026-11-24
 
 ### Changed

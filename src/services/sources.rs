@@ -6,7 +6,8 @@ use chrono::Utc;
 
 use super::fetch::{self, FetchError};
 use super::{
-    arbeitsagentur, bayt, francetravail, jobcloud, jobstreet, linkedin, mcf, reed, stepstone,
+    arbeitsagentur, bayt, francetravail, jobbank, jobcloud, jobstreet, linkedin, mcf, reed,
+    stepstone,
 };
 use crate::model::{Backend, Country, Job, JobDetail, Posted, SearchParams, Settings, Source};
 
@@ -81,6 +82,7 @@ pub async fn fetch_search(
             fetch::get_cached(&bayt::search_url(p, page), ttl, &in_browser(settings)).await
         }
         Source::FranceTravail => francetravail::fetch_search(p, page, ttl, settings).await,
+        Source::JobBank => fetch::get_cached(&jobbank::search_url(p, page), ttl, settings).await,
     }
 }
 
@@ -99,6 +101,7 @@ pub fn parse_search(source: Source, body: &str, query: &str) -> Vec<Job> {
         Source::Reed => reed::parse_search(body, query),
         Source::Bayt => bayt::parse_search(body, query),
         Source::FranceTravail => francetravail::parse_search(body, query),
+        Source::JobBank => jobbank::parse_search(body, query),
     }
 }
 
@@ -120,6 +123,7 @@ pub async fn fetch_detail(job: &Job, settings: &Settings) -> Result<String, Fetc
         Source::Reed => reed::fetch_detail(&job.id, settings).await,
         Source::Bayt => fetch::get(&job.url, &in_browser(settings)).await,
         Source::FranceTravail => francetravail::fetch_detail(&job.id, settings).await,
+        Source::JobBank => fetch::get(&jobbank::detail_url(&job.id), settings).await,
     }
 }
 
@@ -138,6 +142,7 @@ pub fn parse_detail(source: Source, body: &str) -> Option<JobDetail> {
         Source::Reed => reed::parse_detail(body),
         Source::Bayt => bayt::parse_detail(body),
         Source::FranceTravail => francetravail::parse_detail(body),
+        Source::JobBank => jobbank::parse_detail(body),
     }
 }
 
